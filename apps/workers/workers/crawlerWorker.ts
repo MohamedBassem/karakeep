@@ -1590,7 +1590,7 @@ async function checkDomainRateLimit(url: string, jobId: string): Promise<void> {
       }
 
       const hostname = new URL(url).hostname;
-      const rateLimitResult = rateLimitClient.checkRateLimit(
+      const rateLimitResult = await rateLimitClient.checkRateLimit(
         {
           name: "domain-ratelimit",
           maxRequests: crawlerDomainRateLimitConfig.maxRequests,
