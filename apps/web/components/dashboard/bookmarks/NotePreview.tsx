@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { MarkdownReadonly } from "@/components/ui/markdown/markdown-readonly";
 import {
   Popover,
   PopoverContent,
@@ -43,8 +44,10 @@ export function NotePreview({ note, bookmarkId, className }: NotePreviewProps) {
       </PopoverTrigger>
       <PopoverContent className="w-96 max-w-[calc(100vw-2rem)]" align="start">
         <div className="space-y-3">
-          <div className="max-h-60 overflow-y-auto whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-300">
-            {note}
+          <div className="max-h-60 overflow-y-auto text-sm">
+            <MarkdownReadonly className="prose-sm">
+              {note}
+            </MarkdownReadonly>
           </div>
           <div className="flex justify-end">
             <Link href={`/dashboard/preview/${bookmarkId}`}>

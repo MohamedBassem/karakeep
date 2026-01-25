@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -33,7 +34,7 @@ import { api } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ExternalLink } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { useUpdateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
@@ -203,7 +204,21 @@ export function EditBookmarkDialog({
                 name="note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("common.note")}</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>{t("common.note")}</FormLabel>
+                      <Link href={`/dashboard/preview/${bookmark.id}`}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto gap-1 px-2 py-1 text-xs"
+                          onClick={() => setOpen(false)}
+                        >
+                          {t("actions.open_in_editor")}
+                          <ExternalLink className="size-3" />
+                        </Button>
+                      </Link>
+                    </div>
                     <FormControl>
                       <Textarea
                         placeholder="Bookmark notes"
