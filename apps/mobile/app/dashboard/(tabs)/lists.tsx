@@ -40,6 +40,7 @@ interface ListLink {
   numChildren: number;
   collapsed: boolean;
   isSharedSection?: boolean;
+  badge?: number;
 }
 
 function traverseTree(
@@ -76,6 +77,9 @@ export default function Lists() {
   );
   const apiUtils = api.useUtils();
 
+  // Fetch pending invitations
+  const { data: pendingInvitations } = api.lists.getPendingInvitations.useQuery();
+
   // Check if there are any shared lists
   const hasSharedLists = useMemo(() => {
     return lists?.data.some((list) => list.userRole !== "owner") ?? false;
@@ -106,9 +110,27 @@ export default function Lists() {
 
   const onRefresh = () => {
     apiUtils.lists.list.invalidate();
+    apiUtils.lists.getPendingInvitations.invalidate();
   };
 
-  const links: ListLink[] = [
+  const links: ListLink[] = [];
+
+  // Add pending invitations at the top if there are any
+  if (pendingInvitations && pendingInvitations.length > 0) {
+    links.push({
+      id: "pending-invitations",
+      logo: "✉️",
+      name: "Pending Invitations",
+      href: "/dashboard/invitations",
+      level: 0,
+      numChildren: 0,
+      collapsed: false,
+      badge: pendingInvitations.length,
+    });
+  }
+
+  // Add favorites and archive
+  links.push(
     {
       id: "fav",
       logo: "⭐️",
@@ -127,7 +149,7 @@ export default function Lists() {
       numChildren: 0,
       collapsed: false,
     },
-  ];
+  );
 
   // Add shared lists section if there are any
   if (hasSharedLists) {
@@ -234,9 +256,18 @@ export default function Lists() {
                 className="flex-1"
               >
                 <Pressable className="flex flex-row items-center justify-between">
-                  <Text>
-                    {l.item.logo} {l.item.name}
-                  </Text>
+                  <View className="flex flex-row items-center gap-2">
+                    <Text>
+                      {l.item.logo} {l.item.name}
+                    </Text>
+                    {l.item.badge !== undefined && (
+                      <View className="rounded-full bg-primary px-2 py-0.5">
+                        <Text variant="caption1" className="font-medium text-white">
+                          {l.item.badge}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <ChevronRight />
                 </Pressable>
               </Link>
