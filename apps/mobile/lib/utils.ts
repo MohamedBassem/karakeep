@@ -57,3 +57,23 @@ export function buildApiHeaders(
     ...customHeaders,
   };
 }
+
+/**
+ * Transform network error messages into user-friendly messages.
+ * Common error messages like "fetch failed" or "Network request failed" are
+ * replaced with helpful suggestions about checking the server address.
+ */
+export function getNetworkErrorMessage(errorMessage: string): string {
+  const lowerMessage = errorMessage.toLowerCase();
+
+  if (
+    lowerMessage.includes("fetch failed") ||
+    lowerMessage.includes("network request failed") ||
+    lowerMessage.includes("networkerror") ||
+    lowerMessage.includes("failed to fetch")
+  ) {
+    return "Unable to connect to the server. Please check that the server address is correct and the server is running.";
+  }
+
+  return errorMessage;
+}

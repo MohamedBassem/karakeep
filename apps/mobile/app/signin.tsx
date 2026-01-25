@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import useAppSettings from "@/lib/settings";
 import { api } from "@/lib/trpc";
+import { getNetworkErrorMessage } from "@/lib/utils";
 import { Bug, Edit3 } from "lucide-react-native";
 
 enum LoginType {
@@ -51,7 +52,7 @@ export default function Signin() {
         if (e.data?.code === "UNAUTHORIZED") {
           setError("Wrong username or password");
         } else {
-          setError(`${e.message}`);
+          setError(getNetworkErrorMessage(e.message));
         }
       },
     });
@@ -66,7 +67,7 @@ export default function Signin() {
         if (e.data?.code === "UNAUTHORIZED") {
           setError("Invalid API key");
         } else {
-          setError(`${e.message}`);
+          setError(getNetworkErrorMessage(e.message));
         }
       },
     });
