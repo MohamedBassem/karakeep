@@ -6,8 +6,19 @@ import { migrateCmd } from "@/commands/migrate";
 import { tagsCmd } from "@/commands/tags";
 import { whoamiCmd } from "@/commands/whoami";
 import { wipeCmd } from "@/commands/wipe";
+import { loadConfigFile } from "@/lib/config";
 import { setGlobalOptions } from "@/lib/globals";
 import { Command, Option } from "@commander-js/extra-typings";
+
+// Load config file and set environment variables as defaults
+// Environment variables take precedence over config file values
+const configFile = loadConfigFile();
+if (configFile.apiKey && !process.env.KARAKEEP_API_KEY) {
+  process.env.KARAKEEP_API_KEY = configFile.apiKey;
+}
+if (configFile.serverAddr && !process.env.KARAKEEP_SERVER_ADDR) {
+  process.env.KARAKEEP_SERVER_ADDR = configFile.serverAddr;
+}
 
 const program = new Command()
   .name("karakeep")
