@@ -213,6 +213,9 @@ const allEnv = z.object({
   // Database configuration
   DB_WAL_MODE: stringBool("false"),
 
+  // Sandbox configuration
+  SANDBOX_USE_BUBBLEWRAP: stringBool("false"),
+
   // OpenTelemetry tracing configuration
   OTEL_TRACING_ENABLED: stringBool("false"),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
@@ -420,6 +423,9 @@ const serverConfigSchema = allEnv.transform((val, ctx) => {
     },
     database: {
       walMode: val.DB_WAL_MODE,
+    },
+    sandbox: {
+      useBubblewrap: val.SANDBOX_USE_BUBBLEWRAP,
     },
     tracing: {
       enabled: val.OTEL_TRACING_ENABLED,

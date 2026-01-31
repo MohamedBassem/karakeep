@@ -10,7 +10,6 @@ import { Readability } from "@mozilla/readability";
 import { Mutex } from "async-mutex";
 import DOMPurify from "dompurify";
 import { and, eq } from "drizzle-orm";
-import { execa } from "execa";
 import { exitAbortController } from "exit";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -34,6 +33,7 @@ import {
   matchesNoProxy,
   validateUrl,
 } from "network";
+import { sandboxedExec } from "sandboxedExec";
 import { Browser, BrowserContextOptions } from "playwright";
 import { chromium } from "playwright-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
@@ -1024,19 +1024,25 @@ async function archiveWebpage(
       const assetId = newAssetId();
       const assetPath = path.join(os.tmpdir(), assetId);
 
-      let res = await execa({
-        input: html,
-        cancelSignal: abortSignal,
-        env: {
-          https_proxy: serverConfig.proxy.httpsProxy
-            ? getRandomProxy(serverConfig.proxy.httpsProxy)
-            : undefined,
-          http_proxy: serverConfig.proxy.httpProxy
-            ? getRandomProxy(serverConfig.proxy.httpProxy)
-            : undefined,
-          no_proxy: serverConfig.proxy.noProxy?.join(","),
+      let res = await sandboxedExec(
+        "monolith",
+        ["-", "-Ije", "-t", "5", "-b", url, "-o", assetPath],
+        {
+          input: html,
+          cancelSignal: abortSignal,
+          env: {
+            https_proxy: serverConfig.proxy.httpsProxy
+              ? getRandomProxy(serverConfig.proxy.httpsProxy)
+              : undefined,
+            http_proxy: serverConfig.proxy.httpProxy
+              ? getRandomProxy(serverConfig.proxy.httpProxy)
+              : undefined,
+            no_proxy: serverConfig.proxy.noProxy?.join(","),
+          },
+          writablePaths: [assetPath],
+          allowNetwork: true,
         },
-      })("monolith", ["-", "-Ije", "-t", "5", "-b", url, "-o", assetPath]);
+      );
 
       if (res.isCanceled) {
         logger.error(

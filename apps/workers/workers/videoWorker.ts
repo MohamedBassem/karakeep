@@ -1,9 +1,9 @@
 import fs from "fs";
 import * as os from "os";
 import path from "path";
-import { execa } from "execa";
 import { workerStatsCounter } from "metrics";
 import { getProxyAgent, validateUrl } from "network";
+import { sandboxedExec } from "sandboxedExec";
 import { withWorkerTracing } from "workerTracing";
 
 import { db } from "@karakeep/db";
@@ -131,8 +131,10 @@ async function runWorker(job: DequeuedJob<ZVideoRequest>) {
       `[VideoCrawler][${jobId}] Attempting to download a file from "${normalizedUrl}" to "${assetPath}" using the following arguments: "${ytDlpArguments}"`,
     );
 
-    await execa("yt-dlp", ytDlpArguments, {
+    await sandboxedExec("yt-dlp", ytDlpArguments, {
       cancelSignal: job.abortSignal,
+      writablePaths: [assetPath],
+      allowNetwork: true,
     });
     const downloadPath = await findAssetFile(videoAssetId);
     if (!downloadPath) {
