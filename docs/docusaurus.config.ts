@@ -49,7 +49,16 @@ const config: Config = {
           routeBasePath: "/",
           docItemComponent: "@theme/ApiItem",
         },
-        blog: false,
+        blog: {
+          routeBasePath: "/changelog",
+          path: "./changelog",
+          blogTitle: "Changelog",
+          blogDescription: "Karakeep release notes and updates",
+          blogSidebarTitle: "Recent Releases",
+          blogSidebarCount: "ALL",
+          postsPerPage: 10,
+          showReadingTime: false,
+        },
         theme: {
           customCss: "./src/css/custom.css",
         },
@@ -91,6 +100,11 @@ const config: Config = {
         width: "120px",
       },
       items: [
+        {
+          to: "/changelog",
+          label: "Changelog",
+          position: "left",
+        },
         {
           type: "docsVersionDropdown",
           position: "right",
