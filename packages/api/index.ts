@@ -14,6 +14,7 @@ import admin from "./routes/admin";
 import assets from "./routes/assets";
 import backups from "./routes/backups";
 import bookmarks from "./routes/bookmarks";
+import clientConfig from "./routes/clientConfig";
 import health from "./routes/health";
 import highlights from "./routes/highlights";
 import lists from "./routes/lists";
@@ -86,6 +87,7 @@ app
   .use(trpcAdapter)
   .route("/health", health)
   .route("/version", version)
+  .route("/clientConfig", clientConfig)
   .route("/trpc", trpc)
   .route("/v1", v1)
   .route("/assets", assets)

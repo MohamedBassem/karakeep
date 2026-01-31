@@ -33,3 +33,30 @@ export function useServerVersion() {
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 }
+
+export interface ClientConfig {
+  subscriptionsEnabled: boolean;
+  inferenceEnabled: boolean;
+  serverVersion: string;
+}
+
+export function useClientConfig() {
+  const { settings } = useAppSettings();
+
+  return useQuery({
+    queryKey: ["clientConfig", settings.address],
+    queryFn: async (): Promise<ClientConfig> => {
+      const response = await fetch(`${settings.address}/api/clientConfig`, {
+        headers: buildApiHeaders(settings.apiKey, settings.customHeaders),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch client config: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    enabled: !!settings.address,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}

@@ -161,6 +161,14 @@ export default function Dashboard() {
           headerBackTitle: "Back",
         }}
       />
+      <Stack.Screen
+        name="settings/quota"
+        options={{
+          title: "Usage & Quotas",
+          headerTitle: "Usage & Quotas",
+          headerBackTitle: "Back",
+        }}
+      />
     </StyledStack>
   );
 }

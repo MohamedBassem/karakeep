@@ -10,7 +10,7 @@ import ChevronRight from "@/components/ui/ChevronRight";
 import CustomSafeAreaView from "@/components/ui/CustomSafeAreaView";
 import { Divider } from "@/components/ui/Divider";
 import { Text } from "@/components/ui/Text";
-import { useServerVersion } from "@/lib/hooks";
+import { useClientConfig, useServerVersion } from "@/lib/hooks";
 import { useSession } from "@/lib/session";
 import useAppSettings from "@/lib/settings";
 import { api } from "@/lib/trpc";
@@ -37,6 +37,7 @@ export default function Dashboard() {
     isLoading: isServerVersionLoading,
     error: serverVersionError,
   } = useServerVersion();
+  const { data: clientConfig } = useClientConfig();
 
   if (error?.data?.code === "UNAUTHORIZED") {
     logout();
@@ -144,6 +145,20 @@ export default function Dashboard() {
             </View>
           </View>
         </View>
+
+        {clientConfig?.subscriptionsEnabled && (
+          <View className="w-full rounded-xl bg-card py-2">
+            <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
+              <Link asChild href="/dashboard/settings/quota" className="flex-1">
+                <Pressable className="flex flex-row justify-between">
+                  <Text>Usage & Quotas</Text>
+                  <ChevronRight />
+                </Pressable>
+              </Link>
+            </View>
+          </View>
+        )}
+
         <Button
           androidRootClassName="w-full"
           onPress={logout}
