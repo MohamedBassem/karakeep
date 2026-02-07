@@ -240,3 +240,96 @@ If you weren't expecting this invitation, you can safely ignore this email or de
   },
   { silentFail: true },
 );
+
+export const sendReferralSignupNotificationEmail = withTracing(
+  "sendReferralSignupNotificationEmail",
+  async (
+    transporter: Transporter,
+    referrerEmail: string,
+    referrerName: string,
+    referredEmail: string,
+  ) => {
+    const settingsUrl = `${serverConfig.publicUrl}/settings/referrals`;
+
+    const mailOptions = {
+      from: serverConfig.email.smtp!.from,
+      to: referrerEmail,
+      subject: "Someone signed up using your referral!",
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Great news, ${referrerName}!</h2>
+        <p><strong>${referredEmail}</strong> just signed up for Karakeep using your referral link.</p>
+        <p>You'll receive <strong>1 month free</strong> when they subscribe to a paid plan!</p>
+        <p>
+          <a href="${settingsUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Track Your Referrals
+          </a>
+        </p>
+        <p>Keep sharing your referral link to earn more rewards!</p>
+      </div>
+    `,
+      text: `
+Great news, ${referrerName}!
+
+${referredEmail} just signed up for Karakeep using your referral link.
+
+You'll receive 1 month free when they subscribe to a paid plan!
+
+Track your referrals: ${settingsUrl}
+
+Keep sharing your referral link to earn more rewards!
+    `,
+    };
+
+    await transporter.sendMail(mailOptions);
+  },
+  { silentFail: true },
+);
+
+export const sendReferralRewardEmail = withTracing(
+  "sendReferralRewardEmail",
+  async (
+    transporter: Transporter,
+    referrerEmail: string,
+    referrerName: string,
+    referredUserIdentifier: string,
+    amountCents: number,
+    currency: string,
+  ) => {
+    const formattedAmount = (amountCents / 100).toFixed(2);
+    const settingsUrl = `${serverConfig.publicUrl}/settings/referrals`;
+
+    const mailOptions = {
+      from: serverConfig.email.smtp!.from,
+      to: referrerEmail,
+      subject: "You earned a free month!",
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Congratulations, ${referrerName}!</h2>
+        <p><strong>${referredUserIdentifier}</strong> just subscribed, and you've earned <strong>1 month free</strong>!</p>
+        <p>A <strong>${formattedAmount} ${currency.toUpperCase()}</strong> credit has been applied to your account and will be used on your next billing cycle.</p>
+        <p>
+          <a href="${settingsUrl}" style="background-color: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            View Your Rewards
+          </a>
+        </p>
+        <p>Keep sharing your referral link to earn more free months!</p>
+      </div>
+    `,
+      text: `
+Congratulations, ${referrerName}!
+
+${referredUserIdentifier} just subscribed, and you've earned 1 month free!
+
+A ${formattedAmount} ${currency.toUpperCase()} credit has been applied to your account and will be used on your next billing cycle.
+
+View your rewards: ${settingsUrl}
+
+Keep sharing your referral link to earn more free months!
+    `,
+    };
+
+    await transporter.sendMail(mailOptions);
+  },
+  { silentFail: true },
+);

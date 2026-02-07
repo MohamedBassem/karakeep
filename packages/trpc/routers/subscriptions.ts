@@ -9,6 +9,7 @@ import { assets, bookmarks, subscriptions, users } from "@karakeep/db/schema";
 import serverConfig from "@karakeep/shared/config";
 
 import { authedProcedure, Context, publicProcedure, router } from "../index";
+import { processReferralOnSubscription } from "./referrals";
 
 const stripe = serverConfig.stripe.secretKey
   ? new Stripe(serverConfig.stripe.secretKey, {
@@ -124,6 +125,13 @@ async function syncStripeDataToDatabase(customerId: string, db: Context["db"]) {
         : null,
     };
 
+    // Track if this is a new subscription activation for referral processing
+    const wasNotActive =
+      existingSubscription.status !== "active" &&
+      existingSubscription.status !== "trialing";
+    const isNowActive =
+      subData.status === "active" || subData.status === "trialing";
+
     await db.transaction(async (trx) => {
       await trx
         .update(subscriptions)
@@ -154,6 +162,16 @@ async function syncStripeDataToDatabase(customerId: string, db: Context["db"]) {
           .where(eq(users.id, existingSubscription.userId));
       }
     });
+
+    // Process referral reward if this is a new subscription activation
+    if (wasNotActive && isNowActive && serverConfig.referrals.enabled) {
+      try {
+        await processReferralOnSubscription(db, existingSubscription.userId);
+      } catch (error) {
+        // Log but don't fail subscription sync if referral processing fails
+        console.error("Failed to process referral on subscription:", error);
+      }
+    }
 
     return subData;
   } catch (error) {

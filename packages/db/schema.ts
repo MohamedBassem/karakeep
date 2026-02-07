@@ -40,6 +40,10 @@ export const users = sqliteTable("user", {
   salt: text("salt").notNull().default(""),
   role: text("role", { enum: ["admin", "user"] }).default("user"),
 
+  // Referral tracking
+  referralCode: text("referralCode").unique(),
+  referredBy: text("referredBy"),
+
   // Admin Only Settings
   bookmarkQuota: integer("bookmarkQuota"),
   storageQuota: integer("storageQuota"),
@@ -773,6 +777,79 @@ export const invites = sqliteTable("invites", {
     .references(() => users.id, { onDelete: "cascade" }),
 });
 
+// Referral system tables
+export const referrals = sqliteTable(
+  "referrals",
+  {
+    id: text("id")
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    referrerUserId: text("referrerUserId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    referralCode: text("referralCode").notNull().unique(),
+    referredUserId: text("referredUserId").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    referredEmail: text("referredEmail"),
+    status: text("status", {
+      enum: ["pending", "signed_up", "subscribed", "rewarded", "expired"],
+    })
+      .notNull()
+      .default("pending"),
+    rewardApplied: integer("rewardApplied", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    createdAt: createdAtField(),
+    usedAt: integer("usedAt", { mode: "timestamp" }),
+    subscribedAt: integer("subscribedAt", { mode: "timestamp" }),
+    rewardedAt: integer("rewardedAt", { mode: "timestamp" }),
+  },
+  (r) => [
+    index("referrals_referrerUserId_idx").on(r.referrerUserId),
+    index("referrals_referralCode_idx").on(r.referralCode),
+    index("referrals_referredUserId_idx").on(r.referredUserId),
+    index("referrals_status_idx").on(r.status),
+  ],
+);
+
+export const referralRewards = sqliteTable(
+  "referralRewards",
+  {
+    id: text("id")
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    referralId: text("referralId")
+      .notNull()
+      .references(() => referrals.id, { onDelete: "cascade" }),
+    rewardType: text("rewardType", {
+      enum: ["free_month"],
+    })
+      .notNull()
+      .default("free_month"),
+    amountCents: integer("amountCents"),
+    stripeCreditId: text("stripeCreditId"),
+    status: text("status", {
+      enum: ["pending", "applied", "failed"],
+    })
+      .notNull()
+      .default("pending"),
+    createdAt: createdAtField(),
+    appliedAt: integer("appliedAt", { mode: "timestamp" }),
+    errorMessage: text("errorMessage"),
+  },
+  (rr) => [
+    index("referralRewards_userId_idx").on(rr.userId),
+    index("referralRewards_referralId_idx").on(rr.referralId),
+    index("referralRewards_status_idx").on(rr.status),
+  ],
+);
+
 export const subscriptions = sqliteTable(
   "subscriptions",
   {
@@ -940,6 +1017,8 @@ export const userRelations = relations(users, ({ many, one }) => ({
   listCollaborations: many(listCollaborators),
   backups: many(backupsTable),
   listInvitations: many(listInvitations),
+  referralsMade: many(referrals, { relationName: "referrer" }),
+  referralRewards: many(referralRewards),
 }));
 
 export const bookmarkRelations = relations(bookmarks, ({ many, one }) => ({
@@ -1173,3 +1252,31 @@ export const backupsRelations = relations(backupsTable, ({ one }) => ({
     references: [assets.id],
   }),
 }));
+
+export const referralsRelations = relations(referrals, ({ one, many }) => ({
+  referrer: one(users, {
+    fields: [referrals.referrerUserId],
+    references: [users.id],
+    relationName: "referrer",
+  }),
+  referredUser: one(users, {
+    fields: [referrals.referredUserId],
+    references: [users.id],
+    relationName: "referredUser",
+  }),
+  rewards: many(referralRewards),
+}));
+
+export const referralRewardsRelations = relations(
+  referralRewards,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [referralRewards.userId],
+      references: [users.id],
+    }),
+    referral: one(referrals, {
+      fields: [referralRewards.referralId],
+      references: [referrals.id],
+    }),
+  }),
+);

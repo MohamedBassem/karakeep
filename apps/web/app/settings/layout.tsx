@@ -14,6 +14,7 @@ import {
   CloudDownload,
   CreditCard,
   Download,
+  Gift,
   GitBranch,
   Image,
   KeyRound,
@@ -56,6 +57,15 @@ const settingsSidebarItems = (
             name: t("settings.subscription.subscription"),
             icon: <CreditCard size={18} />,
             path: "/settings/subscription",
+          },
+        ]
+      : []),
+    ...(serverConfig.stripe.isConfigured && serverConfig.referrals.enabled
+      ? [
+          {
+            name: t("settings.referrals.referrals"),
+            icon: <Gift size={18} />,
+            path: "/settings/referrals",
           },
         ]
       : []),

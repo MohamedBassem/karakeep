@@ -8,10 +8,10 @@ import { validateRedirectUrl } from "@karakeep/shared/utils/redirectUrl";
 export default async function SignUpPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirectUrl?: string }>;
+  searchParams: Promise<{ redirectUrl?: string; ref?: string }>;
 }) {
   const session = await getServerAuthSession();
-  const { redirectUrl: rawRedirectUrl } = await searchParams;
+  const { redirectUrl: rawRedirectUrl, ref: referralCode } = await searchParams;
   const redirectUrl = validateRedirectUrl(rawRedirectUrl) ?? "/";
 
   if (session) {
@@ -24,7 +24,7 @@ export default async function SignUpPage({
         <div className="flex items-center justify-center">
           <KarakeepLogo height={80} />
         </div>
-        <SignUpForm redirectUrl={redirectUrl} />
+        <SignUpForm redirectUrl={redirectUrl} referralCode={referralCode} />
       </div>
     </div>
   );

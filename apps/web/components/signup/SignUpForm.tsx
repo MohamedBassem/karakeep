@@ -27,9 +27,9 @@ import { signIn } from "@/lib/auth/client";
 import { useClientConfig } from "@/lib/clientConfig";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Turnstile } from "@marsidev/react-turnstile";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
-import { AlertCircle, UserX } from "lucide-react";
+import { AlertCircle, Gift, UserX } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -41,9 +41,13 @@ const VERIFY_EMAIL_ERROR = "Please verify your email address before signing in";
 
 interface SignUpFormProps {
   redirectUrl: string;
+  referralCode?: string;
 }
 
-export default function SignUpForm({ redirectUrl }: SignUpFormProps) {
+export default function SignUpForm({
+  redirectUrl,
+  referralCode,
+}: SignUpFormProps) {
   const api = useTRPC();
   const form = useForm<z.infer<typeof zSignUpSchema>>({
     resolver: zodResolver(zSignUpSchema),
@@ -62,6 +66,12 @@ export default function SignUpForm({ redirectUrl }: SignUpFormProps) {
   const turnstileRef = useRef<TurnstileInstance>(null);
 
   const createUserMutation = useMutation(api.users.create.mutationOptions());
+
+  // Validate referral code if provided
+  const { data: referralValidation } = useQuery({
+    ...api.referrals.validateCode.queryOptions({ code: referralCode || "" }),
+    enabled: !!referralCode,
+  });
 
   if (
     clientConfig.auth.disableSignups ||
@@ -121,6 +131,10 @@ export default function SignUpForm({ redirectUrl }: SignUpFormProps) {
                 await createUserMutation.mutateAsync({
                   ...value,
                   redirectUrl,
+                  referralCode:
+                    referralCode && referralValidation?.valid
+                      ? referralCode
+                      : undefined,
                 });
               } catch (e) {
                 if (e instanceof TRPCClientError) {
@@ -163,6 +177,16 @@ export default function SignUpForm({ redirectUrl }: SignUpFormProps) {
             })}
             className="space-y-4"
           >
+            {referralCode && referralValidation?.valid && (
+              <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <AlertDescription className="text-green-800 dark:text-green-200">
+                  You were referred by{" "}
+                  <strong>{referralValidation.referrerName}</strong>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {errorMessage && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />

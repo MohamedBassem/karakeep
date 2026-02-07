@@ -16,6 +16,7 @@ import { validateRedirectUrl } from "@karakeep/shared/utils/redirectUrl";
 import {
   adminProcedure,
   authedProcedure,
+  createCallerFactory,
   createRateLimitMiddleware,
   publicProcedure,
   router,
@@ -32,7 +33,14 @@ export const usersAppRouter = router({
         maxRequests: 3,
       }),
     )
-    .input(zSignUpSchema.and(z.object({ redirectUrl: z.string().optional() })))
+    .input(
+      zSignUpSchema.and(
+        z.object({
+          redirectUrl: z.string().optional(),
+          referralCode: z.string().optional(),
+        }),
+      ),
+    )
     .output(
       z.object({
         id: z.string(),
@@ -71,6 +79,25 @@ export const usersAppRouter = router({
         ...input,
         redirectUrl: validatedRedirectUrl,
       });
+
+      // Process referral if a referral code was provided
+      if (input.referralCode && serverConfig.referrals.enabled) {
+        try {
+          const { referralsRouter } = await import("./referrals");
+          const caller = createCallerFactory(
+            router({ referrals: referralsRouter }),
+          )({ ...ctx, user: null });
+          await caller.referrals.recordReferral({
+            referralCode: input.referralCode,
+            referredUserId: user.id,
+            referredEmail: user.email,
+          });
+        } catch (error) {
+          // Log but don't fail signup if referral recording fails
+          console.error("Failed to record referral:", error);
+        }
+      }
+
       return {
         id: user.id,
         name: user.name,

@@ -173,6 +173,11 @@ const allEnv = z.object({
   PAID_QUOTA_ASSET_SIZE_BYTES: z.coerce.number().optional(),
   PAID_BROWSER_CRAWLING_ENABLED: optionalStringBool(),
 
+  // Referral system configuration
+  REFERRAL_ENABLED: stringBool("true"),
+  REFERRAL_CODE_LENGTH: z.coerce.number().default(8),
+  REFERRAL_MAX_REWARDS_PER_MONTH: z.coerce.number().default(10),
+
   // Proxy configuration
   CRAWLER_HTTP_PROXY: z
     .string()
@@ -428,6 +433,11 @@ const serverConfigSchema = allEnv.transform((val, ctx) => {
       otlpEndpoint: val.OTEL_EXPORTER_OTLP_ENDPOINT,
       serviceName: val.OTEL_SERVICE_NAME,
       sampleRate: val.OTEL_SAMPLE_RATE,
+    },
+    referrals: {
+      enabled: val.REFERRAL_ENABLED,
+      codeLength: val.REFERRAL_CODE_LENGTH,
+      maxRewardsPerMonth: val.REFERRAL_MAX_REWARDS_PER_MONTH,
     },
   };
   if (obj.auth.emailVerificationRequired && !obj.email.smtp) {
