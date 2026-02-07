@@ -29,6 +29,10 @@ export type TracingAttributeKey =
   | "crawler.getContentType.statusCode"
   | "crawler.contentType"
   | "crawler.statusCode"
+  // Database attributes
+  | "db.system"
+  | "db.statement"
+  | "db.operation"
   // Inference-specific attributes
   | "inference.tagging.numGeneratedTags"
   | "inference.tagging.style"
