@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { toast } from "@/components/ui/sonner";
-import { UserAvatar as UserAvatarImage } from "@/components/ui/user-avatar";
+import { UserAvatar as UserAvatarImage } from "@karakeep/shared-react/components/ui/user-avatar";
 import useUpload from "@/lib/hooks/upload-file";
 import { useTranslation } from "@/lib/i18n/client";
 import { Image as ImageIcon, Upload, User, X } from "lucide-react";
@@ -15,8 +15,8 @@ import {
   useWhoAmI,
 } from "@karakeep/shared-react/hooks/users";
 
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
 
 export default function UserAvatar() {
   const { t } = useTranslation();

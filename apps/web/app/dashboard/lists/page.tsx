@@ -1,7 +1,7 @@
 import AllListsView from "@/components/dashboard/lists/AllListsView";
 import { EditListModal } from "@/components/dashboard/lists/EditListModal";
 import { PendingInvitationsCard } from "@/components/dashboard/lists/PendingInvitationsCard";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { useTranslation } from "@/lib/i18n/server";
 import { api } from "@/server/api/client";
 import { Plus } from "lucide-react";

@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@karakeep/shared-react/components/ui/dialog";
 
 import { ZBookmark, ZBookmarkTypeText } from "@karakeep/shared/types/bookmarks";
 

@@ -4,12 +4,12 @@ import { ActionBuilder } from "@/components/dashboard/rules/RuleEngineActionBuil
 import { ConditionBuilder } from "@/components/dashboard/rules/RuleEngineConditionBuilder";
 import { EventSelector } from "@/components/dashboard/rules/RuleEngineEventSelector";
 import { ActionButton } from "@/components/ui/action-button";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
+import { Input } from "@karakeep/shared-react/components/ui/input";
+import { Label } from "@karakeep/shared-react/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@karakeep/shared-react/components/ui/textarea";
 import { Save, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 

@@ -6,7 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@karakeep/shared-react/components/ui/dropdown-menu";
 import { useShowArchived } from "@/components/utils/useShowArchived";
 import { useTranslation } from "@/lib/i18n/client";
 import { Combine, Square, SquareCheck, Trash2 } from "lucide-react";

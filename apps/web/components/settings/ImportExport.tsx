@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@karakeep/shared-react/components/ui/alert";
+import { Button, buttonVariants } from "@karakeep/shared-react/components/ui/button";
 import FilePickerButton from "@/components/ui/file-picker-button";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@karakeep/shared-react/components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { useBookmarkImport } from "@/lib/hooks/useBookmarkImport";
 import { useTranslation } from "@/lib/i18n/client";
@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Download, Loader2, Upload } from "lucide-react";
 
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent } from "@karakeep/shared-react/components/ui/card";
 import { ImportSessionsSection } from "./ImportSessionsSection";
 
 function ImportCard({

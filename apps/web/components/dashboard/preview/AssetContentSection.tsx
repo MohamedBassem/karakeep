@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 import { useTranslation } from "@/lib/i18n/client";
 
 import { BookmarkTypes, ZBookmark } from "@karakeep/shared/types/bookmarks";

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import KarakeepLogo from "@/components/KarakeepIcon";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@karakeep/shared-react/components/ui/button";
 import { BookmarkIcon, RssIcon } from "lucide-react";
 
 export default function PublicListHeader({

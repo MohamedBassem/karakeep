@@ -5,7 +5,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@karakeep/shared-react/components/ui/table";
 import { useTranslation } from "@/lib/i18n/server";
 import { api } from "@/server/api/client";
 import { formatDistanceToNow } from "date-fns";

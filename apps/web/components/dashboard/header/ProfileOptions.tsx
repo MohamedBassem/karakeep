@@ -4,15 +4,15 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { redirect, useRouter } from "next/navigation";
 import { useToggleTheme } from "@/components/theme-provider";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
-import { UserAvatar } from "@/components/ui/user-avatar";
+} from "@karakeep/shared-react/components/ui/dropdown-menu";
+import { Separator } from "@karakeep/shared-react/components/ui/separator";
+import { UserAvatar } from "@karakeep/shared-react/components/ui/user-avatar";
 import { useSession } from "@/lib/auth/client";
 import { useTranslation } from "@/lib/i18n/client";
 import { LogOut, Moon, Paintbrush, Settings, Shield, Sun } from "lucide-react";

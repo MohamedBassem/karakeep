@@ -3,28 +3,28 @@
 import React, { useEffect } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@karakeep/shared-react/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import InfoTooltip from "@/components/ui/info-tooltip";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@karakeep/shared-react/components/ui/dropdown-menu";
+import InfoTooltip from "@karakeep/shared-react/components/ui/info-tooltip";
+import { Input } from "@karakeep/shared-react/components/ui/input";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
-import Spinner from "@/components/ui/spinner";
-import { Toggle } from "@/components/ui/toggle";
+import Spinner from "@karakeep/shared-react/components/ui/spinner";
+import { Toggle } from "@karakeep/shared-react/components/ui/toggle";
 import useBulkTagActionsStore from "@/lib/bulkTagActions";
 import { useTranslation } from "@/lib/i18n/client";
 import { ArrowDownAZ, ChevronDown, Combine, Search, Tag } from "lucide-react";

@@ -1,11 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@karakeep/shared-react/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 import { useTranslation } from "react-i18next";
 
 import type { RuleEngineEvent } from "@karakeep/shared/types/rules";

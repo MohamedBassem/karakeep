@@ -1,8 +1,8 @@
 "use client";
 
 import { forwardRef } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
+import { Card } from "@karakeep/shared-react/components/ui/card";
 import {
   BookOpen,
   Calendar,

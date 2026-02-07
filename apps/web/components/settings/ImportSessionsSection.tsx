@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@karakeep/shared-react/components/ui/card";
 import { useListImportSessions } from "@/lib/hooks/useImportSessions";
 import { useTranslation } from "@/lib/i18n/client";
 import { Package } from "lucide-react";
 
-import { FullPageSpinner } from "../ui/full-page-spinner";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
 import { ImportSessionCard } from "./ImportSessionCard";
 
 export function ImportSessionsSection() {

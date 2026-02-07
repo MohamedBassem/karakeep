@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { RuleEditor } from "@/components/dashboard/rules/RuleEngineRuleEditor";
 import RuleList from "@/components/dashboard/rules/RuleEngineRuleList";
-import { Button } from "@/components/ui/button";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useQuery } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";

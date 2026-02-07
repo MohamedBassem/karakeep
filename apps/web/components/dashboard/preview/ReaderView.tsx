@@ -1,4 +1,4 @@
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
 import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useQuery } from "@tanstack/react-query";

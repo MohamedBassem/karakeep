@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { ButtonWithTooltip } from "@/components/ui/button";
+import { ButtonWithTooltip } from "@karakeep/shared-react/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@karakeep/shared-react/components/ui/dropdown-menu";
 import { useTranslation } from "@/lib/i18n/client";
 import { useInSearchPageStore } from "@/lib/store/useInSearchPageStore";
 import { useSortOrderStore } from "@/lib/store/useSortOrderStore";

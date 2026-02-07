@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
+import { Progress } from "@karakeep/shared-react/components/ui/progress";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 import { useTranslation } from "@/lib/i18n/client";
 import { useQuery } from "@tanstack/react-query";
 import {

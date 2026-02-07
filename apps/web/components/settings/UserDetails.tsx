@@ -1,10 +1,10 @@
-import { Input } from "@/components/ui/input";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import { useTranslation } from "@/lib/i18n/server";
 import { api } from "@/server/api/client";
 import { Mail, User } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Label } from "../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
+import { Label } from "@karakeep/shared-react/components/ui/label";
 
 export default async function UserDetails() {
   // oxlint-disable-next-line rules-of-hooks

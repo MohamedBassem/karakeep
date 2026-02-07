@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
+import { Collapsible, CollapsibleContent } from "@karakeep/shared-react/components/ui/collapsible";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { useBookmarkLists } from "@karakeep/shared-react/hooks/lists";

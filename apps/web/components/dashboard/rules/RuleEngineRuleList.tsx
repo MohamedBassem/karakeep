@@ -1,9 +1,9 @@
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Card, CardContent } from "@karakeep/shared-react/components/ui/card";
 import { toast } from "@/components/ui/sonner";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useClientConfig } from "@/lib/clientConfig";
 import { Edit, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

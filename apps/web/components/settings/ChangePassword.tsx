@@ -10,8 +10,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@karakeep/shared-react/components/ui/form";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,8 +22,8 @@ import { useForm } from "react-hook-form";
 import { useTRPC } from "@karakeep/shared-react/trpc";
 import { zChangePasswordSchema } from "@karakeep/shared/types/users";
 
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
 
 export function ChangePassword() {
   const api = useTRPC();

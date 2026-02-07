@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Button } from "@/components/ui/button";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
 import { toast } from "@/components/ui/sonner";
 import {
   Table,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@karakeep/shared-react/components/ui/table";
 import { ASSET_TYPE_TO_ICON } from "@/lib/attachments";
 import { useTranslation } from "@/lib/i18n/client";
 import { formatBytes } from "@/lib/utils";

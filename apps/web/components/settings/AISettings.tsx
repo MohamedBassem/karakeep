@@ -1,14 +1,14 @@
 "use client";
 
 import { ActionButton } from "@/components/ui/action-button";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@karakeep/shared-react/components/ui/card";
 import {
   Field,
   FieldContent,
@@ -17,17 +17,17 @@ import {
   FieldGroup,
   FieldLabel,
   FieldTitle,
-} from "@/components/ui/field";
+} from "@karakeep/shared-react/components/ui/field";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@karakeep/shared-react/components/ui/form";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
+import { Input } from "@karakeep/shared-react/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@karakeep/shared-react/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -35,9 +35,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 import { toast } from "@/components/ui/sonner";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";
 import { useUserSettings } from "@/lib/userSettings";

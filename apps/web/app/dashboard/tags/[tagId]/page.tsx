@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Bookmarks from "@/components/dashboard/bookmarks/Bookmarks";
 import EditableTagName from "@/components/dashboard/tags/EditableTagName";
 import { TagOptions } from "@/components/dashboard/tags/TagOptions";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { api } from "@/server/api/client";
 import { TRPCError } from "@trpc/server";
 import { MoreHorizontal } from "lucide-react";

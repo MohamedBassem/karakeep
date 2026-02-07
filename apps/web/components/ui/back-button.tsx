@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
-import type { ButtonProps } from "./button";
-import { Button } from "./button";
+import type { ButtonProps } from "@karakeep/shared-react/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 
 export function BackButton({ ...props }: ButtonProps) {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { useTranslation } from "@/lib/i18n/client";
 import {
   $convertFromMarkdownString,
@@ -30,9 +30,9 @@ import {
 } from "lucide-react";
 
 import { ActionButton } from "../../action-button";
-import InfoTooltip from "../../info-tooltip";
-import { Label } from "../../label";
-import { Switch } from "../../switch";
+import InfoTooltip from "@karakeep/shared-react/components/ui/info-tooltip";
+import { Label } from "@karakeep/shared-react/components/ui/label";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 
 const LowPriority = 1;
 

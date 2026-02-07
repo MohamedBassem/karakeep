@@ -1,7 +1,7 @@
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@karakeep/shared-react/components/ui/alert";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 

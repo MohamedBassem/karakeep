@@ -10,11 +10,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { Input } from "@/components/ui/input";
+} from "@karakeep/shared-react/components/ui/form";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +41,7 @@ import {
 } from "@karakeep/shared/types/feeds";
 
 import ActionConfirmingDialog from "../ui/action-confirming-dialog";
-import { Button, buttonVariants } from "../ui/button";
+import { Button, buttonVariants } from "@karakeep/shared-react/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -50,7 +50,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
+} from "@karakeep/shared-react/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -58,8 +58,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+} from "@karakeep/shared-react/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@karakeep/shared-react/components/ui/tooltip";
 
 export function FeedsEditorDialog() {
   const api = useTRPC();

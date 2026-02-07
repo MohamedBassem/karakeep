@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@karakeep/shared-react/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Maximize2 } from "lucide-react";
 

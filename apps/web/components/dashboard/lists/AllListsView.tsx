@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTriggerChevron,
-} from "@/components/ui/collapsible";
+} from "@karakeep/shared-react/components/ui/collapsible";
 import { useTranslation } from "@/lib/i18n/client";
 import { MoreHorizontal } from "lucide-react";
 

@@ -2,8 +2,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { UserAvatar } from "@/components/ui/user-avatar";
+} from "@karakeep/shared-react/components/ui/tooltip";
+import { UserAvatar } from "@karakeep/shared-react/components/ui/user-avatar";
 
 interface BookmarkOwnerIconProps {
   ownerName: string;

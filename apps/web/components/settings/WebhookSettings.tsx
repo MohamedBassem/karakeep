@@ -9,9 +9,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { Input } from "@/components/ui/input";
+} from "@karakeep/shared-react/components/ui/form";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +36,7 @@ import {
 } from "@karakeep/shared/types/webhooks";
 
 import ActionConfirmingDialog from "../ui/action-confirming-dialog";
-import { Button } from "../ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -45,7 +45,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
+} from "@karakeep/shared-react/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -53,7 +53,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
+} from "@karakeep/shared-react/components/ui/table";
 import { WebhookEventSelector } from "./WebhookEventSelector";
 
 export function WebhooksEditorDialog() {

@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { buttonVariants } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription, AlertTitle } from "@karakeep/shared-react/components/ui/alert";
+import { buttonVariants } from "@karakeep/shared-react/components/ui/button";
+import { ScrollArea } from "@karakeep/shared-react/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -10,12 +10,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@karakeep/shared-react/components/ui/tooltip";
 import { useSession } from "@/lib/auth/client";
 import { Trans, useTranslation } from "@/lib/i18n/client";
 import { useReaderSettings } from "@/lib/readerSettings";

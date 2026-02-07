@@ -21,29 +21,29 @@ import {
   READER_SETTING_CONSTRAINTS,
 } from "@karakeep/shared/types/readers";
 
-import { Alert, AlertDescription } from "../ui/alert";
-import { Button } from "../ui/button";
+import { Alert, AlertDescription } from "@karakeep/shared-react/components/ui/alert";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
+} from "@karakeep/shared-react/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "../ui/collapsible";
-import { Label } from "../ui/label";
+} from "@karakeep/shared-react/components/ui/collapsible";
+import { Label } from "@karakeep/shared-react/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Slider } from "../ui/slider";
+} from "@karakeep/shared-react/components/ui/select";
+import { Slider } from "@karakeep/shared-react/components/ui/slider";
 
 export default function ReaderSettings() {
   const { t } = useTranslation();

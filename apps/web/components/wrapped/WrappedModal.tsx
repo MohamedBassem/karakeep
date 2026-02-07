@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogOverlay,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@karakeep/shared-react/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, X } from "lucide-react";

@@ -6,9 +6,9 @@ import BookmarkFormattedCreatedAt from "@/components/dashboard/bookmarks/Bookmar
 import { BookmarkMarkdownComponent } from "@/components/dashboard/bookmarks/BookmarkMarkdownComponent";
 import FooterLinkURL from "@/components/dashboard/bookmarks/FooterLinkURL";
 import { ActionButton } from "@/components/ui/action-button";
-import { badgeVariants } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { badgeVariants } from "@karakeep/shared-react/components/ui/badge";
+import { Card, CardContent } from "@karakeep/shared-react/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "@karakeep/shared-react/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import tailwindConfig from "@/tailwind.config";
 import { useInfiniteQuery } from "@tanstack/react-query";

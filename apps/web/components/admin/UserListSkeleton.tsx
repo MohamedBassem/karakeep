@@ -1,5 +1,5 @@
 import { AdminCard } from "@/components/admin/AdminCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@karakeep/shared-react/components/ui/table";
 
 const headerWidths = ["w-24", "w-32", "w-28", "w-28", "w-20", "w-16", "w-24"];
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ActionButton } from "@/components/ui/action-button";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Calendar } from "@karakeep/shared-react/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@karakeep/shared-react/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -18,15 +18,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@karakeep/shared-react/components/ui/form";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@karakeep/shared-react/components/ui/popover";
 import { toast } from "@/components/ui/sonner";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@karakeep/shared-react/components/ui/textarea";
 import { useDialogFormReset } from "@/lib/hooks/useDialogFormReset";
 import { useTranslation } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";

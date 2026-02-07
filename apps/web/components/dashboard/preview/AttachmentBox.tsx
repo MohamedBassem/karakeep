@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@karakeep/shared-react/components/ui/collapsible";
 import FilePickerButton from "@/components/ui/file-picker-button";
 import { toast } from "@/components/ui/sonner";
 import { ASSET_TYPE_TO_ICON } from "@/lib/attachments";

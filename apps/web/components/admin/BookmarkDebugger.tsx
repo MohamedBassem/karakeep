@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminCard } from "@/components/admin/AdminCard";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import InfoTooltip from "@/components/ui/info-tooltip";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import InfoTooltip from "@karakeep/shared-react/components/ui/info-tooltip";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import { useTranslation } from "@/lib/i18n/client";
 import { formatBytes } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";

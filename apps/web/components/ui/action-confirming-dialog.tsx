@@ -7,10 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@karakeep/shared-react/components/ui/dialog";
 import { useTranslation } from "@/lib/i18n/client";
 
-import { Button } from "./button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 
 export default function ActionConfirmingDialog({
   title,

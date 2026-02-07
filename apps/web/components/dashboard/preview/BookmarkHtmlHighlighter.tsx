@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Popover, PopoverContent } from "@karakeep/shared-react/components/ui/popover";
+import { Textarea } from "@karakeep/shared-react/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PopoverAnchor } from "@radix-ui/react-popover";
 import { Check, Trash2 } from "lucide-react";

@@ -1,7 +1,7 @@
 "use client";
 
 import { RefObject, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { Download, Loader2, Share2 } from "lucide-react";
 import { domToPng } from "modern-screenshot";
 

@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import ErrorFallback from "@/components/dashboard/ErrorFallback";
 import Header from "@/components/dashboard/header/Header";
 import DemoModeBanner from "@/components/DemoModeBanner";
-import { Separator } from "@/components/ui/separator";
-import LoadingSpinner from "@/components/ui/spinner";
+import { Separator } from "@karakeep/shared-react/components/ui/separator";
+import LoadingSpinner from "@karakeep/shared-react/components/ui/spinner";
 import ValidAccountCheck from "@/components/utils/ValidAccountCheck";
 import { ErrorBoundary } from "react-error-boundary";
 

@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Card, CardContent, CardHeader } from "@karakeep/shared-react/components/ui/card";
+import { Progress } from "@karakeep/shared-react/components/ui/progress";
 import {
   useDeleteImportSession,
   useImportSessionStats,

@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/ui/action-button";
-import { ButtonWithTooltip } from "@/components/ui/button";
+import { ButtonWithTooltip } from "@karakeep/shared-react/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import {
   Table,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@karakeep/shared-react/components/ui/table";
 import {
   useMutation,
   useQueryClient,

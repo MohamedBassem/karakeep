@@ -7,17 +7,17 @@ import {
   useState,
   useTransition,
 } from "react";
-import { ButtonWithTooltip } from "@/components/ui/button";
+import { ButtonWithTooltip } from "@karakeep/shared-react/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+} from "@karakeep/shared-react/components/ui/dropdown-menu";
+import { Label } from "@karakeep/shared-react/components/ui/label";
+import { Slider } from "@karakeep/shared-react/components/ui/slider";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 import {
   useBookmarkDisplaySettings,

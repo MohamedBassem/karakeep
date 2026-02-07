@@ -5,8 +5,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import LoadingSpinner from "@/components/ui/spinner";
+} from "@karakeep/shared-react/components/ui/select";
+import LoadingSpinner from "@karakeep/shared-react/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 

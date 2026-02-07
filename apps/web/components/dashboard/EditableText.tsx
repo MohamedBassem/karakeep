@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { ActionButtonWithTooltip } from "@/components/ui/action-button";
-import { ButtonWithTooltip } from "@/components/ui/button";
+import { ButtonWithTooltip } from "@karakeep/shared-react/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipPortal,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@karakeep/shared-react/components/ui/tooltip";
 import { useTranslation } from "@/lib/i18n/client";
 import { Check, Pencil, X } from "lucide-react";
 

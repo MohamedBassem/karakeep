@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -6,12 +6,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@karakeep/shared-react/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@karakeep/shared-react/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import {

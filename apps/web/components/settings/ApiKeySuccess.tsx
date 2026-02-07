@@ -1,5 +1,5 @@
 import CopyBtn from "@/components/ui/copy-button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 
 export default function ApiKeySuccess({
   apiKey,

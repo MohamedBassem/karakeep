@@ -3,16 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookmarkTagsEditor } from "@/components/dashboard/bookmarks/BookmarkTagsEditor";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
+import { Separator } from "@karakeep/shared-react/components/ui/separator";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@karakeep/shared-react/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipPortal,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@karakeep/shared-react/components/ui/tooltip";
 import { useSession } from "@/lib/auth/client";
 import useRelativeTime from "@/lib/hooks/relative-time";
 import { useTranslation } from "@/lib/i18n/client";

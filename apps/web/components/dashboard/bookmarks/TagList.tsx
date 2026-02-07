@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { badgeVariants } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { badgeVariants } from "@karakeep/shared-react/components/ui/badge";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 import { useSession } from "@/lib/auth/client";
 import { cn } from "@/lib/utils";
 

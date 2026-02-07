@@ -19,16 +19,16 @@ import {
   zUserSettingsSchema,
 } from "@karakeep/shared/types/users";
 
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Form, FormField } from "../ui/form";
-import { Label } from "../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
+import { Form, FormField } from "@karakeep/shared-react/components/ui/form";
+import { Label } from "@karakeep/shared-react/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 
 const LanguageSelect = () => {
   const lang = useInterfaceLang();

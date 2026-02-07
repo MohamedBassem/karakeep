@@ -1,7 +1,7 @@
 // TODO: Refactor the bookmark layout grid to be generic and allow to pass the bookmark component generically.
 // This removes the need for handling the layout in this component.
 import { useMemo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 import {
   bookmarkLayoutSwitch,
   useBookmarkLayout,

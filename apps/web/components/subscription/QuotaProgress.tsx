@@ -12,8 +12,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Progress } from "../ui/progress";
+} from "@karakeep/shared-react/components/ui/card";
+import { Progress } from "@karakeep/shared-react/components/ui/progress";
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";

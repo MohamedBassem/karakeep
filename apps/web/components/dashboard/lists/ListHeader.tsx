@@ -2,13 +2,13 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { UserAvatar } from "@/components/ui/user-avatar";
+} from "@karakeep/shared-react/components/ui/tooltip";
+import { UserAvatar } from "@karakeep/shared-react/components/ui/user-avatar";
 import { useTranslation } from "@/lib/i18n/client";
 import { useQuery } from "@tanstack/react-query";
 import { MoreHorizontal, SearchIcon } from "lucide-react";

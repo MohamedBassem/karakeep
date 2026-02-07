@@ -11,8 +11,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@karakeep/shared-react/components/ui/form";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Eye, EyeOff, Trash2 } from "lucide-react";
@@ -24,8 +24,8 @@ import {
   useWhoAmI,
 } from "@karakeep/shared-react/hooks/users";
 
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@karakeep/shared-react/components/ui/card";
 
 const createDeleteAccountSchema = (isLocalUser: boolean) =>
   z.object({

@@ -1,9 +1,9 @@
 "use client";
 
 import { CopyBtnV2 } from "@/components/ui/copy-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Input } from "@karakeep/shared-react/components/ui/input";
+import { Label } from "@karakeep/shared-react/components/ui/label";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "react-i18next";
 

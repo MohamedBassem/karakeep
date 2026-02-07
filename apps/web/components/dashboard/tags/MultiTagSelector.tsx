@@ -1,5 +1,5 @@
 import React from "react";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@karakeep/shared-react/components/ui/separator";
 import useBulkTagActionsStore from "@/lib/bulkTagActions";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";

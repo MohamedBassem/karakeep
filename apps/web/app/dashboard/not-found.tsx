@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { ArrowLeft, FileQuestion, Home } from "lucide-react";
 
 export default function NotFound() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { signIn } from "@/lib/auth/client";
 
 export default function SignInProviderButton({

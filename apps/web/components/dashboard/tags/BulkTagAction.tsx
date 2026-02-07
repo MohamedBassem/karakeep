@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { ButtonWithTooltip } from "@/components/ui/button";
+import { ButtonWithTooltip } from "@karakeep/shared-react/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { Toggle } from "@/components/ui/toggle";
+import { Toggle } from "@karakeep/shared-react/components/ui/toggle";
 import useBulkTagActionsStore from "@/lib/bulkTagActions";
 import { useTranslation } from "@/lib/i18n/client";
 import { CheckCheck, Pencil, Trash2, X } from "lucide-react";

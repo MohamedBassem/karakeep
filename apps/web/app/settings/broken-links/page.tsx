@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/ui/action-button";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
 import { toast } from "@/components/ui/sonner";
 import {
   Table,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@karakeep/shared-react/components/ui/table";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

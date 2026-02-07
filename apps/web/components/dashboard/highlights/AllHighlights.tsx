@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ActionButton } from "@/components/ui/action-button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import useRelativeTime from "@/lib/hooks/relative-time";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useInfiniteQuery } from "@tanstack/react-query";

@@ -1,5 +1,5 @@
-import InfoTooltip from "@/components/ui/info-tooltip";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import InfoTooltip from "@karakeep/shared-react/components/ui/info-tooltip";
+import { Table, TableBody, TableCell, TableRow } from "@karakeep/shared-react/components/ui/table";
 import { useTranslation } from "@/lib/i18n/client";
 import { match } from "@/lib/utils";
 

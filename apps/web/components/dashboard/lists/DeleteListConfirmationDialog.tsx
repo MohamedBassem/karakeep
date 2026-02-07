@@ -2,9 +2,9 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Label } from "@/components/ui/label";
+import { Label } from "@karakeep/shared-react/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 
 import type { ZBookmarkList } from "@karakeep/shared/types/lists";

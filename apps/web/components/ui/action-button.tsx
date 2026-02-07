@@ -1,15 +1,15 @@
 import React from "react";
 import { useClientConfig } from "@/lib/clientConfig";
 
-import type { ButtonProps } from "./button";
-import { Button } from "./button";
-import LoadingSpinner from "./spinner";
+import type { ButtonProps } from "@karakeep/shared-react/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
+import LoadingSpinner from "@karakeep/shared-react/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipPortal,
   TooltipTrigger,
-} from "./tooltip";
+} from "@karakeep/shared-react/components/ui/tooltip";
 
 interface ActionButtonProps extends ButtonProps {
   loading: boolean;

@@ -2,15 +2,15 @@
 
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@karakeep/shared-react/components/ui/card";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
@@ -32,7 +32,7 @@ import {
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
-import { Button } from "../ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { AdminCard } from "./AdminCard";
 
 interface JobStats {

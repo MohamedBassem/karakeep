@@ -10,7 +10,7 @@ import DropZone from "react-dropzone";
 import { useCreateBookmarkWithPostHook } from "@karakeep/shared-react/hooks/bookmarks";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
 
-import LoadingSpinner from "../ui/spinner";
+import LoadingSpinner from "@karakeep/shared-react/components/ui/spinner";
 import BookmarkAlreadyExistsToast from "../utils/BookmarkAlreadyExistsToast";
 
 export function useUploadAsset() {

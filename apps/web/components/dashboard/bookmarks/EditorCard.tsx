@@ -1,12 +1,12 @@
 import type { SubmitErrorHandler, SubmitHandler } from "react-hook-form";
 import React, { useImperativeHandle, useRef } from "react";
 import { ActionButton } from "@/components/ui/action-button";
-import { Form, FormControl, FormItem } from "@/components/ui/form";
-import { Kbd } from "@/components/ui/kbd";
-import MultipleChoiceDialog from "@/components/ui/multiple-choice-dialog";
-import { Separator } from "@/components/ui/separator";
+import { Form, FormControl, FormItem } from "@karakeep/shared-react/components/ui/form";
+import { Kbd } from "@karakeep/shared-react/components/ui/kbd";
+import MultipleChoiceDialog from "@karakeep/shared-react/components/ui/multiple-choice-dialog";
+import { Separator } from "@karakeep/shared-react/components/ui/separator";
 import { toast } from "@/components/ui/sonner";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@karakeep/shared-react/components/ui/textarea";
 import BookmarkAlreadyExistsToast from "@/components/utils/BookmarkAlreadyExistsToast";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";

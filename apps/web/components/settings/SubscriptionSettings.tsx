@@ -8,17 +8,17 @@ import { CreditCard, Loader2 } from "lucide-react";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
-import { Alert, AlertDescription } from "../ui/alert";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+import { Alert, AlertDescription } from "@karakeep/shared-react/components/ui/alert";
+import { Badge } from "@karakeep/shared-react/components/ui/badge";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
+} from "@karakeep/shared-react/components/ui/card";
+import { Skeleton } from "@karakeep/shared-react/components/ui/skeleton";
 
 export default function SubscriptionSettings() {
   const api = useTRPC();

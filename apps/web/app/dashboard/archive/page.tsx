@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Bookmarks from "@/components/dashboard/bookmarks/Bookmarks";
-import InfoTooltip from "@/components/ui/info-tooltip";
+import InfoTooltip from "@karakeep/shared-react/components/ui/info-tooltip";
 import { useTranslation } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {

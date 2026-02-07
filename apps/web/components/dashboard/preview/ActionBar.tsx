@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
-import { Button } from "@/components/ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@karakeep/shared-react/components/ui/tooltip";
 import { useTranslation } from "@/lib/i18n/client";
 import { Pencil, Trash2 } from "lucide-react";
 

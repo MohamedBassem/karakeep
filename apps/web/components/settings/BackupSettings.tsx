@@ -11,18 +11,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { Input } from "@/components/ui/input";
+} from "@karakeep/shared-react/components/ui/form";
+import { FullPageSpinner } from "@karakeep/shared-react/components/ui/full-page-spinner";
+import { Input } from "@karakeep/shared-react/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@karakeep/shared-react/components/ui/select";
 import { toast } from "@/components/ui/sonner";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@karakeep/shared-react/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 import { useUserSettings } from "@/lib/userSettings";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,7 +45,7 @@ import { zUpdateBackupSettingsSchema } from "@karakeep/shared/types/users";
 import { getAssetUrl } from "@karakeep/shared/utils/assetUtils";
 
 import ActionConfirmingDialog from "../ui/action-confirming-dialog";
-import { Button } from "../ui/button";
+import { Button } from "@karakeep/shared-react/components/ui/button";
 import {
   Table,
   TableBody,
@@ -53,8 +53,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+} from "@karakeep/shared-react/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@karakeep/shared-react/components/ui/tooltip";
 
 function BackupConfigurationForm() {
   const { t } = useTranslation();
