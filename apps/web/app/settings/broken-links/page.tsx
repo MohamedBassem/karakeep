@@ -2,7 +2,6 @@
 
 import { ActionButton } from "@/components/ui/action-button";
 import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { toast } from "@/components/ui/sonner";
 import {
   Table,
   TableBody,
@@ -14,6 +13,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import {
   useDeleteBookmark,
@@ -32,34 +32,24 @@ export default function BrokenLinksPage() {
 
   const { mutate: deleteBookmark, isPending: isDeleting } = useDeleteBookmark({
     onSuccess: () => {
-      toast({
-        description: t("toasts.bookmarks.deleted"),
-      });
+      toast.success(t("toasts.bookmarks.deleted"));
       queryClient.invalidateQueries(api.bookmarks.getBrokenLinks.pathFilter());
     },
     onError: () => {
-      toast({
-        description: t("common.something_went_wrong"),
-        variant: "destructive",
-      });
+      toast.error(t("common.something_went_wrong"));
     },
   });
 
   const { mutate: recrawlBookmark, isPending: isRecrawling } =
     useRecrawlBookmark({
       onSuccess: () => {
-        toast({
-          description: t("toasts.bookmarks.refetch"),
-        });
+        toast.success(t("toasts.bookmarks.refetch"));
         queryClient.invalidateQueries(
           api.bookmarks.getBrokenLinks.pathFilter(),
         );
       },
       onError: () => {
-        toast({
-          description: t("common.something_went_wrong"),
-          variant: "destructive",
-        });
+        toast.error(t("common.something_went_wrong"));
       },
     });
 

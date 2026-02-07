@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import type {
   RuleEngineAction,
@@ -33,61 +33,39 @@ export function RuleEditor({ rule, onCancel }: RuleEditorProps) {
   const { t } = useTranslation();
   const { mutate: createRule, isPending: isCreating } = useCreateRule({
     onSuccess: () => {
-      toast({
-        description: t("settings.rules.rule_has_been_created"),
-      });
+      toast.success(t("settings.rules.rule_has_been_created"));
       onCancel();
     },
     onError: (e) => {
       if (e.data?.code == "BAD_REQUEST") {
         if (e.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(e.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(e.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: t("common.something_went_wrong"),
-        });
+        toast.error(t("common.something_went_wrong"));
       }
     },
   });
   const { mutate: updateRule, isPending: isUpdating } = useUpdateRule({
     onSuccess: () => {
-      toast({
-        description: t("settings.rules.rule_has_been_updated"),
-      });
+      toast.success(t("settings.rules.rule_has_been_updated"));
       onCancel();
     },
     onError: (e) => {
       if (e.data?.code == "BAD_REQUEST") {
         if (e.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(e.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(e.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: t("common.something_went_wrong"),
-        });
+        toast.error(t("common.something_went_wrong"));
       }
     },
   });

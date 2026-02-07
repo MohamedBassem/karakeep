@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { Check, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "./button";
 
@@ -55,11 +55,9 @@ export function CopyBtnV2({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({
-        description:
-          "Failed to copy link. Browsers only support copying to the clipboard from https pages.",
-        variant: "destructive",
-      });
+      toast.error(
+        "Failed to copy link. Browsers only support copying to the clipboard from https pages.",
+      );
     }
   };
 

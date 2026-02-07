@@ -8,10 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Mail, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -36,9 +36,7 @@ function InvitationRow({ invitation }: { invitation: Invitation }) {
   const acceptInvitation = useMutation(
     api.lists.acceptInvitation.mutationOptions({
       onSuccess: async () => {
-        toast({
-          description: t("lists.invitations.accepted"),
-        });
+        toast.success(t("lists.invitations.accepted"));
         await Promise.all([
           queryClient.invalidateQueries(
             api.lists.getPendingInvitations.pathFilter(),
@@ -47,10 +45,7 @@ function InvitationRow({ invitation }: { invitation: Invitation }) {
         ]);
       },
       onError: (error) => {
-        toast({
-          variant: "destructive",
-          description: error.message || t("lists.invitations.failed_to_accept"),
-        });
+        toast.error(error.message || t("lists.invitations.failed_to_accept"));
       },
     }),
   );
@@ -58,19 +53,13 @@ function InvitationRow({ invitation }: { invitation: Invitation }) {
   const declineInvitation = useMutation(
     api.lists.declineInvitation.mutationOptions({
       onSuccess: async () => {
-        toast({
-          description: t("lists.invitations.declined"),
-        });
+        toast.success(t("lists.invitations.declined"));
         await queryClient.invalidateQueries(
           api.lists.getPendingInvitations.pathFilter(),
         );
       },
       onError: (error) => {
-        toast({
-          variant: "destructive",
-          description:
-            error.message || t("lists.invitations.failed_to_decline"),
-        });
+        toast.error(error.message || t("lists.invitations.failed_to_decline"));
       },
     }),
   );

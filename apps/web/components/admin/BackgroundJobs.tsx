@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -29,6 +28,7 @@ import {
   Video,
   Webhook,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -262,15 +262,10 @@ function useJobActions() {
     useMutation(
       api.admin.recrawlLinks.mutationOptions({
         onSuccess: () => {
-          toast({
-            description: "Recrawl enqueued",
-          });
+          toast.success("Recrawl enqueued");
         },
         onError: (e) => {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         },
       }),
     );
@@ -279,15 +274,10 @@ function useJobActions() {
     useMutation(
       api.admin.reindexAllBookmarks.mutationOptions({
         onSuccess: () => {
-          toast({
-            description: "Reindex enqueued",
-          });
+          toast.success("Reindex enqueued");
         },
         onError: (e) => {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         },
       }),
     );
@@ -298,15 +288,10 @@ function useJobActions() {
   } = useMutation(
     api.admin.reprocessAssetsFixMode.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Reprocessing enqueued",
-        });
+        toast.success("Reprocessing enqueued");
       },
       onError: (e) => {
-        toast({
-          variant: "destructive",
-          description: e.message,
-        });
+        toast.error(e.message);
       },
     }),
   );
@@ -317,15 +302,10 @@ function useJobActions() {
   } = useMutation(
     api.admin.reRunInferenceOnAllBookmarks.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Inference jobs enqueued",
-        });
+        toast.success("Inference jobs enqueued");
       },
       onError: (e) => {
-        toast({
-          variant: "destructive",
-          description: e.message,
-        });
+        toast.error(e.message);
       },
     }),
   );
@@ -336,15 +316,10 @@ function useJobActions() {
   } = useMutation(
     api.admin.runAdminMaintenanceTask.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Admin maintenance request has been enqueued!",
-        });
+        toast.success("Admin maintenance request has been enqueued!");
       },
       onError: (e) => {
-        toast({
-          variant: "destructive",
-          description: e.message,
-        });
+        toast.error(e.message);
       },
     }),
   );

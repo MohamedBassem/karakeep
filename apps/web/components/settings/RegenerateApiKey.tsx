@@ -14,10 +14,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useMutation } from "@tanstack/react-query";
 import { RefreshCcw } from "lucide-react";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -44,10 +44,7 @@ export default function RegenerateApiKey({
         router.refresh();
       },
       onError: () => {
-        toast({
-          description: t("common.something_went_wrong"),
-          variant: "destructive",
-        });
+        toast.error(t("common.something_went_wrong"));
         setDialogOpen(false);
       },
     }),

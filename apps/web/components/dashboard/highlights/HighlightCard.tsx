@@ -1,7 +1,7 @@
 import { ActionButton } from "@/components/ui/action-button";
-import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useDeleteHighlight } from "@karakeep/shared-react/hooks/highlights";
 import { ZHighlight } from "@karakeep/shared/types/highlights";
@@ -22,15 +22,10 @@ export default function HighlightCard({
   const { mutate: deleteHighlight, isPending: isDeleting } = useDeleteHighlight(
     {
       onSuccess: () => {
-        toast({
-          description: "Highlight has been deleted!",
-        });
+        toast.success("Highlight has been deleted!");
       },
       onError: () => {
-        toast({
-          description: "Something went wrong",
-          variant: "destructive",
-        });
+        toast.error("Something went wrong");
       },
     },
   );

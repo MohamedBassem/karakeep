@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 import { useUserSettings } from "@/lib/userSettings";
@@ -36,6 +35,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useUpdateUserSettings } from "@karakeep/shared-react/hooks/users";
@@ -63,15 +63,10 @@ function BackupConfigurationForm() {
   const { mutate: updateSettings, isPending: isUpdating } =
     useUpdateUserSettings({
       onSuccess: () => {
-        toast({
-          description: t("settings.info.user_settings.user_settings_updated"),
-        });
+        toast.success(t("settings.info.user_settings.user_settings_updated"));
       },
       onError: () => {
-        toast({
-          description: t("common.something_went_wrong"),
-          variant: "destructive",
-        });
+        toast.error(t("common.something_went_wrong"));
       },
     });
 
@@ -215,16 +210,11 @@ function BackupRow({ backup }: { backup: z.infer<typeof zBackupSchema> }) {
   const { mutate: deleteBackup, isPending: isDeleting } = useMutation(
     api.backups.delete.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: t("settings.backups.toasts.backup_deleted"),
-        });
+        toast.success(t("settings.backups.toasts.backup_deleted"));
         queryClient.invalidateQueries(api.backups.list.pathFilter());
       },
       onError: (error) => {
-        toast({
-          description: `Error: ${error.message}`,
-          variant: "destructive",
-        });
+        toast.error(`Error: ${error.message}`);
       },
     }),
   );
@@ -351,16 +341,11 @@ function BackupsList() {
   const { mutate: triggerBackup, isPending: isTriggering } = useMutation(
     api.backups.triggerBackup.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: t("settings.backups.toasts.backup_queued"),
-        });
+        toast.success(t("settings.backups.toasts.backup_queued"));
         queryClient.invalidateQueries(api.backups.list.pathFilter());
       },
       onError: (error) => {
-        toast({
-          description: `Error: ${error.message}`,
-          variant: "destructive",
-        });
+        toast.error(`Error: ${error.message}`);
       },
     }),
   );

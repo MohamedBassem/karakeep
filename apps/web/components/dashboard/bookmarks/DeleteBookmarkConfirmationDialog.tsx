@@ -1,8 +1,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
+import { toast } from "sonner";
 
 import { useDeleteBookmark } from "@karakeep/shared-react/hooks//bookmarks";
 import { ZBookmark } from "@karakeep/shared/types/bookmarks";
@@ -24,19 +24,14 @@ export default function DeleteBookmarkConfirmationDialog({
 
   const { mutate: deleteBoomark, isPending } = useDeleteBookmark({
     onSuccess: () => {
-      toast({
-        description: t("toasts.bookmarks.deleted"),
-      });
+      toast.success(t("toasts.bookmarks.deleted"));
       setOpen(false);
       if (currentPath.includes(bookmark.id)) {
         router.push("/dashboard/bookmarks");
       }
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        description: `Something went wrong`,
-      });
+      toast.error(`Something went wrong`);
     },
   });
 

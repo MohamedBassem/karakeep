@@ -26,11 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -59,24 +59,16 @@ export default function AddUserDialog({
   const { mutate, isPending } = useMutation(
     api.admin.createUser.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "User created successfully",
-        });
+        toast.success("User created successfully");
         onOpenChange(false);
         queryClient.invalidateQueries(api.users.list.pathFilter());
         queryClient.invalidateQueries(api.admin.userStats.pathFilter());
       },
       onError: (error) => {
         if (error instanceof TRPCClientError) {
-          toast({
-            variant: "destructive",
-            description: error.message,
-          });
+          toast.error(error.message);
         } else {
-          toast({
-            variant: "destructive",
-            description: "Failed to create user",
-          });
+          toast.error("Failed to create user");
         }
       },
     }),

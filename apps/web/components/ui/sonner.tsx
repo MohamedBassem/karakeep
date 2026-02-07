@@ -8,7 +8,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Toaster as Sonner, toast } from "sonner";
+import { Toaster as Sonner } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
@@ -42,30 +42,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
-/**
- * Compat layer for migrating from old toaster to sonner
- * @deprecated Use sonner's natie toast instead
- */
-const legacyToast = ({
-  title,
-  description,
-  variant,
-}: {
-  title?: React.ReactNode;
-  description?: React.ReactNode;
-  variant?: "destructive" | "default";
-}) => {
-  let toastTitle = title;
-  let toastDescription: React.ReactNode | undefined = description;
-  if (!title) {
-    toastTitle = description;
-    toastDescription = undefined;
-  }
-  if (variant === "destructive") {
-    toast.error(toastTitle, { description: toastDescription });
-  } else {
-    toast(toastTitle, { description: toastDescription });
-  }
-};
-
-export { Toaster, legacyToast as toast };
+export { Toaster };

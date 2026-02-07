@@ -2,11 +2,11 @@ import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { useClientConfig } from "@/lib/clientConfig";
 import { Edit, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import type { RuleEngineRule } from "@karakeep/shared/types/rules";
 import {
@@ -27,30 +27,20 @@ export default function RuleList({
   const { demoMode } = useClientConfig();
   const { mutate: updateRule, isPending: isUpdating } = useUpdateRule({
     onSuccess: () => {
-      toast({
-        description: t("settings.rules.rule_has_been_updated"),
-      });
+      toast.success(t("settings.rules.rule_has_been_updated"));
     },
     onError: (e) => {
-      toast({
-        description: e.message,
-        variant: "destructive",
-      });
+      toast.error(e.message);
     },
   });
 
   const { mutate: deleteRule, isPending: isDeleting } = useDeleteRule({
     onSuccess: (_ret, req) => {
-      toast({
-        description: t("settings.rules.rule_has_been_deleted"),
-      });
+      toast.success(t("settings.rules.rule_has_been_deleted"));
       onDeleteRule?.(req.id);
     },
     onError: (e) => {
-      toast({
-        description: e.message,
-        variant: "destructive",
-      });
+      toast.error(e.message);
     },
   });
 

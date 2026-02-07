@@ -24,12 +24,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -50,10 +50,7 @@ function AddApiKeyForm({ onSuccess }: { onSuccess: (key: string) => void }) {
         router.refresh();
       },
       onError: () => {
-        toast({
-          description: t("common.something_went_wrong"),
-          variant: "destructive",
-        });
+        toast.error(t("common.something_went_wrong"));
       },
     }),
   );
@@ -67,12 +64,11 @@ function AddApiKeyForm({ onSuccess }: { onSuccess: (key: string) => void }) {
   }
 
   const onError: SubmitErrorHandler<z.infer<typeof formSchema>> = (errors) => {
-    toast({
-      description: Object.values(errors)
+    toast.error(
+      Object.values(errors)
         .map((v) => v.message)
         .join("\n"),
-      variant: "destructive",
-    });
+    );
   };
 
   return (

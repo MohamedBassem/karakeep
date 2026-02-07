@@ -1,6 +1,6 @@
 import MarkdownEditor from "@/components/ui/markdown/markdown-editor";
 import { MarkdownReadonly } from "@/components/ui/markdown/markdown-readonly";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 import { useUpdateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
 
@@ -18,12 +18,10 @@ export function BookmarkMarkdownComponent({
 }) {
   const { mutate: updateBookmarkMutator, isPending } = useUpdateBookmark({
     onSuccess: () => {
-      toast({
-        description: "Note updated!",
-      });
+      toast.success("Note updated!");
     },
     onError: () => {
-      toast({ description: "Something went wrong", variant: "destructive" });
+      toast.error("Something went wrong");
     },
   });
 

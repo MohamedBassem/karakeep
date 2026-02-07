@@ -1,6 +1,6 @@
-import { toast } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useClientConfig } from "@/lib/clientConfig";
+import { toast } from "sonner";
 
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import { useUpdateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
@@ -16,15 +16,10 @@ export function NoteEditor({
 
   const updateBookmarkMutator = useUpdateBookmark({
     onSuccess: () => {
-      toast({
-        description: "The bookmark has been updated!",
-      });
+      toast.success("The bookmark has been updated!");
     },
     onError: () => {
-      toast({
-        description: "Something went wrong while saving the note",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong while saving the note");
     },
   });
 

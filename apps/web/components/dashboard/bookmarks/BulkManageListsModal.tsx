@@ -15,9 +15,9 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useAddBookmarkToList } from "@karakeep/shared-react/hooks/lists";
@@ -53,15 +53,9 @@ export default function BulkManageListsModal({
       },
       onError: (e) => {
         if (e.data?.code == "BAD_REQUEST") {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         } else {
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-          });
+          toast.error("Something went wrong");
         }
       },
     });
@@ -82,9 +76,7 @@ export default function BulkManageListsModal({
 
     const successes = results.filter((r) => r.status == "fulfilled").length;
     if (successes > 0) {
-      toast({
-        description: `${successes} bookmarks have been added to the list!`,
-      });
+      toast.success(`${successes} bookmarks have been added to the list!`);
     }
 
     setOpen(false);

@@ -25,7 +25,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { toast } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useDialogFormReset } from "@/lib/hooks/useDialogFormReset";
 import { useTranslation } from "@/lib/i18n/client";
@@ -35,6 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { useUpdateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -117,16 +117,14 @@ export function EditBookmarkDialog({
   const { mutate: updateBookmarkMutate, isPending: isUpdatingBookmark } =
     useUpdateBookmark({
       onSuccess: (updatedBookmark) => {
-        toast({ description: "Bookmark details updated successfully!" });
+        toast.success("Bookmark details updated successfully!");
         // Close the dialog after successful detail update
         setOpen(false);
         // Reset form with potentially updated data
         form.reset(bookmarkToDefault(updatedBookmark));
       },
       onError: (error) => {
-        toast({
-          variant: "destructive",
-          title: "Failed to update bookmark",
+        toast.error("Failed to update bookmark", {
           description: error.message,
         });
       },

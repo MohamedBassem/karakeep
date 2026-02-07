@@ -19,12 +19,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useMergeLists } from "@karakeep/shared-react/hooks/lists";
@@ -74,32 +74,21 @@ export function MergeListModal({
 
   const { mutate: mergeLists, isPending: isMerging } = useMergeLists({
     onSuccess: () => {
-      toast({
-        description: t("toasts.lists.merged"),
-      });
+      toast.success(t("toasts.lists.merged"));
       setOpen(false);
       form.reset();
     },
     onError: (e) => {
       if (e.data?.code == "BAD_REQUEST") {
         if (e.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(e.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(e.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: t("common.something_went_wrong"),
-        });
+        toast.error(t("common.something_went_wrong"));
       }
     },
   });

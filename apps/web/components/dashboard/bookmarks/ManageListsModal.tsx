@@ -16,13 +16,13 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/sonner";
 import LoadingSpinner from "@/components/ui/spinner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Archive, X } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import {
@@ -77,22 +77,14 @@ export default function ManageListsModal({
   const { mutate: addToList, isPending: isAddingToListPending } =
     useAddBookmarkToList({
       onSuccess: () => {
-        toast({
-          description: t("toasts.lists.updated"),
-        });
+        toast.success(t("toasts.lists.updated"));
         form.resetField("listId");
       },
       onError: (e) => {
         if (e.data?.code == "BAD_REQUEST") {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         } else {
-          toast({
-            variant: "destructive",
-            title: t("common.something_went_wrong"),
-          });
+          toast.error(t("common.something_went_wrong"));
         }
       },
     });
@@ -100,22 +92,14 @@ export default function ManageListsModal({
   const { mutate: deleteFromList, isPending: isDeleteFromListPending } =
     useRemoveBookmarkFromList({
       onSuccess: () => {
-        toast({
-          description: t("toasts.lists.updated"),
-        });
+        toast.success(t("toasts.lists.updated"));
         form.resetField("listId");
       },
       onError: (e) => {
         if (e.data?.code == "BAD_REQUEST") {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         } else {
-          toast({
-            variant: "destructive",
-            title: t("common.something_went_wrong"),
-          });
+          toast.error(t("common.something_went_wrong"));
         }
       },
     });

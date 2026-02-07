@@ -2,10 +2,10 @@ import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/sonner";
 import { useDragAndDrop } from "@/lib/drag-and-drop";
 import { X } from "lucide-react";
 import Draggable from "react-draggable";
+import { toast } from "sonner";
 
 import { useMergeTag } from "@karakeep/shared-react/hooks/tags";
 
@@ -30,30 +30,19 @@ export const TagPill = React.memo(function TagPill({
 
   const { mutate: mergeTag } = useMergeTag({
     onSuccess: () => {
-      toast({
-        description: "Tags have been merged!",
-      });
+      toast.success("Tags have been merged!");
     },
     onError: (e) => {
       if (e.data?.code == "BAD_REQUEST") {
         if (e.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(e.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(e.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong",
-        });
+        toast.error("Something went wrong");
       }
     },
   });

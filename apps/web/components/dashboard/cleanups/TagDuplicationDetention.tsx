@@ -11,7 +11,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { toast } from "@/components/ui/sonner";
 import LoadingSpinner from "@/components/ui/spinner";
 import {
   Table,
@@ -26,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { distance } from "fastest-levenshtein";
 import { Check, Combine, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { useMergeTag } from "@karakeep/shared-react/hooks/tags";
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -62,10 +62,7 @@ function ApplyAllButton({ suggestions }: { suggestions: Suggestion[] }) {
   const [applying, setApplying] = useState(false);
   const { mutateAsync } = useMergeTag({
     onError: (e) => {
-      toast({
-        description: e.message,
-        variant: "destructive",
-      });
+      toast.error(e.message);
     },
   });
 
@@ -81,9 +78,7 @@ function ApplyAllButton({ suggestions }: { suggestions: Suggestion[] }) {
     setApplying(true);
     await Promise.all(promises)
       .then(() => {
-        toast({
-          description: "All suggestions has been applied!",
-        });
+        toast.success("All suggestions has been applied!");
       })
       .catch(() => ({}))
       .finally(() => {
@@ -127,15 +122,10 @@ function SuggestionRow({
   const { t } = useTranslation();
   const { mutate, isPending } = useMergeTag({
     onSuccess: () => {
-      toast({
-        description: "Tags have been merged!",
-      });
+      toast.success("Tags have been merged!");
     },
     onError: (e) => {
-      toast({
-        description: e.message,
-        variant: "destructive",
-      });
+      toast.error(e.message);
     },
   });
   return (

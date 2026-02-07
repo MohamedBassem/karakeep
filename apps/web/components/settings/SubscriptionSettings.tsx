@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreditCard, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -48,10 +48,7 @@ export default function SubscriptionSettings() {
         }
       },
       onError: () => {
-        toast({
-          description: t("common.something_went_wrong"),
-          variant: "destructive",
-        });
+        toast.error(t("common.something_went_wrong"));
       },
     }),
   );
@@ -63,10 +60,7 @@ export default function SubscriptionSettings() {
         }
       },
       onError: () => {
-        toast({
-          description: t("common.something_went_wrong"),
-          variant: "destructive",
-        });
+        toast.error(t("common.something_went_wrong"));
       },
     }),
   );

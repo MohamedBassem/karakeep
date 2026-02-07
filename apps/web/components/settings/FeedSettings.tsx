@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form";
 import { FullPageSpinner } from "@/components/ui/full-page-spinner";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
@@ -31,6 +30,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -86,9 +86,7 @@ export function FeedsEditorDialog() {
   const { mutateAsync: createFeed, isPending: isCreating } = useMutation(
     api.feeds.create.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Feed has been created!",
-        });
+        toast.success("Feed has been created!");
         queryClient.invalidateQueries(api.feeds.list.pathFilter());
         setOpen(false);
       },
@@ -211,9 +209,7 @@ export function EditFeedDialog({ feed }: { feed: ZFeed }) {
   const { mutateAsync: updateFeed, isPending: isUpdating } = useMutation(
     api.feeds.update.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Feed has been updated!",
-        });
+        toast.success("Feed has been updated!");
         setOpen(false);
         queryClient.invalidateQueries(api.feeds.list.pathFilter());
       },
@@ -350,9 +346,7 @@ export function FeedRow({ feed }: { feed: ZFeed }) {
   const { mutate: deleteFeed, isPending: isDeleting } = useMutation(
     api.feeds.delete.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Feed has been deleted!",
-        });
+        toast.success("Feed has been deleted!");
         queryClient.invalidateQueries(api.feeds.list.pathFilter());
       },
     }),
@@ -361,9 +355,7 @@ export function FeedRow({ feed }: { feed: ZFeed }) {
   const { mutate: fetchNow, isPending: isFetching } = useMutation(
     api.feeds.fetchNow.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Feed fetch has been enqueued!",
-        });
+        toast.success("Feed fetch has been enqueued!");
         queryClient.invalidateQueries(api.feeds.list.pathFilter());
       },
     }),
@@ -372,18 +364,15 @@ export function FeedRow({ feed }: { feed: ZFeed }) {
   const { mutate: updateFeedEnabled } = useMutation(
     api.feeds.update.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: feed.enabled
+        toast.success(
+          feed.enabled
             ? t("settings.feeds.feed_disabled")
             : t("settings.feeds.feed_enabled"),
-        });
+        );
         queryClient.invalidateQueries(api.feeds.list.pathFilter());
       },
       onError: (error) => {
-        toast({
-          description: `Error: ${error.message}`,
-          variant: "destructive",
-        });
+        toast.error(`Error: ${error.message}`);
       },
     }),
   );

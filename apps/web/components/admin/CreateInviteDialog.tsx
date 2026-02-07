@@ -19,11 +19,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -54,9 +54,7 @@ export default function CreateInviteDialog({
   const createInviteMutation = useMutation(
     api.invites.create.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Invite sent successfully",
-        });
+        toast.success("Invite sent successfully");
         queryClient.invalidateQueries(api.invites.list.pathFilter());
         setOpen(false);
         form.reset();

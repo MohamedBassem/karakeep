@@ -13,10 +13,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Eye, EyeOff, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import {
@@ -52,24 +52,16 @@ export function DeleteAccount() {
 
   const deleteAccountMutation = useDeleteAccount({
     onSuccess: () => {
-      toast({
-        description: "Your account has been successfully deleted.",
-      });
+      toast.success("Your account has been successfully deleted.");
       // Redirect to home page after successful deletion
       router.push("/");
       setIsDialogOpen(false);
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {
-        toast({
-          description: "Invalid password. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Invalid password. Please try again.");
       } else {
-        toast({
-          description: "Failed to delete account. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to delete account. Please try again.");
       }
     },
   });

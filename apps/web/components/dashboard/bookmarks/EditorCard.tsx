@@ -5,7 +5,6 @@ import { Form, FormControl, FormItem } from "@/components/ui/form";
 import { Kbd } from "@/components/ui/kbd";
 import MultipleChoiceDialog from "@/components/ui/multiple-choice-dialog";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import BookmarkAlreadyExistsToast from "@/components/utils/BookmarkAlreadyExistsToast";
 import { useClientConfig } from "@/lib/clientConfig";
@@ -18,6 +17,7 @@ import { cn, getOS } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCreateBookmarkWithPostHook } from "@karakeep/shared-react/hooks/bookmarks";
@@ -57,10 +57,7 @@ export default function EditorCard({ className }: { className?: string }) {
   const { mutate, isPending } = useCreateBookmarkWithPostHook({
     onSuccess: (resp) => {
       if (resp.alreadyExists) {
-        toast({
-          description: <BookmarkAlreadyExistsToast bookmarkId={resp.id} />,
-          variant: "default",
-        });
+        toast.success(<BookmarkAlreadyExistsToast bookmarkId={resp.id} />);
       }
       form.reset();
       // if the list layout is used, we reset the size of the editor card to the original size after submitting
@@ -69,7 +66,7 @@ export default function EditorCard({ className }: { className?: string }) {
       }
     },
     onError: (e) => {
-      toast({ description: e.message, variant: "destructive" });
+      toast.error(e.message);
     },
   });
 
@@ -123,12 +120,11 @@ export default function EditorCard({ className }: { className?: string }) {
   };
 
   const onError: SubmitErrorHandler<z.infer<typeof formSchema>> = (errors) => {
-    toast({
-      description: Object.values(errors)
+    toast.error(
+      Object.values(errors)
         .map((v) => v.message)
         .join("\n"),
-      variant: "destructive",
-    });
+    );
   };
   const cardHeight = useBookmarkLayoutSwitch({
     grid: "h-96",

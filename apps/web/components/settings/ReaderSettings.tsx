@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/ui/sonner";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";
 import { useReaderSettings } from "@/lib/readerSettings";
@@ -12,6 +11,7 @@ import {
   Laptop,
   RotateCcw,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   formatFontSize,
@@ -74,14 +74,12 @@ export default function ReaderSettings() {
 
   const handleClearDefaults = () => {
     clearServerDefaults();
-    toast({ description: t("settings.info.reader_settings.defaults_cleared") });
+    toast.success(t("settings.info.reader_settings.defaults_cleared"));
   };
 
   const handleClearLocalOverrides = () => {
     clearLocalOverrides();
-    toast({
-      description: t("settings.info.reader_settings.local_overrides_cleared"),
-    });
+    toast.success(t("settings.info.reader_settings.local_overrides_cleared"));
   };
 
   // Format local override for display

@@ -36,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";
@@ -46,6 +45,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Info, Plus, Save, Trash2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useUpdateUserSettings } from "@karakeep/shared-react/hooks/users";
@@ -90,15 +90,10 @@ export function AIPreferences() {
 
   const { mutate: updateSettings, isPending } = useUpdateUserSettings({
     onSuccess: () => {
-      toast({
-        description: "Settings updated successfully!",
-      });
+      toast.success("Settings updated successfully!");
     },
     onError: () => {
-      toast({
-        description: "Failed to update settings",
-        variant: "destructive",
-      });
+      toast.error("Failed to update settings");
     },
   });
 
@@ -245,15 +240,10 @@ export function TagStyleSelector() {
   const { mutate: updateSettings, isPending: isUpdating } =
     useUpdateUserSettings({
       onSuccess: () => {
-        toast({
-          description: "Tag style updated successfully!",
-        });
+        toast.success("Tag style updated successfully!");
       },
       onError: () => {
-        toast({
-          description: "Failed to update tag style",
-          variant: "destructive",
-        });
+        toast.error("Failed to update tag style");
       },
     });
 
@@ -356,9 +346,7 @@ export function PromptEditor() {
   const { mutateAsync: createPrompt, isPending: isCreating } = useMutation(
     api.prompts.create.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Prompt has been created!",
-        });
+        toast.success("Prompt has been created!");
         queryClient.invalidateQueries(api.prompts.list.pathFilter());
       },
     }),
@@ -450,9 +438,7 @@ export function PromptRow({ prompt }: { prompt: ZPrompt }) {
   const { mutateAsync: updatePrompt, isPending: isUpdating } = useMutation(
     api.prompts.update.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Prompt has been updated!",
-        });
+        toast.success("Prompt has been updated!");
         queryClient.invalidateQueries(api.prompts.list.pathFilter());
       },
     }),
@@ -460,9 +446,7 @@ export function PromptRow({ prompt }: { prompt: ZPrompt }) {
   const { mutate: deletePrompt, isPending: isDeleting } = useMutation(
     api.prompts.delete.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Prompt has been deleted!",
-        });
+        toast.success("Prompt has been deleted!");
         queryClient.invalidateQueries(api.prompts.list.pathFilter());
       },
     }),

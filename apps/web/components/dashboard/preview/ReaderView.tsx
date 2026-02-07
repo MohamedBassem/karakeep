@@ -1,8 +1,8 @@
 import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useQuery } from "@tanstack/react-query";
 import { FileX } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useCreateHighlight,
@@ -49,43 +49,28 @@ export default function ReaderView({
 
   const { mutate: createHighlight } = useCreateHighlight({
     onSuccess: () => {
-      toast({
-        description: "Highlight has been created!",
-      });
+      toast.success("Highlight has been created!");
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        description: "Something went wrong",
-      });
+      toast.error("Something went wrong");
     },
   });
 
   const { mutate: updateHighlight } = useUpdateHighlight({
     onSuccess: () => {
-      toast({
-        description: "Highlight has been updated!",
-      });
+      toast.success("Highlight has been updated!");
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        description: "Something went wrong",
-      });
+      toast.error("Something went wrong");
     },
   });
 
   const { mutate: deleteHighlight } = useDeleteHighlight({
     onSuccess: () => {
-      toast({
-        description: "Highlight has been deleted!",
-      });
+      toast.success("Highlight has been deleted!");
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        description: "Something went wrong",
-      });
+      toast.error("Something went wrong");
     },
   });
 

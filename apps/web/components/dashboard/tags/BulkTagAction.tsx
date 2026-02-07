@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { ButtonWithTooltip } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
 import { Toggle } from "@/components/ui/toggle";
 import useBulkTagActionsStore from "@/lib/bulkTagActions";
 import { useTranslation } from "@/lib/i18n/client";
 import { CheckCheck, Pencil, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { useDeleteTag } from "@karakeep/shared-react/hooks/tags";
 import { limitConcurrency } from "@karakeep/shared/concurrency";
@@ -36,9 +36,7 @@ export default function BulkTagAction() {
   }, []);
 
   const onError = () => {
-    toast({
-      variant: "destructive",
-      title: t("common.something_went_wrong"),
+    toast.error(t("common.something_went_wrong"), {
       description: "There was a problem with your request.",
     });
   };
@@ -59,9 +57,7 @@ export default function BulkTagAction() {
         MAX_CONCURRENT_BULK_ACTIONS,
       ),
     );
-    toast({
-      description: `${selectedTagIds.length} tags have been deleted!`,
-    });
+    toast.success(`${selectedTagIds.length} tags have been deleted!`);
     setIsDeleteDialogOpen(false);
   };
 

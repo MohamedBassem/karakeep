@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -9,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useTranslation } from "@/lib/i18n/client";
 import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import { useUpdateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
@@ -25,26 +25,22 @@ export default function ActionBar({ bookmark }: { bookmark: ZBookmark }) {
   const [isEditBookmarkDialogOpen, setEditBookmarkDialogOpen] = useState(false);
 
   const onError = () => {
-    toast({
-      variant: "destructive",
-      title: "Something went wrong",
+    toast.error("Something went wrong", {
       description: "There was a problem with your request.",
     });
   };
   const { mutate: favBookmark, isPending: pendingFav } = useUpdateBookmark({
     onSuccess: () => {
-      toast({
-        description: "The bookmark has been updated!",
-      });
+      toast.success("The bookmark has been updated!");
     },
     onError,
   });
   const { mutate: archiveBookmark, isPending: pendingArchive } =
     useUpdateBookmark({
       onSuccess: (resp) => {
-        toast({
-          description: `The bookmark has been ${resp.archived ? "Archived" : "Un-archived"}!`,
-        });
+        toast.success(
+          `The bookmark has been ${resp.archived ? "Archived" : "Un-archived"}!`,
+        );
       },
       onError,
     });

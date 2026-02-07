@@ -1,7 +1,7 @@
 "use client";
 
-import { toast } from "@/components/ui/sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -17,10 +17,7 @@ export function useCreateImportSession() {
         );
       },
       onError: (error) => {
-        toast({
-          description: error.message || "Failed to create import session",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Failed to create import session");
       },
     }),
   );
@@ -67,16 +64,10 @@ export function useDeleteImportSession() {
         queryClient.invalidateQueries(
           api.importSessions.listImportSessions.pathFilter(),
         );
-        toast({
-          description: "Import session deleted successfully",
-          variant: "default",
-        });
+        toast.success("Import session deleted successfully");
       },
       onError: (error) => {
-        toast({
-          description: error.message || "Failed to delete import session",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Failed to delete import session");
       },
     }),
   );
@@ -92,16 +83,10 @@ export function usePauseImportSession() {
         queryClient.invalidateQueries(
           api.importSessions.listImportSessions.pathFilter(),
         );
-        toast({
-          description: "Import session paused",
-          variant: "default",
-        });
+        toast.success("Import session paused");
       },
       onError: (error) => {
-        toast({
-          description: error.message || "Failed to pause import session",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Failed to pause import session");
       },
     }),
   );
@@ -117,16 +102,10 @@ export function useResumeImportSession() {
         queryClient.invalidateQueries(
           api.importSessions.listImportSessions.pathFilter(),
         );
-        toast({
-          description: "Import session resumed",
-          variant: "default",
-        });
+        toast.success("Import session resumed");
       },
       onError: (error) => {
-        toast({
-          description: error.message || "Failed to resume import session",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Failed to resume import session");
       },
     }),
   );

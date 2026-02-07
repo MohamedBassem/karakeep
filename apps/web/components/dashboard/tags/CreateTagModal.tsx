@@ -22,11 +22,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCreateTag } from "@karakeep/shared-react/hooks/tags";
@@ -48,31 +48,21 @@ export function CreateTagModal() {
 
   const { mutate: createTag, isPending } = useCreateTag({
     onSuccess: () => {
-      toast({
-        description: t("toasts.tags.created"),
-      });
+      toast.success(t("toasts.tags.created"));
       setOpen(false);
       form.reset();
     },
     onError: (e) => {
       if (e.data?.code === "BAD_REQUEST") {
         if (e.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(e.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(e.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: t("common.something_went_wrong"),
+        toast.error(t("common.something_went_wrong"), {
           description: t("toasts.tags.failed_to_create"),
         });
       }

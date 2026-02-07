@@ -3,9 +3,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/lib/i18n/client";
+import { toast } from "sonner";
 
 import type { ZBookmarkList } from "@karakeep/shared/types/lists";
 import { useDeleteBookmarkList } from "@karakeep/shared-react/hooks/lists";
@@ -28,19 +28,16 @@ export default function DeleteListConfirmationDialog({
 
   const { mutate: deleteList, isPending } = useDeleteBookmarkList({
     onSuccess: () => {
-      toast({
-        description: `List "${list.icon} ${list.name}" ${deleteChildren ? "and all its children are " : "is "} deleted!`,
-      });
+      toast.success(
+        `List "${list.icon} ${list.name}" ${deleteChildren ? "and all its children are " : "is "} deleted!`,
+      );
       setOpen(false);
       if (currentPath.includes(list.id)) {
         router.push("/dashboard/lists");
       }
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        description: `Something went wrong`,
-      });
+      toast.error(`Something went wrong`);
     },
   });
 

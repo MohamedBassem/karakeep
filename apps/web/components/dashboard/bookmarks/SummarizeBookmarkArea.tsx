@@ -1,12 +1,12 @@
 import React from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { MarkdownReadonly } from "@/components/ui/markdown/markdown-readonly";
-import { toast } from "@/components/ui/sonner";
 import LoadingSpinner from "@/components/ui/spinner";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { ChevronUp, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useSummarizeBookmark,
@@ -27,19 +27,13 @@ function AISummary({
   const { mutate: resummarize, isPending: isResummarizing } =
     useSummarizeBookmark({
       onError: () => {
-        toast({
-          description: "Something went wrong",
-          variant: "destructive",
-        });
+        toast.error("Something went wrong");
       },
     });
   const { mutate: updateBookmark, isPending: isUpdatingBookmark } =
     useUpdateBookmark({
       onError: () => {
-        toast({
-          description: "Something went wrong",
-          variant: "destructive",
-        });
+        toast.error("Something went wrong");
       },
     });
   return (
@@ -115,10 +109,7 @@ export default function SummarizeBookmarkArea({
   const { t } = useTranslation();
   const { mutate, isPending } = useSummarizeBookmark({
     onError: () => {
-      toast({
-        description: "Something went wrong",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong");
     },
   });
 

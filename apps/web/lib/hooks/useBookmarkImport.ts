@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { useCreateBookmarkList } from "@karakeep/shared-react/hooks/lists";
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -105,21 +105,17 @@ export function useBookmarkImport() {
       setImportProgress(null);
 
       if (result.counts.total === 0) {
-        toast({ description: "No bookmarks found in the file." });
+        toast.success("No bookmarks found in the file.");
         return;
       }
 
-      toast({
-        description: `Staged ${result.counts.total} bookmarks for import. Background processing will start automatically.`,
-        variant: "default",
-      });
+      toast.success(
+        `Staged ${result.counts.total} bookmarks for import. Background processing will start automatically.`,
+      );
     },
     onError: (error) => {
       setImportProgress(null);
-      toast({
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(error.message);
     },
   });
 

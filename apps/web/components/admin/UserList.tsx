@@ -2,7 +2,6 @@
 
 import { ActionButton } from "@/components/ui/action-button";
 import { ButtonWithTooltip } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
 import {
   Table,
   TableBody,
@@ -19,6 +18,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { Check, KeyRound, Pencil, Trash, UserPlus, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -49,16 +49,11 @@ export default function UsersSection() {
   const { mutateAsync: deleteUser, isPending: isDeletionPending } = useMutation(
     api.users.delete.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "User deleted",
-        });
+        toast.success("User deleted");
         queryClient.invalidateQueries(api.users.list.pathFilter());
       },
       onError: (e) => {
-        toast({
-          variant: "destructive",
-          description: `Something went wrong: ${e.message}`,
-        });
+        toast.error(`Something went wrong: ${e.message}`);
       },
     }),
   );

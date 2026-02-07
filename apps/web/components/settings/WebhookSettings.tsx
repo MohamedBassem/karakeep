@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { FullPageSpinner } from "@/components/ui/full-page-spinner";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -80,9 +80,7 @@ export function WebhooksEditorDialog() {
   const { mutateAsync: createWebhook, isPending: isCreating } = useMutation(
     api.webhooks.create.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Webhook has been created!",
-        });
+        toast.success("Webhook has been created!");
         queryClient.invalidateQueries(api.webhooks.list.pathFilter());
         setOpen(false);
       },
@@ -198,9 +196,7 @@ export function EditWebhookDialog({ webhook }: { webhook: ZWebhook }) {
   const { mutateAsync: updateWebhook, isPending: isUpdating } = useMutation(
     api.webhooks.update.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Webhook has been updated!",
-        });
+        toast.success("Webhook has been updated!");
         setOpen(false);
         queryClient.invalidateQueries(api.webhooks.list.pathFilter());
       },
@@ -340,9 +336,7 @@ export function EditTokenDialog({ webhook }: { webhook: ZWebhook }) {
   const { mutateAsync: updateWebhook, isPending: isUpdating } = useMutation(
     api.webhooks.update.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Webhook token has been updated!",
-        });
+        toast.success("Webhook token has been updated!");
         setOpen(false);
         queryClient.invalidateQueries(api.webhooks.list.pathFilter());
       },
@@ -445,9 +439,7 @@ export function WebhookRow({ webhook }: { webhook: ZWebhook }) {
   const { mutate: deleteWebhook, isPending: isDeleting } = useMutation(
     api.webhooks.delete.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Webhook has been deleted!",
-        });
+        toast.success("Webhook has been deleted!");
         queryClient.invalidateQueries(api.webhooks.list.pathFilter());
       },
     }),

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "@/components/ui/sonner";
 import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";
 import { useInterfaceLang } from "@/lib/userLocalSettings/bookmarksLayout";
@@ -10,6 +9,7 @@ import { useUserSettings } from "@/lib/userSettings";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Archive, Bookmark, Clock, Globe } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useUpdateUserSettings } from "@karakeep/shared-react/hooks/users";
@@ -59,15 +59,10 @@ export default function UserOptions() {
   const data = useUserSettings();
   const { mutate } = useUpdateUserSettings({
     onSuccess: () => {
-      toast({
-        description: t("settings.info.user_settings.user_settings_updated"),
-      });
+      toast.success(t("settings.info.user_settings.user_settings_updated"));
     },
     onError: () => {
-      toast({
-        description: t("common.something_went_wrong"),
-        variant: "destructive",
-      });
+      toast.error(t("common.something_went_wrong"));
     },
   });
   const [timezones, setTimezones] = useState<

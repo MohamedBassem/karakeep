@@ -1,7 +1,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 import { useDeleteTag } from "@karakeep/shared-react/hooks/tags";
 
@@ -18,18 +18,13 @@ export default function DeleteTagConfirmationDialog({
   const router = useRouter();
   const { mutate: deleteTag, isPending } = useDeleteTag({
     onSuccess: () => {
-      toast({
-        description: `Tag "${tag.name}" has been deleted!`,
-      });
+      toast.success(`Tag "${tag.name}" has been deleted!`);
       if (currentPath.includes(tag.id)) {
         router.push("/dashboard/tags");
       }
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        description: `Something went wrong`,
-      });
+      toast.error(`Something went wrong`);
     },
   });
   return (

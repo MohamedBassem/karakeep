@@ -19,11 +19,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useTRPC } from "@karakeep/shared-react/trpc"; // Adjust the import path as needed
@@ -54,22 +54,14 @@ export default function ResetPasswordDialog({
   const { mutate, isPending } = useMutation(
     api.admin.resetPassword.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Password reset successfully",
-        });
+        toast.success("Password reset successfully");
         onOpenChange(false);
       },
       onError: (error) => {
         if (error instanceof TRPCClientError) {
-          toast({
-            variant: "destructive",
-            description: error.message,
-          });
+          toast.error(error.message);
         } else {
-          toast({
-            variant: "destructive",
-            description: "Failed to reset password",
-          });
+          toast.error("Failed to reset password");
         }
       },
     }),

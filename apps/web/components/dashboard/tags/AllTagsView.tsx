@@ -22,13 +22,13 @@ import {
 import InfoTooltip from "@/components/ui/info-tooltip";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/sonner";
 import Spinner from "@/components/ui/spinner";
 import { Toggle } from "@/components/ui/toggle";
 import useBulkTagActionsStore from "@/lib/bulkTagActions";
 import { useTranslation } from "@/lib/i18n/client";
 import { ArrowDownAZ, ChevronDown, Combine, Search, Tag } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
+import { toast } from "sonner";
 
 import type { ZGetTagResponse, ZTagBasic } from "@karakeep/shared/types/tags";
 import {
@@ -47,15 +47,10 @@ function DeleteAllUnusedTags({ numUnusedTags }: { numUnusedTags: number }) {
   const { t } = useTranslation();
   const { mutate, isPending } = useDeleteUnusedTags({
     onSuccess: () => {
-      toast({
-        description: `Deleted all ${numUnusedTags} unused tags`,
-      });
+      toast.success(`Deleted all ${numUnusedTags} unused tags`);
     },
     onError: () => {
-      toast({
-        description: "Something went wrong",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong");
     },
   });
   return (

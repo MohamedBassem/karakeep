@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import { useUpdateBookmarkTags } from "@karakeep/shared-react/hooks/bookmarks";
@@ -14,14 +14,10 @@ export function BookmarkTagsEditor({
 }) {
   const { mutate } = useUpdateBookmarkTags({
     onSuccess: () => {
-      toast({
-        description: "Tags has been updated!",
-      });
+      toast.success("Tags has been updated!");
     },
     onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
+      toast.error("Something went wrong", {
         description: "There was a problem with your request.",
       });
     },

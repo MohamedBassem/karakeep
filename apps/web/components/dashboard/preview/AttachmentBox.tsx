@@ -8,11 +8,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import FilePickerButton from "@/components/ui/file-picker-button";
-import { toast } from "@/components/ui/sonner";
 import { ASSET_TYPE_TO_ICON } from "@/lib/attachments";
 import useUpload from "@/lib/hooks/upload-file";
 import { useTranslation } from "@/lib/i18n/client";
 import { ChevronsDownUp, Download, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useAttachBookmarkAsset,
@@ -38,54 +38,36 @@ export default function AttachmentBox({
   const { mutate: attachAsset, isPending: isAttaching } =
     useAttachBookmarkAsset({
       onSuccess: () => {
-        toast({
-          description: "Attachment has been attached!",
-        });
+        toast.success("Attachment has been attached!");
       },
       onError: (e) => {
-        toast({
-          description: e.message,
-          variant: "destructive",
-        });
+        toast.error(e.message);
       },
     });
 
   const { mutate: replaceAsset, isPending: isReplacing } =
     useReplaceBookmarkAsset({
       onSuccess: () => {
-        toast({
-          description: "Attachment has been replaced!",
-        });
+        toast.success("Attachment has been replaced!");
       },
       onError: (e) => {
-        toast({
-          description: e.message,
-          variant: "destructive",
-        });
+        toast.error(e.message);
       },
     });
 
   const { mutate: detachAsset, isPending: isDetaching } =
     useDetachBookmarkAsset({
       onSuccess: () => {
-        toast({
-          description: "Attachment has been detached!",
-        });
+        toast.success("Attachment has been detached!");
       },
       onError: (e) => {
-        toast({
-          description: e.message,
-          variant: "destructive",
-        });
+        toast.error(e.message);
       },
     });
 
   const { mutate: uploadAsset } = useUpload({
     onError: (e) => {
-      toast({
-        description: e.error,
-        variant: "destructive",
-      });
+      toast.error(e.error);
     },
   });
 

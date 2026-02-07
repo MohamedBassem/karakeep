@@ -2,7 +2,6 @@
 
 import { ActionButton } from "@/components/ui/action-button";
 import { ButtonWithTooltip } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
 import {
   Table,
   TableBody,
@@ -18,6 +17,7 @@ import {
 } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Mail, MailX, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
@@ -33,16 +33,11 @@ export default function InvitesList() {
   const { mutateAsync: revokeInvite, isPending: isRevokePending } = useMutation(
     api.invites.revoke.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Invite revoked successfully",
-        });
+        toast.success("Invite revoked successfully");
         queryClient.invalidateQueries(api.invites.list.pathFilter());
       },
       onError: (e) => {
-        toast({
-          variant: "destructive",
-          description: `Failed to revoke invite: ${e.message}`,
-        });
+        toast.error(`Failed to revoke invite: ${e.message}`);
       },
     }),
   );
@@ -50,16 +45,11 @@ export default function InvitesList() {
   const { mutateAsync: resendInvite, isPending: isResendPending } = useMutation(
     api.invites.resend.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: "Invite resent successfully",
-        });
+        toast.success("Invite resent successfully");
         queryClient.invalidateQueries(api.invites.list.pathFilter());
       },
       onError: (e) => {
-        toast({
-          variant: "destructive",
-          description: `Failed to resend invite: ${e.message}`,
-        });
+        toast.error(`Failed to resend invite: ${e.message}`);
       },
     }),
   );

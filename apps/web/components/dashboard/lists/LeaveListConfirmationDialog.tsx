@@ -2,9 +2,9 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import type { ZBookmarkList } from "@karakeep/shared/types/lists";
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -29,12 +29,12 @@ export default function LeaveListConfirmationDialog({
   const { mutate: leaveList, isPending } = useMutation(
     api.lists.leaveList.mutationOptions({
       onSuccess: () => {
-        toast({
-          description: t("lists.leave_list.success", {
+        toast.success(
+          t("lists.leave_list.success", {
             icon: list.icon,
             name: list.name,
           }),
-        });
+        );
         setOpen(false);
         // Invalidate the lists cache
         queryClient.invalidateQueries(api.lists.list.pathFilter());
@@ -44,10 +44,7 @@ export default function LeaveListConfirmationDialog({
         }
       },
       onError: (error) => {
-        toast({
-          variant: "destructive",
-          description: error.message || t("common.something_went_wrong"),
-        });
+        toast.error(error.message || t("common.something_went_wrong"));
       },
     }),
   );

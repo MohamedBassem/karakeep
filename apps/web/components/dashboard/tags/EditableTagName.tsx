@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 import { useUpdateTag } from "@karakeep/shared-react/hooks/tags";
 
@@ -19,9 +19,7 @@ export default function EditableTagName({
   const currentPath = usePathname();
   const { mutate: updateTag, isPending } = useUpdateTag({
     onSuccess: () => {
-      toast({
-        description: "Tag updated!",
-      });
+      toast.success("Tag updated!");
       if (currentPath.includes(tag.id)) {
         router.refresh();
       }
@@ -34,10 +32,7 @@ export default function EditableTagName({
       originalText={tag.name}
       onSave={(newName) => {
         if (!newName || newName == "") {
-          toast({
-            description: "You must set a name for the tag!",
-            variant: "destructive",
-          });
+          toast.error("You must set a name for the tag!");
           return;
         }
         updateTag(
@@ -47,10 +42,7 @@ export default function EditableTagName({
           },
           {
             onError: (e) => {
-              toast({
-                description: e.message,
-                variant: "destructive",
-              });
+              toast.error(e.message);
             },
           },
         );

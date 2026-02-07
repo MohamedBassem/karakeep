@@ -5,7 +5,6 @@ import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { Button } from "@/components/ui/button";
 import { FullPageSpinner } from "@/components/ui/full-page-spinner";
-import { toast } from "@/components/ui/sonner";
 import {
   Table,
   TableBody,
@@ -19,6 +18,7 @@ import { useTranslation } from "@/lib/i18n/client";
 import { formatBytes } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useDetachBookmarkAsset } from "@karakeep/shared-react/hooks/assets";
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -34,15 +34,10 @@ export default function AssetsSettingsPage() {
   const { mutate: detachAsset, isPending: isDetaching } =
     useDetachBookmarkAsset({
       onSuccess: () => {
-        toast({
-          description: "Asset has been deleted!",
-        });
+        toast.success("Asset has been deleted!");
       },
       onError: (e) => {
-        toast({
-          description: e.message,
-          variant: "destructive",
-        });
+        toast.error(e.message);
       },
     });
   const {

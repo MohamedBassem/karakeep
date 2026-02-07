@@ -12,12 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/sonner";
 import { useBookmarkImport } from "@/lib/hooks/useBookmarkImport";
 import { useTranslation } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Download, Loader2, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "../ui/card";
 import { ImportSessionsSection } from "./ImportSessionsSection";
@@ -72,10 +72,7 @@ function ExportButton() {
 
   useEffect(() => {
     if (error) {
-      toast({
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(error.message);
     }
   }, [error]);
 

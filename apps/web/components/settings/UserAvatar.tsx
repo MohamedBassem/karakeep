@@ -4,11 +4,11 @@ import type { ChangeEvent } from "react";
 import { useRef } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { toast } from "@/components/ui/sonner";
 import { UserAvatar as UserAvatarImage } from "@/components/ui/user-avatar";
 import useUpload from "@/lib/hooks/upload-file";
 import { useTranslation } from "@/lib/i18n/client";
 import { Image as ImageIcon, Upload, User, X } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useUpdateUserAvatar,
@@ -26,10 +26,7 @@ export default function UserAvatar() {
 
   const updateAvatar = useUpdateUserAvatar({
     onError: () => {
-      toast({
-        description: t("common.something_went_wrong"),
-        variant: "destructive",
-      });
+      toast.error(t("common.something_went_wrong"));
     },
   });
 
@@ -37,18 +34,13 @@ export default function UserAvatar() {
     onSuccess: async (resp) => {
       try {
         await updateAvatar.mutateAsync({ assetId: resp.assetId });
-        toast({
-          description: t("settings.info.avatar.updated"),
-        });
+        toast.success(t("settings.info.avatar.updated"));
       } catch {
         // handled in onError
       }
     },
     onError: (err) => {
-      toast({
-        description: err.error,
-        variant: "destructive",
-      });
+      toast.error(err.error);
     },
   });
 
@@ -124,9 +116,7 @@ export default function UserAvatar() {
                     { assetId: null },
                     {
                       onSuccess: () => {
-                        toast({
-                          description: t("settings.info.avatar.removed"),
-                        });
+                        toast.success(t("settings.info.avatar.removed"));
                         setDialogOpen(false);
                       },
                     },

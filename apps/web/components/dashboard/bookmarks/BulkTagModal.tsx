@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/sonner";
 import { useQueries } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { useUpdateBookmarkTags } from "@karakeep/shared-react/hooks/bookmarks";
 import { useTRPC } from "@karakeep/shared-react/trpc";
@@ -41,23 +41,14 @@ export default function BulkTagModal({
     onError: (err) => {
       if (err.data?.code == "BAD_REQUEST") {
         if (err.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(err.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(err.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: err.message,
-          });
+          toast.error(err.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong",
-        });
+        toast.error("Something went wrong");
       }
     },
   });
@@ -77,9 +68,9 @@ export default function BulkTagModal({
       ),
     );
     const successes = results.filter((r) => r.status == "fulfilled").length;
-    toast({
-      description: `Tag "${tag.tagName}" has been added to ${successes} bookmarks!`,
-    });
+    toast.success(
+      `Tag "${tag.tagName}" has been added to ${successes} bookmarks!`,
+    );
   };
 
   const onDetach = async ({
@@ -103,9 +94,9 @@ export default function BulkTagModal({
       ),
     );
     const successes = results.filter((r) => r.status == "fulfilled").length;
-    toast({
-      description: `Tag "${tagName}" has been removed from ${successes} bookmarks!`,
-    });
+    toast.success(
+      `Tag "${tagName}" has been removed from ${successes} bookmarks!`,
+    );
   };
 
   // Get all the tags that are attached to all the bookmarks

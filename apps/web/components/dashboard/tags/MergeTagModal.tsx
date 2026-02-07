@@ -18,9 +18,9 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useMergeTag } from "@karakeep/shared-react/hooks/tags";
@@ -52,9 +52,7 @@ export function MergeTagModal({
 
   const { mutate: mergeTag, isPending } = useMergeTag({
     onSuccess: (resp) => {
-      toast({
-        description: "Tag has been updated!",
-      });
+      toast.success("Tag has been updated!");
       setOpen(false);
       if (currentPath.includes(tag.id)) {
         router.push(`/dashboard/tags/${resp.mergedIntoTagId}`);
@@ -63,23 +61,14 @@ export function MergeTagModal({
     onError: (e) => {
       if (e.data?.code == "BAD_REQUEST") {
         if (e.data.zodError) {
-          toast({
-            variant: "destructive",
-            description: Object.values(e.data.zodError.fieldErrors)
-              .flat()
-              .join("\n"),
-          });
+          toast.error(
+            Object.values(e.data.zodError.fieldErrors).flat().join("\n"),
+          );
         } else {
-          toast({
-            variant: "destructive",
-            description: e.message,
-          });
+          toast.error(e.message);
         }
       } else {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong",
-        });
+        toast.error("Something went wrong");
       }
     },
   });

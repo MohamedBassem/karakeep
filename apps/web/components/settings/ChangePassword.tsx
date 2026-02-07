@@ -12,12 +12,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 import { zChangePasswordSchema } from "@karakeep/shared/types/users";
@@ -43,20 +43,14 @@ export function ChangePassword() {
   const mutator = useMutation(
     api.users.changePassword.mutationOptions({
       onSuccess: () => {
-        toast({ description: "Password changed successfully" });
+        toast.success("Password changed successfully");
         form.reset();
       },
       onError: (e) => {
         if (e.data?.code == "UNAUTHORIZED") {
-          toast({
-            description: "Your current password is incorrect",
-            variant: "destructive",
-          });
+          toast.error("Your current password is incorrect");
         } else {
-          toast({
-            description: "Something went wrong",
-            variant: "destructive",
-          });
+          toast.error("Something went wrong");
         }
       },
     }),

@@ -7,7 +7,6 @@ import {
   ActionButtonWithTooltip,
 } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
-import { toast } from "@/components/ui/sonner";
 import useBulkActionsStore from "@/lib/bulkActions";
 import { useTranslation } from "@/lib/i18n/client";
 import {
@@ -22,6 +21,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useDeleteBookmark,
@@ -72,9 +72,7 @@ export default function BulkBookmarksAction() {
   }, [pathname, currentPathname]);
 
   const onError = () => {
-    toast({
-      variant: "destructive",
-      title: "Something went wrong",
+    toast.error("Something went wrong", {
       description: "There was a problem with your request.",
     });
   };
@@ -128,9 +126,9 @@ export default function BulkBookmarksAction() {
         MAX_CONCURRENT_BULK_ACTIONS,
       ),
     );
-    toast({
-      description: `${links.length} bookmarks will be ${archiveFullPage ? "re-crawled and archived!" : "refreshed!"}`,
-    });
+    toast.success(
+      `${links.length} bookmarks will be ${archiveFullPage ? "re-crawled and archived!" : "refreshed!"}`,
+    );
   };
 
   function isClipboardAvailable() {
@@ -142,9 +140,7 @@ export default function BulkBookmarksAction() {
 
   const copyLinks = async () => {
     if (!isClipboardAvailable()) {
-      toast({
-        description: `Copying is only available over https`,
-      });
+      toast.success(`Copying is only available over https`);
       return;
     }
     const copyString = selectedBookmarks
@@ -156,9 +152,9 @@ export default function BulkBookmarksAction() {
 
     await navigator.clipboard.writeText(copyString);
 
-    toast({
-      description: `Added ${selectedBookmarks.length} bookmark links into the clipboard!`,
-    });
+    toast.success(
+      `Added ${selectedBookmarks.length} bookmark links into the clipboard!`,
+    );
   };
 
   const updateBookmarks = async ({
@@ -178,9 +174,7 @@ export default function BulkBookmarksAction() {
         MAX_CONCURRENT_BULK_ACTIONS,
       ),
     );
-    toast({
-      description: `${selectedBookmarks.length} bookmarks have been updated!`,
-    });
+    toast.success(`${selectedBookmarks.length} bookmarks have been updated!`);
   };
 
   const deleteBookmarks = async () => {
@@ -193,9 +187,7 @@ export default function BulkBookmarksAction() {
         MAX_CONCURRENT_BULK_ACTIONS,
       ),
     );
-    toast({
-      description: `${selectedBookmarks.length} bookmarks have been deleted!`,
-    });
+    toast.success(`${selectedBookmarks.length} bookmarks have been deleted!`);
     setIsDeleteDialogOpen(false);
   };
 
@@ -217,9 +209,7 @@ export default function BulkBookmarksAction() {
 
     const successes = results.filter((r) => r.status === "fulfilled").length;
     if (successes > 0) {
-      toast({
-        description: `${successes} bookmarks have been removed from the list!`,
-      });
+      toast.success(`${successes} bookmarks have been removed from the list!`);
     }
     setIsRemoveFromListDialogOpen(false);
   };

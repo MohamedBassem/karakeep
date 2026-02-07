@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { toast } from "@/components/ui/sonner";
 import useUpload from "@/lib/hooks/upload-file";
 import { cn } from "@/lib/utils";
 import { TRPCClientError } from "@trpc/client";
 import DropZone from "react-dropzone";
+import { toast } from "sonner";
 
 import { useCreateBookmarkWithPostHook } from "@karakeep/shared-react/hooks/bookmarks";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
@@ -17,16 +17,13 @@ export function useUploadAsset() {
   const { mutateAsync: createBookmark } = useCreateBookmarkWithPostHook({
     onSuccess: (resp) => {
       if (resp.alreadyExists) {
-        toast({
-          description: <BookmarkAlreadyExistsToast bookmarkId={resp.id} />,
-          variant: "default",
-        });
+        toast.success(<BookmarkAlreadyExistsToast bookmarkId={resp.id} />);
       } else {
-        toast({ description: "Bookmark uploaded" });
+        toast.success("Bookmark uploaded");
       }
     },
     onError: () => {
-      toast({ description: "Something went wrong", variant: "destructive" });
+      toast.error("Something went wrong");
     },
   });
 
@@ -42,10 +39,7 @@ export function useUploadAsset() {
       });
     },
     onError: (err, req) => {
-      toast({
-        description: `${req.name}: ${err.error}`,
-        variant: "destructive",
-      });
+      toast.error(`${req.name}: ${err.error}`);
     },
   });
 
@@ -62,10 +56,7 @@ export function useUploadAsset() {
             source: "web",
           });
         } catch {
-          toast({
-            description: `${file.name}: Failed to read markdown file`,
-            variant: "destructive",
-          });
+          toast.error(`${file.name}: Failed to read markdown file`);
         }
       } else {
         return runUploadAsset(file);
