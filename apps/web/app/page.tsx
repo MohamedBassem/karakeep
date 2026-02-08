@@ -1,11 +1,7 @@
 import { redirect } from "next/navigation";
-import { getServerAuthSession } from "@/server/auth";
 
-export default async function Home() {
-  const session = await getServerAuthSession();
-  if (session) {
-    redirect("/dashboard/bookmarks");
-  } else {
-    redirect("/signin");
-  }
+// Auth-based redirect is handled by middleware.
+// This is a fallback in case the middleware is bypassed.
+export default function Home() {
+  redirect("/signin");
 }

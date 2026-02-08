@@ -1,7 +1,5 @@
-import { redirect } from "next/dist/client/components/navigation";
 import KarakeepLogo from "@/components/KarakeepIcon";
 import SignUpForm from "@/components/signup/SignUpForm";
-import { getServerAuthSession } from "@/server/auth";
 
 import { validateRedirectUrl } from "@karakeep/shared/utils/redirectUrl";
 
@@ -10,13 +8,8 @@ export default async function SignUpPage({
 }: {
   searchParams: Promise<{ redirectUrl?: string }>;
 }) {
-  const session = await getServerAuthSession();
   const { redirectUrl: rawRedirectUrl } = await searchParams;
   const redirectUrl = validateRedirectUrl(rawRedirectUrl) ?? "/";
-
-  if (session) {
-    redirect(redirectUrl);
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">

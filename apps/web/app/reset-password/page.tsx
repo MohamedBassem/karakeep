@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import KarakeepLogo from "@/components/KarakeepIcon";
 import ResetPasswordForm from "@/components/signin/ResetPasswordForm";
-import { getServerAuthSession } from "@/server/auth";
 
 interface ResetPasswordPageProps {
   searchParams: {
@@ -12,11 +11,6 @@ interface ResetPasswordPageProps {
 export default async function ResetPasswordPage({
   searchParams,
 }: ResetPasswordPageProps) {
-  const session = await getServerAuthSession();
-  if (session) {
-    redirect("/");
-  }
-
   const { token } = searchParams;
 
   if (!token) {
