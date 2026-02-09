@@ -85,7 +85,9 @@ export function useDeleteBookmark(
         queryClient.invalidateQueries(
           api.bookmarks.searchBookmarks.pathFilter(),
         );
-        queryClient.invalidateQueries(
+        // Remove instead of invalidate to avoid refetching a deleted bookmark
+        // (which would cause NOT_FOUND errors on the server).
+        queryClient.removeQueries(
           api.bookmarks.getBookmark.queryFilter({ bookmarkId: req.bookmarkId }),
         );
         queryClient.invalidateQueries(api.lists.stats.pathFilter());
