@@ -1,5 +1,5 @@
 import { experimental_trpcMiddleware, TRPCError } from "@trpc/server";
-import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
+import { and, eq, gt, inArray, like, lt, or } from "drizzle-orm";
 import { z } from "zod";
 
 import type { ZBookmarkContent } from "@karakeep/shared/types/bookmarks";
@@ -685,6 +685,52 @@ export const bookmarksAppRouter = router({
                 offset: resp.hits.length + (input.cursor?.offset || 0),
               },
       };
+    }),
+  checkUrl: authedProcedure
+    .input(
+      z.object({
+        url: z.string(),
+      }),
+    )
+    .output(
+      z.object({
+        bookmarkId: z.string().nullable(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const results = await ctx.db
+        .select({ id: bookmarkLinks.id, url: bookmarkLinks.url })
+        .from(bookmarkLinks)
+        .leftJoin(bookmarks, eq(bookmarks.id, bookmarkLinks.id))
+        .where(
+          and(
+            eq(bookmarks.userId, ctx.user.id),
+            like(bookmarkLinks.url, `%${input.url}%`),
+          ),
+        );
+
+      if (results.length === 0) {
+        return { bookmarkId: null };
+      }
+
+      // Normalize and compare URLs (ignoring hash fragment and trailing slash)
+      function normalizeUrl(url: string): string {
+        const u = new URL(url);
+        u.hash = "";
+        let pathname = u.pathname;
+        if (pathname.endsWith("/") && pathname !== "/") {
+          pathname = pathname.slice(0, -1);
+        }
+        u.pathname = pathname;
+        return u.toString();
+      }
+
+      const normalizedInput = normalizeUrl(input.url);
+      const exactMatch = results.find(
+        (r) => r.url && normalizeUrl(r.url) === normalizedInput,
+      );
+
+      return { bookmarkId: exactMatch?.id ?? null };
     }),
   getBookmarks: authedProcedure
     .input(zGetBookmarksRequestSchema)
