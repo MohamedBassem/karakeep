@@ -6,7 +6,7 @@ import * as os from "os";
 import { Transform } from "stream";
 import { pipeline } from "stream/promises";
 import { PlaywrightBlocker } from "@ghostery/adblocker-playwright";
-import { Readability } from "@mozilla/readability";
+import { Defuddle } from "defuddle/node";
 import { Mutex } from "async-mutex";
 import DOMPurify from "dompurify";
 import { and, eq } from "drizzle-orm";
@@ -14,7 +14,7 @@ import { execa } from "execa";
 import { exitAbortController } from "exit";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import { JSDOM, VirtualConsole } from "jsdom";
+import { JSDOM } from "jsdom";
 import metascraper from "metascraper";
 import metascraperAmazon from "metascraper-amazon";
 import metascraperAuthor from "metascraper-author";
@@ -793,29 +793,23 @@ async function extractReadableContent(
       logger.info(
         `[Crawler][${jobId}] Will attempt to extract readable content ...`,
       );
-      const virtualConsole = new VirtualConsole();
-      const dom = new JSDOM(htmlContent, { url, virtualConsole });
       let result: { content: string } | null = null;
+      const readableContent = await Defuddle(htmlContent, url);
+      if (!readableContent || typeof readableContent.content !== "string") {
+        return null;
+      }
+
+      const purifyWindow = new JSDOM("").window;
       try {
-        const readableContent = new Readability(dom.window.document).parse();
-        if (!readableContent || typeof readableContent.content !== "string") {
-          return null;
-        }
+        const purify = DOMPurify(purifyWindow);
+        const purifiedHTML = purify.sanitize(readableContent.content);
 
-        const purifyWindow = new JSDOM("").window;
-        try {
-          const purify = DOMPurify(purifyWindow);
-          const purifiedHTML = purify.sanitize(readableContent.content);
-
-          logger.info(`[Crawler][${jobId}] Done extracting readable content.`);
-          result = {
-            content: purifiedHTML,
-          };
-        } finally {
-          purifyWindow.close();
-        }
+        logger.info(`[Crawler][${jobId}] Done extracting readable content.`);
+        result = {
+          content: purifiedHTML,
+        };
       } finally {
-        dom.window.close();
+        purifyWindow.close();
       }
 
       return result;
