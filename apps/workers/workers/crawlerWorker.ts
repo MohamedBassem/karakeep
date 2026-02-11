@@ -554,6 +554,12 @@ async function crawlPage(
         // Create a new page in the context
         const page = await context.newPage();
 
+        // Automatically dismiss any JavaScript dialogs (alert, confirm, prompt, beforeunload)
+        // to prevent them from blocking page navigation and causing protocol errors.
+        page.on("dialog", (dialog) => {
+          dialog.dismiss().catch(() => {});
+        });
+
         // Apply ad blocking
         if (globalBlocker) {
           await globalBlocker.enableBlockingInPage(page);
