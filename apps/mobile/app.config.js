@@ -63,16 +63,8 @@ export default {
       [
         "expo-share-intent",
         {
-          iosActivationRules: {
-            NSExtensionActivationSupportsWebURLWithMaxCount: 1,
-            NSExtensionActivationSupportsWebPageWithMaxCount: 1,
-            NSExtensionActivationSupportsImageWithMaxCount: 1,
-            NSExtensionActivationSupportsMovieWithMaxCount: 0,
-            NSExtensionActivationSupportsText: true,
-            NSExtensionActivationSupportsFileWithMaxCount: 10,
-            NSExtensionActivationRule:
-              'SUBQUERY (extensionItems, $extensionItem, SUBQUERY ($extensionItem.attachments, $attachment, SUBQUERY ($attachment.registeredTypeIdentifiers, $uti, $uti UTI-CONFORMS-TO "com.adobe.pdf" || $uti UTI-CONFORMS-TO "public.image" || $uti UTI-CONFORMS-TO "public.url" || $uti UTI-CONFORMS-TO "public.plain-text").@count >= 1).@count >= 1).@count >= 1',
-          },
+          iosActivationRules:
+            'SUBQUERY (extensionItems, $extensionItem, SUBQUERY ($extensionItem.attachments, $attachment, SUBQUERY ($attachment.registeredTypeIdentifiers, $uti, $uti UTI-CONFORMS-TO "com.adobe.pdf" || $uti UTI-CONFORMS-TO "public.image" || $uti UTI-CONFORMS-TO "public.url" || $uti UTI-CONFORMS-TO "public.plain-text").@count >= 1).@count >= 1).@count >= 1',
           androidIntentFilters: ["text/*", "image/*", "application/pdf"],
         },
       ],
