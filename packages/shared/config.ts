@@ -212,6 +212,7 @@ const allEnv = z.object({
     .optional(),
 
   // Database configuration
+  DATABASE_URL: z.string().optional(),
   DB_WAL_MODE: stringBool("false"),
 
   // OpenTelemetry tracing configuration
@@ -421,6 +422,11 @@ const serverConfigSchema = allEnv.transform((val, ctx) => {
       },
     },
     database: {
+      type: (val.DATABASE_URL?.startsWith("postgresql://") ||
+        val.DATABASE_URL?.startsWith("postgres://")
+        ? "postgresql"
+        : "sqlite") as "sqlite" | "postgresql",
+      url: val.DATABASE_URL,
       walMode: val.DB_WAL_MODE,
     },
     tracing: {

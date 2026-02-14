@@ -4,15 +4,26 @@ import type { Config } from "drizzle-kit";
 
 import serverConfig from "@karakeep/shared/config";
 
-const databaseURL = serverConfig.dataDir
-  ? `${serverConfig.dataDir}/db.db`
-  : "./db.db";
+const isPostgresql = serverConfig.database.type === "postgresql";
 
-export default {
-  dialect: "sqlite",
+const sqliteConfig = {
+  dialect: "sqlite" as const,
   schema: "./schema.ts",
   out: "./drizzle",
   dbCredentials: {
-    url: databaseURL,
+    url: serverConfig.dataDir ? `${serverConfig.dataDir}/db.db` : "./db.db",
   },
-} satisfies Config;
+};
+
+const postgresqlConfig = {
+  dialect: "postgresql" as const,
+  schema: "./schema-pg.ts",
+  out: "./drizzle-pg",
+  dbCredentials: {
+    url: serverConfig.database.url ?? "",
+  },
+};
+
+export default (
+  isPostgresql ? postgresqlConfig : sqliteConfig
+) satisfies Config;

@@ -1,5 +1,13 @@
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import "dotenv/config";
 
-import { db } from "./drizzle";
+import serverConfig from "@karakeep/shared/config";
 
-migrate(db, { migrationsFolder: "./drizzle" });
+if (serverConfig.database.type === "postgresql") {
+  const { migrate } = await import("drizzle-orm/node-postgres/migrator");
+  const { pgDb } = await import("./drizzle-pg");
+  await migrate(pgDb, { migrationsFolder: "./drizzle-pg" });
+} else {
+  const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
+  const { db } = await import("./drizzle");
+  migrate(db, { migrationsFolder: "./drizzle" });
+}

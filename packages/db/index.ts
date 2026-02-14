@@ -8,6 +8,11 @@ export { db } from "./drizzle";
 export type { DB } from "./drizzle";
 export * as schema from "./schema";
 export { SqliteError } from "better-sqlite3";
+export {
+  isUniqueConstraintError,
+  isPrimaryKeyConstraintError,
+  isConstraintError,
+} from "./errors";
 
 // This is exported here to avoid leaking better-sqlite types outside of this package.
 export type KarakeepDBTransaction = SQLiteTransaction<
