@@ -495,6 +495,9 @@ export const clientConfig = {
   },
   serverVersion: serverConfig.serverVersion,
   disableNewReleaseCheck: serverConfig.disableNewReleaseCheck,
+  stripe: {
+    isConfigured: serverConfig.stripe.isConfigured,
+  },
 };
 export type ClientConfig = typeof clientConfig;
 

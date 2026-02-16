@@ -1,5 +1,6 @@
 import type { SubmitErrorHandler, SubmitHandler } from "react-hook-form";
 import React, { useImperativeHandle, useRef } from "react";
+import Link from "next/link";
 import { ActionButton } from "@/components/ui/action-button";
 import { Form, FormControl, FormItem } from "@/components/ui/form";
 import { Kbd } from "@/components/ui/kbd";
@@ -37,7 +38,8 @@ export default function EditorCard({ className }: { className?: string }) {
   const [multiUrlImportState, setMultiUrlImportState] =
     React.useState<MultiUrlImportState | null>(null);
 
-  const demoMode = !!useClientConfig().demoMode;
+  const clientConfig = useClientConfig();
+  const demoMode = !!clientConfig.demoMode;
   const bookmarkLayout = useBookmarkLayout();
   const formSchema = z.object({
     text: z.string(),
@@ -69,7 +71,27 @@ export default function EditorCard({ className }: { className?: string }) {
       }
     },
     onError: (e) => {
-      toast({ description: e.message, variant: "destructive" });
+      if (
+        e.message.includes("Bookmark quota exceeded") &&
+        clientConfig.stripe.isConfigured
+      ) {
+        toast({
+          description: (
+            <div className="flex flex-col gap-1">
+              {e.message}
+              <Link
+                className="underline underline-offset-4"
+                href="/settings/subscription"
+              >
+                {t("settings.subscription.upgrade_to_increase_quota")}
+              </Link>
+            </div>
+          ),
+          variant: "destructive",
+        });
+      } else {
+        toast({ description: e.message, variant: "destructive" });
+      }
     },
   });
 

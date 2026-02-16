@@ -410,7 +410,8 @@
       "approaching_quota_limit": "Approaching quota limit",
       "loading_usage": "Loading usage information...",
       "free": "Free",
-      "paid": "Paid"
+      "paid": "Paid",
+      "upgrade_to_increase_quota": "Upgrade your plan to increase your quota."
     },
     "import_sessions": {
       "title": "Import Sessions",

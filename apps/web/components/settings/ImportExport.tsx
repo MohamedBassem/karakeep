@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import FilePickerButton from "@/components/ui/file-picker-button";
@@ -13,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
+import { useClientConfig } from "@/lib/clientConfig";
 import { useBookmarkImport } from "@/lib/hooks/useBookmarkImport";
 import { useTranslation } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
@@ -134,6 +136,7 @@ export function ImportExportRow() {
   const { t } = useTranslation();
   const { importProgress, quotaError, runUploadBookmarkFile } =
     useBookmarkImport();
+  const clientConfig = useClientConfig();
 
   return (
     <div className="flex flex-col gap-3">
@@ -141,7 +144,20 @@ export function ImportExportRow() {
         <Alert variant="destructive" className="relative">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Import Quota Exceeded</AlertTitle>
-          <AlertDescription>{quotaError}</AlertDescription>
+          <AlertDescription>
+            {quotaError}
+            {clientConfig.stripe.isConfigured && (
+              <>
+                {" "}
+                <Link
+                  className="underline underline-offset-4"
+                  href="/settings/subscription"
+                >
+                  {t("settings.subscription.upgrade_to_increase_quota")}
+                </Link>
+              </>
+            )}
+          </AlertDescription>
         </Alert>
       )}
       <div className="grid gap-4 md:grid-cols-2">

@@ -24,6 +24,9 @@ export const ClientConfigCtx = createContext<ClientConfig>({
   },
   serverVersion: undefined,
   disableNewReleaseCheck: true,
+  stripe: {
+    isConfigured: false,
+  },
 });
 
 export function useClientConfig() {
