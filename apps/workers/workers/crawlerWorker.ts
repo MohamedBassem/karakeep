@@ -455,14 +455,22 @@ async function crawlPage(
     },
     async () => {
       // Check user's browser crawling setting
-      const userData = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-        columns: { browserCrawlingEnabled: true },
-      });
-      if (!userData) {
-        logger.error(`[Crawler][${jobId}] User ${userId} not found`);
-        throw new Error(`User ${userId} not found`);
-      }
+      const userData = await withSpan(
+        tracer,
+        "crawlerWorker.crawlPage.userLookup",
+        {},
+        async () => {
+          const result = await db.query.users.findFirst({
+            where: eq(users.id, userId),
+            columns: { browserCrawlingEnabled: true },
+          });
+          if (!result) {
+            logger.error(`[Crawler][${jobId}] User ${userId} not found`);
+            throw new Error(`User ${userId} not found`);
+          }
+          return result;
+        },
+      );
 
       const browserCrawlingEnabled = userData.browserCrawlingEnabled;
 
@@ -470,12 +478,20 @@ async function crawlPage(
         return browserlessCrawlPage(jobId, url, abortSignal);
       }
 
-      let browser: Browser | undefined;
-      if (serverConfig.crawler.browserConnectOnDemand) {
-        browser = await startBrowserInstance();
-      } else {
-        browser = globalBrowser;
-      }
+      const browser = await withSpan(
+        tracer,
+        "crawlerWorker.crawlPage.browserAcquire",
+        {},
+        async () => {
+          let b: Browser | undefined;
+          if (serverConfig.crawler.browserConnectOnDemand) {
+            b = await startBrowserInstance();
+          } else {
+            b = globalBrowser;
+          }
+          return b;
+        },
+      );
       if (!browser) {
         return browserlessCrawlPage(jobId, url, abortSignal);
       }
@@ -484,190 +500,258 @@ async function crawlPage(
       const isRunningInProxyContext =
         proxyConfig !== undefined &&
         !matchesNoProxy(url, proxyConfig.bypass?.split(",") ?? []);
-      const context = await browser.newContext({
-        viewport: { width: 1440, height: 900 },
-        userAgent:
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        proxy: proxyConfig,
-      });
+      const context = await withSpan(
+        tracer,
+        "crawlerWorker.crawlPage.createContext",
+        {},
+        async () => {
+          return await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+            userAgent:
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            proxy: proxyConfig,
+          });
+        },
+      );
 
       try {
-        if (globalCookies.length > 0) {
-          await context.addCookies(globalCookies);
-          logger.info(
-            `[Crawler][${jobId}] Cookies successfully loaded into browser context`,
-          );
-        }
-
-        // Create a new page in the context
-        const page = await context.newPage();
-
-        // Apply ad blocking
-        if (globalBlocker) {
-          await globalBlocker.enableBlockingInPage(page);
-        }
-
-        // Block audio/video resources and disallowed sub-requests
-        await page.route("**/*", async (route) => {
-          if (abortSignal.aborted) {
-            await route.abort("aborted");
-            return;
-          }
-          const request = route.request();
-          const resourceType = request.resourceType();
-
-          // Block audio/video resources
-          if (
-            resourceType === "media" ||
-            request.headers()["content-type"]?.includes("video/") ||
-            request.headers()["content-type"]?.includes("audio/")
-          ) {
-            await route.abort("aborted");
-            return;
-          }
-
-          const requestUrl = request.url();
-          const requestIsRunningInProxyContext =
-            proxyConfig !== undefined &&
-            !matchesNoProxy(requestUrl, proxyConfig.bypass?.split(",") ?? []);
-          if (
-            requestUrl.startsWith("http://") ||
-            requestUrl.startsWith("https://")
-          ) {
-            const validation = await validateUrl(
-              requestUrl,
-              requestIsRunningInProxyContext,
-            );
-            if (!validation.ok) {
-              logger.warn(
-                `[Crawler][${jobId}] Blocking sub-request to disallowed URL "${requestUrl}": ${validation.reason}`,
+        const page = await withSpan(
+          tracer,
+          "crawlerWorker.crawlPage.pageSetup",
+          {},
+          async () => {
+            if (globalCookies.length > 0) {
+              await context.addCookies(globalCookies);
+              logger.info(
+                `[Crawler][${jobId}] Cookies successfully loaded into browser context`,
               );
-              await route.abort("blockedbyclient");
-              return;
             }
-          }
 
-          // Continue with other requests
-          await route.continue();
-        });
+            // Create a new page in the context
+            const p = await context.newPage();
+
+            // Apply ad blocking
+            if (globalBlocker) {
+              await globalBlocker.enableBlockingInPage(p);
+            }
+
+            // Block audio/video resources and disallowed sub-requests
+            await p.route("**/*", async (route) => {
+              if (abortSignal.aborted) {
+                await route.abort("aborted");
+                return;
+              }
+              const request = route.request();
+              const resourceType = request.resourceType();
+
+              // Block audio/video resources
+              if (
+                resourceType === "media" ||
+                request.headers()["content-type"]?.includes("video/") ||
+                request.headers()["content-type"]?.includes("audio/")
+              ) {
+                await route.abort("aborted");
+                return;
+              }
+
+              const requestUrl = request.url();
+              const requestIsRunningInProxyContext =
+                proxyConfig !== undefined &&
+                !matchesNoProxy(
+                  requestUrl,
+                  proxyConfig.bypass?.split(",") ?? [],
+                );
+              if (
+                requestUrl.startsWith("http://") ||
+                requestUrl.startsWith("https://")
+              ) {
+                const validation = await validateUrl(
+                  requestUrl,
+                  requestIsRunningInProxyContext,
+                );
+                if (!validation.ok) {
+                  logger.warn(
+                    `[Crawler][${jobId}] Blocking sub-request to disallowed URL "${requestUrl}": ${validation.reason}`,
+                  );
+                  await route.abort("blockedbyclient");
+                  return;
+                }
+              }
+
+              // Continue with other requests
+              await route.continue();
+            });
+
+            return p;
+          },
+        );
 
         // Navigate to the target URL
-        const navigationValidation = await validateUrl(
-          url,
-          isRunningInProxyContext,
-        );
-        if (!navigationValidation.ok) {
-          throw new Error(
-            `Disallowed navigation target "${url}": ${navigationValidation.reason}`,
-          );
-        }
-        const targetUrl = navigationValidation.url.toString();
-        logger.info(`[Crawler][${jobId}] Navigating to "${targetUrl}"`);
-        const response = await Promise.race([
-          page.goto(targetUrl, {
-            timeout: serverConfig.crawler.navigateTimeoutSec * 1000,
-            waitUntil: "domcontentloaded",
-          }),
-          abortPromise(abortSignal).then(() => null),
-        ]);
+        const response = await withSpan(
+          tracer,
+          "crawlerWorker.crawlPage.navigate",
+          {},
+          async () => {
+            const navigationValidation = await validateUrl(
+              url,
+              isRunningInProxyContext,
+            );
+            if (!navigationValidation.ok) {
+              throw new Error(
+                `Disallowed navigation target "${url}": ${navigationValidation.reason}`,
+              );
+            }
+            const targetUrl = navigationValidation.url.toString();
+            logger.info(`[Crawler][${jobId}] Navigating to "${targetUrl}"`);
+            const resp = await Promise.race([
+              page.goto(targetUrl, {
+                timeout: serverConfig.crawler.navigateTimeoutSec * 1000,
+                waitUntil: "domcontentloaded",
+              }),
+              abortPromise(abortSignal).then(() => null),
+            ]);
 
-        logger.info(
-          `[Crawler][${jobId}] Successfully navigated to "${targetUrl}". Waiting for the page to load ...`,
+            logger.info(
+              `[Crawler][${jobId}] Successfully navigated to "${targetUrl}". Waiting for the page to load ...`,
+            );
+            return resp;
+          },
         );
 
         // Wait until network is relatively idle or timeout after 5 seconds
-        await Promise.race([
-          page
-            .waitForLoadState("networkidle", { timeout: 5000 })
-            .catch(() => ({})),
-          new Promise((resolve) => setTimeout(resolve, 5000)),
-          abortPromise(abortSignal),
-        ]);
+        await withSpan(
+          tracer,
+          "crawlerWorker.crawlPage.waitForLoad",
+          {},
+          async () => {
+            await Promise.race([
+              page
+                .waitForLoadState("networkidle", { timeout: 5000 })
+                .catch(() => ({})),
+              new Promise((resolve) => setTimeout(resolve, 5000)),
+              abortPromise(abortSignal),
+            ]);
 
-        abortSignal.throwIfAborted();
+            abortSignal.throwIfAborted();
 
-        logger.info(
-          `[Crawler][${jobId}] Finished waiting for the page to load.`,
+            logger.info(
+              `[Crawler][${jobId}] Finished waiting for the page to load.`,
+            );
+          },
         );
 
         // Extract content from the page
-        const htmlContent = await page.content();
+        const htmlContent = await withSpan(
+          tracer,
+          "crawlerWorker.crawlPage.extractContent",
+          {},
+          async () => {
+            const content = await page.content();
 
-        abortSignal.throwIfAborted();
+            abortSignal.throwIfAborted();
 
-        logger.info(
-          `[Crawler][${jobId}] Successfully fetched the page content.`,
+            setSpanAttributes({
+              "crawler.htmlContent.size": content.length,
+            });
+
+            logger.info(
+              `[Crawler][${jobId}] Successfully fetched the page content.`,
+            );
+            return content;
+          },
         );
 
         // Take a screenshot if configured
         let screenshot: Buffer | undefined = undefined;
         if (serverConfig.crawler.storeScreenshot) {
-          const { data: screenshotData, error: screenshotError } =
-            await tryCatch(
-              Promise.race<Buffer>([
-                page.screenshot({
-                  // If you change this, you need to change the asset type in the store function.
-                  type: "jpeg",
-                  fullPage: serverConfig.crawler.fullPageScreenshot,
-                  quality: 80,
-                }),
-                new Promise((_, reject) =>
-                  setTimeout(
-                    () =>
-                      reject(
-                        "TIMED_OUT, consider increasing CRAWLER_SCREENSHOT_TIMEOUT_SEC",
+          screenshot = await withSpan(
+            tracer,
+            "crawlerWorker.crawlPage.screenshot",
+            {},
+            async () => {
+              const { data: screenshotData, error: screenshotError } =
+                await tryCatch(
+                  Promise.race<Buffer>([
+                    page.screenshot({
+                      // If you change this, you need to change the asset type in the store function.
+                      type: "jpeg",
+                      fullPage: serverConfig.crawler.fullPageScreenshot,
+                      quality: 80,
+                    }),
+                    new Promise((_, reject) =>
+                      setTimeout(
+                        () =>
+                          reject(
+                            "TIMED_OUT, consider increasing CRAWLER_SCREENSHOT_TIMEOUT_SEC",
+                          ),
+                        serverConfig.crawler.screenshotTimeoutSec * 1000,
                       ),
-                    serverConfig.crawler.screenshotTimeoutSec * 1000,
-                  ),
-                ),
-                abortPromise(abortSignal).then(() => Buffer.from("")),
-              ]),
-            );
-          abortSignal.throwIfAborted();
-          if (screenshotError) {
-            logger.warn(
-              `[Crawler][${jobId}] Failed to capture the screenshot. Reason: ${screenshotError}`,
-            );
-          } else {
-            logger.info(
-              `[Crawler][${jobId}] Finished capturing page content and a screenshot. FullPageScreenshot: ${serverConfig.crawler.fullPageScreenshot}`,
-            );
-            screenshot = screenshotData;
-          }
+                    ),
+                    abortPromise(abortSignal).then(() => Buffer.from("")),
+                  ]),
+                );
+              abortSignal.throwIfAborted();
+              if (screenshotError) {
+                logger.warn(
+                  `[Crawler][${jobId}] Failed to capture the screenshot. Reason: ${screenshotError}`,
+                );
+                return undefined;
+              } else {
+                setSpanAttributes({
+                  "crawler.screenshot.size": screenshotData.length,
+                });
+                logger.info(
+                  `[Crawler][${jobId}] Finished capturing page content and a screenshot. FullPageScreenshot: ${serverConfig.crawler.fullPageScreenshot}`,
+                );
+                return screenshotData;
+              }
+            },
+          );
         }
 
         // Capture PDF if configured or explicitly requested
         let pdf: Buffer | undefined = undefined;
         if (serverConfig.crawler.storePdf || forceStorePdf) {
-          const { data: pdfData, error: pdfError } = await tryCatch(
-            Promise.race<Buffer>([
-              page.pdf({
-                format: "A4",
-                printBackground: true,
-              }),
-              new Promise((_, reject) =>
-                setTimeout(
-                  () =>
-                    reject(
-                      "TIMED_OUT, consider increasing CRAWLER_SCREENSHOT_TIMEOUT_SEC",
+          pdf = await withSpan(
+            tracer,
+            "crawlerWorker.crawlPage.pdf",
+            {},
+            async () => {
+              const { data: pdfData, error: pdfError } = await tryCatch(
+                Promise.race<Buffer>([
+                  page.pdf({
+                    format: "A4",
+                    printBackground: true,
+                  }),
+                  new Promise((_, reject) =>
+                    setTimeout(
+                      () =>
+                        reject(
+                          "TIMED_OUT, consider increasing CRAWLER_SCREENSHOT_TIMEOUT_SEC",
+                        ),
+                      serverConfig.crawler.screenshotTimeoutSec * 1000,
                     ),
-                  serverConfig.crawler.screenshotTimeoutSec * 1000,
-                ),
-              ),
-              abortPromise(abortSignal).then(() => Buffer.from("")),
-            ]),
+                  ),
+                  abortPromise(abortSignal).then(() => Buffer.from("")),
+                ]),
+              );
+              abortSignal.throwIfAborted();
+              if (pdfError) {
+                logger.warn(
+                  `[Crawler][${jobId}] Failed to capture the PDF. Reason: ${pdfError}`,
+                );
+                return undefined;
+              } else {
+                setSpanAttributes({
+                  "crawler.pdf.size": pdfData.length,
+                });
+                logger.info(
+                  `[Crawler][${jobId}] Finished capturing page content as PDF`,
+                );
+                return pdfData;
+              }
+            },
           );
-          abortSignal.throwIfAborted();
-          if (pdfError) {
-            logger.warn(
-              `[Crawler][${jobId}] Failed to capture the PDF. Reason: ${pdfError}`,
-            );
-          } else {
-            logger.info(
-              `[Crawler][${jobId}] Finished capturing page content as PDF`,
-            );
-            pdf = pdfData;
-          }
         }
 
         return {

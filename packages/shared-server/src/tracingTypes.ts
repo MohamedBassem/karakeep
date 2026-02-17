@@ -29,6 +29,9 @@ export type TracingAttributeKey =
   | "crawler.getContentType.statusCode"
   | "crawler.contentType"
   | "crawler.statusCode"
+  | "crawler.htmlContent.size"
+  | "crawler.screenshot.size"
+  | "crawler.pdf.size"
   // Database attributes
   | "db.system"
   | "db.statement"
