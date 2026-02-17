@@ -815,67 +815,79 @@ export const bookmarksAppRouter = router({
 
       const res = await ctx.db.transaction(async (tx) => {
         // Detaches
-        if (idsToRemove.length > 0) {
+        const detached =
+          idsToRemove.length > 0
+            ? await tx
+                .delete(tagsOnBookmarks)
+                .where(
+                  and(
+                    eq(tagsOnBookmarks.bookmarkId, input.bookmarkId),
+                    inArray(tagsOnBookmarks.tagId, idsToRemove),
+                  ),
+                )
+                .returning({ tagId: tagsOnBookmarks.tagId })
+            : [];
+
+        // Attach tags
+        const attached =
+          allIdsToAttach.length > 0
+            ? await tx
+                .insert(tagsOnBookmarks)
+                .values(
+                  allIdsToAttach.map((i) => ({
+                    tagId: i,
+                    bookmarkId: input.bookmarkId,
+                    attachedBy: tagIdToAttachedBy.get(i) ?? "human",
+                  })),
+                )
+                .onConflictDoNothing()
+                .returning({ tagId: tagsOnBookmarks.tagId })
+            : [];
+
+        const actualDetached = detached.map((r) => r.tagId);
+        const actualAttached = attached.map((r) => r.tagId);
+
+        // Only update bookmark modified timestamp if tags actually changed
+        if (actualDetached.length > 0 || actualAttached.length > 0) {
           await tx
-            .delete(tagsOnBookmarks)
+            .update(bookmarks)
+            .set({ modifiedAt: new Date() })
             .where(
               and(
-                eq(tagsOnBookmarks.bookmarkId, input.bookmarkId),
-                inArray(tagsOnBookmarks.tagId, idsToRemove),
+                eq(bookmarks.id, input.bookmarkId),
+                eq(bookmarks.userId, ctx.user.id),
               ),
             );
         }
 
-        // Attach tags
-        if (allIdsToAttach.length > 0) {
-          await tx
-            .insert(tagsOnBookmarks)
-            .values(
-              allIdsToAttach.map((i) => ({
-                tagId: i,
-                bookmarkId: input.bookmarkId,
-                attachedBy: tagIdToAttachedBy.get(i) ?? "human",
-              })),
-            )
-            .onConflictDoNothing();
-        }
-
-        // Update bookmark modified timestamp
-        await tx
-          .update(bookmarks)
-          .set({ modifiedAt: new Date() })
-          .where(
-            and(
-              eq(bookmarks.id, input.bookmarkId),
-              eq(bookmarks.userId, ctx.user.id),
-            ),
-          );
-
         return {
           bookmarkId: input.bookmarkId,
-          attached: allIdsToAttach,
-          detached: idsToRemove,
+          attached: actualAttached,
+          detached: actualDetached,
         };
       });
 
-      await Promise.allSettled([
-        triggerRuleEngineOnEvent(input.bookmarkId, [
-          ...res.detached.map((t) => ({
-            type: "tagRemoved" as const,
-            tagId: t,
-          })),
-          ...res.attached.map((t) => ({
-            type: "tagAdded" as const,
-            tagId: t,
-          })),
-        ]),
-        triggerSearchReindex(input.bookmarkId, {
-          groupId: ctx.user.id,
-        }),
-        triggerWebhook(input.bookmarkId, "edited", ctx.user.id, {
-          groupId: ctx.user.id,
-        }),
-      ]);
+      // Only trigger side effects if tags actually changed
+      if (res.attached.length > 0 || res.detached.length > 0) {
+        await Promise.allSettled([
+          triggerRuleEngineOnEvent(input.bookmarkId, [
+            ...res.detached.map((t) => ({
+              type: "tagRemoved" as const,
+              tagId: t,
+            })),
+            ...res.attached.map((t) => ({
+              type: "tagAdded" as const,
+              tagId: t,
+            })),
+          ]),
+          triggerSearchReindex(input.bookmarkId, {
+            groupId: ctx.user.id,
+          }),
+          triggerWebhook(input.bookmarkId, "edited", ctx.user.id, {
+            groupId: ctx.user.id,
+          }),
+        ]);
+      }
       return res;
     }),
   getBrokenLinks: authedProcedure
