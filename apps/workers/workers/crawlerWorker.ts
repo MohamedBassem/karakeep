@@ -420,8 +420,10 @@ async function browserlessCrawlPage(
       return {
         htmlContent: await response.text(),
         statusCode: response.status,
-        screenshot: undefined,
-        pdf: undefined,
+        screenshotPath: undefined,
+        screenshotSize: undefined,
+        pdfPath: undefined,
+        pdfSize: undefined,
         url: response.url,
       };
     },
@@ -436,8 +438,10 @@ async function crawlPage(
   abortSignal: AbortSignal,
 ): Promise<{
   htmlContent: string;
-  screenshot: Buffer | undefined;
-  pdf: Buffer | undefined;
+  screenshotPath: string | undefined;
+  screenshotSize: number | undefined;
+  pdfPath: string | undefined;
+  pdfSize: number | undefined;
   statusCode: number;
   url: string;
 }> {
@@ -599,51 +603,27 @@ async function crawlPage(
           `[Crawler][${jobId}] Successfully fetched the page content.`,
         );
 
-        // Take a screenshot if configured
-        let screenshot: Buffer | undefined = undefined;
-        if (serverConfig.crawler.storeScreenshot) {
-          const { data: screenshotData, error: screenshotError } =
-            await tryCatch(
-              Promise.race<Buffer>([
-                page.screenshot({
-                  // If you change this, you need to change the asset type in the store function.
-                  type: "jpeg",
-                  fullPage: serverConfig.crawler.fullPageScreenshot,
-                  quality: 80,
-                }),
-                new Promise((_, reject) =>
-                  setTimeout(
-                    () =>
-                      reject(
-                        "TIMED_OUT, consider increasing CRAWLER_SCREENSHOT_TIMEOUT_SEC",
-                      ),
-                    serverConfig.crawler.screenshotTimeoutSec * 1000,
-                  ),
-                ),
-                abortPromise(abortSignal).then(() => Buffer.from("")),
-              ]),
-            );
-          abortSignal.throwIfAborted();
-          if (screenshotError) {
-            logger.warn(
-              `[Crawler][${jobId}] Failed to capture the screenshot. Reason: ${screenshotError}`,
-            );
-          } else {
-            logger.info(
-              `[Crawler][${jobId}] Finished capturing page content and a screenshot. FullPageScreenshot: ${serverConfig.crawler.fullPageScreenshot}`,
-            );
-            screenshot = screenshotData;
-          }
-        }
+        // Capture screenshot and PDF in parallel, writing to tempfiles
+        // to avoid holding large buffers in memory.
+        let screenshotPath: string | undefined = undefined;
+        let screenshotSize: number | undefined = undefined;
+        let pdfPath: string | undefined = undefined;
+        let pdfSize: number | undefined = undefined;
 
-        // Capture PDF if configured or explicitly requested
-        let pdf: Buffer | undefined = undefined;
-        if (serverConfig.crawler.storePdf || forceStorePdf) {
-          const { data: pdfData, error: pdfError } = await tryCatch(
+        const captureScreenshot = async () => {
+          if (!serverConfig.crawler.storeScreenshot) return;
+          const tmpPath = path.join(
+            os.tmpdir(),
+            `karakeep-screenshot-${jobId}.jpeg`,
+          );
+          const { error: screenshotError } = await tryCatch(
             Promise.race<Buffer>([
-              page.pdf({
-                format: "A4",
-                printBackground: true,
+              page.screenshot({
+                // If you change this, you need to change the asset type in the store function.
+                type: "jpeg",
+                fullPage: serverConfig.crawler.fullPageScreenshot,
+                quality: 80,
+                path: tmpPath,
               }),
               new Promise((_, reject) =>
                 setTimeout(
@@ -657,24 +637,71 @@ async function crawlPage(
               abortPromise(abortSignal).then(() => Buffer.from("")),
             ]),
           );
-          abortSignal.throwIfAborted();
+          if (screenshotError) {
+            logger.warn(
+              `[Crawler][${jobId}] Failed to capture the screenshot. Reason: ${screenshotError}`,
+            );
+            await fs.unlink(tmpPath).catch(() => {});
+          } else {
+            logger.info(
+              `[Crawler][${jobId}] Finished capturing page content and a screenshot. FullPageScreenshot: ${serverConfig.crawler.fullPageScreenshot}`,
+            );
+            const stat = await fs.stat(tmpPath);
+            screenshotPath = tmpPath;
+            screenshotSize = stat.size;
+          }
+        };
+
+        const capturePdf = async () => {
+          if (!serverConfig.crawler.storePdf && !forceStorePdf) return;
+          const tmpPath = path.join(
+            os.tmpdir(),
+            `karakeep-pdf-${jobId}.pdf`,
+          );
+          const { error: pdfError } = await tryCatch(
+            Promise.race<Buffer>([
+              page.pdf({
+                format: "A4",
+                printBackground: true,
+                path: tmpPath,
+              }),
+              new Promise((_, reject) =>
+                setTimeout(
+                  () =>
+                    reject(
+                      "TIMED_OUT, consider increasing CRAWLER_SCREENSHOT_TIMEOUT_SEC",
+                    ),
+                  serverConfig.crawler.screenshotTimeoutSec * 1000,
+                ),
+              ),
+              abortPromise(abortSignal).then(() => Buffer.from("")),
+            ]),
+          );
           if (pdfError) {
             logger.warn(
               `[Crawler][${jobId}] Failed to capture the PDF. Reason: ${pdfError}`,
             );
+            await fs.unlink(tmpPath).catch(() => {});
           } else {
             logger.info(
               `[Crawler][${jobId}] Finished capturing page content as PDF`,
             );
-            pdf = pdfData;
+            const stat = await fs.stat(tmpPath);
+            pdfPath = tmpPath;
+            pdfSize = stat.size;
           }
-        }
+        };
+
+        await Promise.all([captureScreenshot(), capturePdf()]);
+        abortSignal.throwIfAborted();
 
         return {
           htmlContent,
           statusCode: response?.status() ?? 0,
-          screenshot,
-          pdf,
+          screenshotPath,
+          screenshotSize,
+          pdfPath,
+          pdfSize,
           url: page.url(),
         };
       } finally {
@@ -811,7 +838,8 @@ async function runParseSubprocess(
 }
 
 async function storeScreenshot(
-  screenshot: Buffer | undefined,
+  screenshotPath: string | undefined,
+  screenshotSize: number | undefined,
   userId: string,
   jobId: string,
 ) {
@@ -822,7 +850,7 @@ async function storeScreenshot(
       attributes: {
         "job.id": jobId,
         "user.id": userId,
-        "asset.size": screenshot?.byteLength ?? 0,
+        "asset.size": screenshotSize ?? 0,
       },
     },
     async () => {
@@ -832,7 +860,7 @@ async function storeScreenshot(
         );
         return null;
       }
-      if (!screenshot) {
+      if (!screenshotPath || !screenshotSize) {
         logger.info(
           `[Crawler][${jobId}] Skipping storing the screenshot as it's empty.`,
         );
@@ -844,7 +872,7 @@ async function storeScreenshot(
 
       // Check storage quota before saving the screenshot
       const { data: quotaApproved, error: quotaError } = await tryCatch(
-        QuotaService.checkStorageQuota(db, userId, screenshot.byteLength),
+        QuotaService.checkStorageQuota(db, userId, screenshotSize),
       );
 
       if (quotaError) {
@@ -854,23 +882,24 @@ async function storeScreenshot(
         return null;
       }
 
-      await saveAsset({
+      await saveAssetFromFile({
         userId,
         assetId,
         metadata: { contentType, fileName },
-        asset: screenshot,
+        assetPath: screenshotPath,
         quotaApproved,
       });
       logger.info(
-        `[Crawler][${jobId}] Stored the screenshot as assetId: ${assetId} (${screenshot.byteLength} bytes)`,
+        `[Crawler][${jobId}] Stored the screenshot as assetId: ${assetId} (${screenshotSize} bytes)`,
       );
-      return { assetId, contentType, fileName, size: screenshot.byteLength };
+      return { assetId, contentType, fileName, size: screenshotSize };
     },
   );
 }
 
 async function storePdf(
-  pdf: Buffer | undefined,
+  pdfPath: string | undefined,
+  pdfSize: number | undefined,
   userId: string,
   jobId: string,
 ) {
@@ -881,11 +910,11 @@ async function storePdf(
       attributes: {
         "job.id": jobId,
         "user.id": userId,
-        "asset.size": pdf?.byteLength ?? 0,
+        "asset.size": pdfSize ?? 0,
       },
     },
     async () => {
-      if (!pdf) {
+      if (!pdfPath || !pdfSize) {
         logger.info(
           `[Crawler][${jobId}] Skipping storing the PDF as it's empty.`,
         );
@@ -897,7 +926,7 @@ async function storePdf(
 
       // Check storage quota before saving the PDF
       const { data: quotaApproved, error: quotaError } = await tryCatch(
-        QuotaService.checkStorageQuota(db, userId, pdf.byteLength),
+        QuotaService.checkStorageQuota(db, userId, pdfSize),
       );
 
       if (quotaError) {
@@ -907,17 +936,17 @@ async function storePdf(
         return null;
       }
 
-      await saveAsset({
+      await saveAssetFromFile({
         userId,
         assetId,
         metadata: { contentType, fileName },
-        asset: pdf,
+        assetPath: pdfPath,
         quotaApproved,
       });
       logger.info(
-        `[Crawler][${jobId}] Stored the PDF as assetId: ${assetId} (${pdf.byteLength} bytes)`,
+        `[Crawler][${jobId}] Stored the PDF as assetId: ${assetId} (${pdfSize} bytes)`,
       );
-      return { assetId, contentType, fileName, size: pdf.byteLength };
+      return { assetId, contentType, fileName, size: pdfSize };
     },
   );
 }
@@ -1383,8 +1412,10 @@ async function crawlAndParseUrl(
     async () => {
       let result: {
         htmlContent: string;
-        screenshot: Buffer | undefined;
-        pdf: Buffer | undefined;
+        screenshotPath: string | undefined;
+        screenshotSize: number | undefined;
+        pdfPath: string | undefined;
+        pdfSize: number | undefined;
         statusCode: number | null;
         url: string;
       };
@@ -1399,8 +1430,10 @@ async function crawlAndParseUrl(
         });
         result = {
           htmlContent: asset.asset.toString(),
-          screenshot: undefined,
-          pdf: undefined,
+          screenshotPath: undefined,
+          screenshotSize: undefined,
+          pdfPath: undefined,
+          pdfSize: undefined,
           statusCode: 200,
           url,
         };
@@ -1417,8 +1450,10 @@ async function crawlAndParseUrl(
 
       const {
         htmlContent,
-        screenshot,
-        pdf,
+        screenshotPath,
+        screenshotSize,
+        pdfPath,
+        pdfSize,
         statusCode,
         url: browserUrl,
       } = result;
@@ -1468,15 +1503,23 @@ async function crawlAndParseUrl(
       let readableContent = parsedReadableContent;
 
       const screenshotAssetInfo = await Promise.race([
-        storeScreenshot(screenshot, userId, jobId),
+        storeScreenshot(screenshotPath, screenshotSize, userId, jobId),
         abortPromise(abortSignal),
       ]);
+      // Clean up the screenshot tempfile after storing
+      if (screenshotPath) {
+        await fs.unlink(screenshotPath).catch(() => {});
+      }
       abortSignal.throwIfAborted();
 
       const pdfAssetInfo = await Promise.race([
-        storePdf(pdf, userId, jobId),
+        storePdf(pdfPath, pdfSize, userId, jobId),
         abortPromise(abortSignal),
       ]);
+      // Clean up the PDF tempfile after storing
+      if (pdfPath) {
+        await fs.unlink(pdfPath).catch(() => {});
+      }
       abortSignal.throwIfAborted();
 
       const htmlContentAssetInfo = await storeHtmlContent(
