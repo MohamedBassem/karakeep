@@ -30,6 +30,7 @@ import { useSearchHistory } from "@karakeep/shared-react/hooks/search-history";
 
 import { EditListModal } from "../lists/EditListModal";
 import QueryExplainerTooltip from "./QueryExplainerTooltip";
+import { SearchQueryBuilder } from "./SearchQueryBuilder";
 import { useSearchAutocomplete } from "./useSearchAutocomplete";
 
 function useFocusSearchOnKeyPress(
@@ -145,6 +146,17 @@ const SearchInput = React.forwardRef<
     [doSearch, addTerm],
   );
 
+  const handleBuilderApply = useCallback(
+    (query: string) => {
+      setValue(query);
+      doSearch(query);
+      if (query) {
+        addTerm(query);
+      }
+    },
+    [doSearch, addTerm],
+  );
+
   useFocusSearchOnKeyPress(inputRef, value, setValue, setIsPopoverOpen);
   useImperativeHandle(ref, () => inputRef.current!);
 
@@ -179,24 +191,30 @@ const SearchInput = React.forwardRef<
           query: value,
         }}
       />
-      <Link
-        href="https://docs.karakeep.app/Guides/search-query-language"
-        target="_blank"
-        className="-translate-1/2 absolute right-1.5 top-2 z-50 stroke-foreground px-0.5"
-      >
-        <QueryExplainerTooltip parsedSearchQuery={parsedSearchQuery} />
-      </Link>
-      {parsedSearchQuery.result === "full" &&
-        parsedSearchQuery.text.length == 0 && (
-          <Button
-            onClick={() => setNewNestedListModalOpen(true)}
-            size="none"
-            variant="secondary"
-            className="absolute right-10 top-2 z-50 px-2 py-1 text-xs"
-          >
-            {t("actions.save")}
-          </Button>
-        )}
+      <div className="absolute right-1.5 top-2 z-50 flex items-center gap-0.5">
+        {parsedSearchQuery.result === "full" &&
+          parsedSearchQuery.text.length == 0 && (
+            <Button
+              onClick={() => setNewNestedListModalOpen(true)}
+              size="none"
+              variant="secondary"
+              className="px-2 py-1 text-xs"
+            >
+              {t("actions.save")}
+            </Button>
+          )}
+        <SearchQueryBuilder
+          currentQuery={value}
+          onApply={handleBuilderApply}
+        />
+        <Link
+          href="https://docs.karakeep.app/Guides/search-query-language"
+          target="_blank"
+          className="stroke-foreground px-0.5"
+        >
+          <QueryExplainerTooltip parsedSearchQuery={parsedSearchQuery} />
+        </Link>
+      </div>
       <Command
         shouldFilter={false}
         className="relative rounded-md bg-transparent"
