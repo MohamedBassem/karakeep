@@ -22,7 +22,7 @@ const MAX_DISPLAY_SUGGESTIONS = 5;
 export default function Search() {
   const [search, setSearch] = useState("");
 
-  const query = useDebounce(search, 10);
+  const query = useDebounce(search, 300);
   const inputRef = useRef<TextInput>(null);
 
   const [isInputFocused, setIsInputFocused] = useState(true);
@@ -44,7 +44,6 @@ export default function Search() {
     error,
     refetch,
     isPending,
-    isFetching,
     fetchNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery(
@@ -122,7 +121,7 @@ export default function Search() {
         onCancel={router.back}
       />
 
-      {isInputFocused ? (
+      {isInputFocused && search.trim().length === 0 ? (
         <FlatList
           data={filteredHistory}
           renderItem={renderHistoryItem}
@@ -146,7 +145,7 @@ export default function Search() {
           }
           keyboardShouldPersistTaps="handled"
         />
-      ) : isFetching && query.length > 0 ? (
+      ) : isPending && query.length > 0 ? (
         <FullPageSpinner />
       ) : data && query.length > 0 ? (
         <BookmarkList
