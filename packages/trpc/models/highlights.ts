@@ -55,6 +55,8 @@ export class Highlight {
         color: input.color,
         text: input.text,
         note: input.note,
+        startAnchor: input.startAnchor ?? null,
+        endAnchor: input.endAnchor ?? null,
         userId: ctx.user.id,
       })
       .returning();

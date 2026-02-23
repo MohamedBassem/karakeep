@@ -173,6 +173,8 @@ export function BookmarkLinkReaderPreview({
             bookmarkId: bookmark.id,
             text: h.text,
             note: h.note ?? null,
+            startAnchor: h.startAnchor ?? null,
+            endAnchor: h.endAnchor ?? null,
           })
         }
         onUpdateHighlight={(h) =>

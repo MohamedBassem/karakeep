@@ -175,6 +175,8 @@ export default function ReaderView({
               bookmarkId,
               text: h.text,
               note: h.note ?? null,
+              startAnchor: h.startAnchor ?? null,
+              endAnchor: h.endAnchor ?? null,
             })
           }
         />

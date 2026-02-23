@@ -350,6 +350,8 @@ export const highlights = sqliteTable(
       .notNull(),
     text: text("text"),
     note: text("note"),
+    startAnchor: text("startAnchor"),
+    endAnchor: text("endAnchor"),
     createdAt: createdAtField(),
   },
   (tb) => [

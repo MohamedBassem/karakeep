@@ -10,9 +10,11 @@ import { PopoverAnchor } from "@radix-ui/react-popover";
 import { Check, Trash2 } from "lucide-react";
 
 import {
+  HIGHLIGHT_ANCHOR_MAX_LENGTH,
   SUPPORTED_HIGHLIGHT_COLORS,
   ZHighlightColor,
 } from "@karakeep/shared/types/highlights";
+import { normalizeText } from "@karakeep/shared/utils/reading-progress-dom";
 
 import { HIGHLIGHT_COLOR_MAP } from "./highlights";
 import { Button } from "./ui/button";
@@ -133,6 +135,8 @@ export interface Highlight {
   color: ZHighlightColor;
   text: string | null;
   note?: string | null;
+  startAnchor?: string | null;
+  endAnchor?: string | null;
 }
 
 interface HTMLHighlighterProps {
@@ -320,6 +324,23 @@ const BookmarkHTMLHighlighter = forwardRef<
     return -1;
   };
 
+  const getAnchorForNode = (node: Node): string | null => {
+    const PARAGRAPH_SELECTORS = "p, h1, h2, h3, h4, h5, h6, li, blockquote";
+    const element =
+      node.nodeType === Node.ELEMENT_NODE
+        ? (node as Element)
+        : node.parentElement;
+    if (!element) return null;
+    const paragraph = element.closest(PARAGRAPH_SELECTORS);
+    if (!paragraph) return null;
+    return (
+      normalizeText(paragraph.textContent ?? "").slice(
+        0,
+        HIGHLIGHT_ANCHOR_MAX_LENGTH,
+      ) || null
+    );
+  };
+
   const createHighlightFromRange = (
     range: Range,
     color: ZHighlightColor,
@@ -338,6 +359,8 @@ const BookmarkHTMLHighlighter = forwardRef<
       endOffset,
       color,
       text: range.toString(),
+      startAnchor: getAnchorForNode(range.startContainer),
+      endAnchor: getAnchorForNode(range.endContainer),
     };
 
     applyHighlightByOffset(highlight);

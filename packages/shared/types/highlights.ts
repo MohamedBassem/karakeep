@@ -4,6 +4,8 @@ import { zCursorV2 } from "./pagination";
 
 export const DEFAULT_NUM_HIGHLIGHTS_PER_PAGE = 20;
 
+export const HIGHLIGHT_ANCHOR_MAX_LENGTH = 50;
+
 const zHighlightColorSchema = z.enum(["yellow", "red", "green", "blue"]);
 export type ZHighlightColor = z.infer<typeof zHighlightColorSchema>;
 export const SUPPORTED_HIGHLIGHT_COLORS = zHighlightColorSchema.options;
@@ -15,6 +17,16 @@ const zHighlightBaseSchema = z.object({
   color: zHighlightColorSchema.default("yellow"),
   text: z.string().nullable(),
   note: z.string().nullable(),
+  startAnchor: z
+    .string()
+    .max(HIGHLIGHT_ANCHOR_MAX_LENGTH)
+    .nullish()
+    .default(null),
+  endAnchor: z
+    .string()
+    .max(HIGHLIGHT_ANCHOR_MAX_LENGTH)
+    .nullish()
+    .default(null),
 });
 
 export const zHighlightSchema = zHighlightBaseSchema.merge(
