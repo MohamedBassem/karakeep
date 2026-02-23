@@ -283,13 +283,17 @@ export class Tag {
     );
 
     try {
-      await Promise.all(
-        affectedBookmarks.map((id) =>
-          triggerSearchReindex(id, {
-            groupId: ctx.user.id,
-          }),
-        ),
-      );
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < affectedBookmarks.length; i += BATCH_SIZE) {
+        const batch = affectedBookmarks.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map((id) =>
+            triggerSearchReindex(id, {
+              groupId: ctx.user.id,
+            }),
+          ),
+        );
+      }
     } catch (e) {
       console.error("Failed to reindex affected bookmarks", e);
     }
