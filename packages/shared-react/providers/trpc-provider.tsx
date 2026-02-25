@@ -11,6 +11,7 @@ interface Settings {
   apiKey?: string;
   address: string;
   customHeaders?: Record<string, string>;
+  source?: string;
 }
 
 function getTRPCClient(settings: Settings) {
@@ -24,6 +25,9 @@ function getTRPCClient(settings: Settings) {
             Authorization: settings.apiKey
               ? `Bearer ${settings.apiKey}`
               : undefined,
+            ...(settings.source
+              ? { "X-Karakeep-Source": settings.source }
+              : {}),
             ...settings.customHeaders,
           };
         },

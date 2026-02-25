@@ -103,6 +103,7 @@ export async function initializeClients() {
           headers() {
             return {
               Authorization: `Bearer ${apiKey}`,
+              "X-Karakeep-Source": "extension",
               ...customHeaders,
             };
           },

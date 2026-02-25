@@ -23,6 +23,7 @@ export const karakeepClient = createKarakeepClient({
     ...getCustomHeaders(),
     "Content-Type": "application/json",
     authorization: `Bearer ${apiKey}`,
+    "X-Karakeep-Source": "mcp",
   },
 });
 

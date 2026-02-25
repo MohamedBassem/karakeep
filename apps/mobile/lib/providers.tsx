@@ -20,7 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <TRPCSettingsProvider settings={settings}>
+    <TRPCSettingsProvider settings={{ ...settings, source: "mobile" }}>
       <ReaderSettingsProvider>
         {children}
         <Toaster />

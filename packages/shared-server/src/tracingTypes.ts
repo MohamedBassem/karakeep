@@ -42,7 +42,9 @@ export type TracingAttributeKey =
   | "inference.prompt.customCount"
   | "inference.totalTokens"
   | "inference.model"
-  | "inference.type";
+  | "inference.type"
+  // Client attributes
+  | "client.source";
 
 export type TracingAttributes = Partial<
   Record<TracingAttributeKey, string | number | boolean>

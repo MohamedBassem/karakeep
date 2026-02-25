@@ -449,7 +449,7 @@ describe("API Keys Routes", () => {
       const caller = createCaller({
         user: null,
         db,
-        req: { ip: null },
+        req: { ip: null, source: null },
       });
 
       // Attempting to exchange should fail with verification error

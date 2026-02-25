@@ -71,6 +71,11 @@ export default function Providers({
           url: `/api/trpc`,
           maxURLLength: 14000,
           transformer: superjson,
+          headers() {
+            return {
+              "X-Karakeep-Source": "web",
+            };
+          },
         }),
       ],
     }),

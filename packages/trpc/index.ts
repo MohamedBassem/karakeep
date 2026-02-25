@@ -25,6 +25,7 @@ export interface Context {
   db: typeof db;
   req: {
     ip: string | null;
+    source: string | null;
   };
 }
 
@@ -33,6 +34,7 @@ export interface AuthedContext {
   db: typeof db;
   req: {
     ip: string | null;
+    source: string | null;
   };
 }
 

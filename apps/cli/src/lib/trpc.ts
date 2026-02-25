@@ -15,6 +15,7 @@ export function getAPIClient() {
         headers() {
           return {
             authorization: `Bearer ${globals.apiKey}`,
+            "X-Karakeep-Source": "cli",
           };
         },
       }),
@@ -32,6 +33,7 @@ export function getAPIClientFor(opts: { serverAddr: string; apiKey: string }) {
         headers() {
           return {
             authorization: `Bearer ${opts.apiKey}`,
+            "X-Karakeep-Source": "cli",
           };
         },
       }),

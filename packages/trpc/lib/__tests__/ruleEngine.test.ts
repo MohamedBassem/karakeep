@@ -89,7 +89,7 @@ describe("RuleEngine", () => {
     ctx = {
       user: { id: userId, role: "user" },
       db: db, // Cast needed because TestDB might have extra test methods
-      req: { ip: null },
+      req: { ip: null, source: null },
     };
 
     // Seed Tags

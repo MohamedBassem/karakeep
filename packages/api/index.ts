@@ -71,7 +71,7 @@ app
   .use(
     cors({
       origin: "*",
-      allowHeaders: ["Authorization", "Content-Type"],
+      allowHeaders: ["Authorization", "Content-Type", "X-Karakeep-Source"],
       credentials: true,
     }),
   )

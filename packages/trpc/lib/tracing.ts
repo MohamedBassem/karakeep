@@ -41,6 +41,7 @@ export function createTracingMiddleware() {
           "rpc.type": opts.type,
           "user.id": opts.ctx.user?.id ?? "anonymous",
           "user.role": opts.ctx.user?.role ?? "none",
+          "client.source": opts.ctx.req.source ?? "unknown",
         },
       },
       async () => {

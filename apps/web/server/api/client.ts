@@ -13,6 +13,7 @@ export async function createContextFromRequest(req: Request) {
   const ip = requestIp.getClientIp({
     headers: Object.fromEntries(req.headers.entries()),
   });
+  const source = req.headers.get("X-Karakeep-Source");
   const authorizationHeader = req.headers.get("Authorization");
   if (authorizationHeader && authorizationHeader.startsWith("Bearer ")) {
     const token = authorizationHeader.split(" ")[1];
@@ -23,6 +24,7 @@ export async function createContextFromRequest(req: Request) {
         db,
         req: {
           ip,
+          source,
         },
       };
     } catch {
@@ -30,12 +32,13 @@ export async function createContextFromRequest(req: Request) {
     }
   }
 
-  return createContext(db, ip);
+  return createContext(db, ip, source);
 }
 
 export const createContext = async (
   database?: typeof db,
   ip?: string | null,
+  source?: string | null,
 ): Promise<Context> => {
   const session = await getServerAuthSession();
   if (ip === undefined) {
@@ -49,6 +52,7 @@ export const createContext = async (
     db: database ?? db,
     req: {
       ip,
+      source: source ?? null,
     },
   };
 };
