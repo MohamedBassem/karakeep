@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import { MenuView } from "@react-native-menu/menu";
 import { ChevronDown } from "lucide-react-native";
@@ -56,26 +57,41 @@ export default function BookmarkLinkTypeSelector({
       id: "reader" as const,
       title: "Reader View",
       state: type === "reader" ? ("on" as const) : undefined,
+      image: Platform.select({
+        ios: "doc.plaintext",
+      }),
     },
     {
       id: "browser" as const,
       title: "Browser",
       state: type === "browser" ? ("on" as const) : undefined,
+      image: Platform.select({
+        ios: "globe",
+      }),
     },
     {
       id: "screenshot" as const,
       title: "Screenshot",
       state: type === "screenshot" ? ("on" as const) : undefined,
+      image: Platform.select({
+        ios: "camera.viewfinder",
+      }),
     },
     {
       id: "archive" as const,
       title: "Archived Page",
       state: type === "archive" ? ("on" as const) : undefined,
+      image: Platform.select({
+        ios: "archivebox",
+      }),
     },
     {
       id: "pdf" as const,
       title: "PDF",
       state: type === "pdf" ? ("on" as const) : undefined,
+      image: Platform.select({
+        ios: "doc.fill",
+      }),
     },
   ];
 

@@ -118,6 +118,9 @@ function ListActionsMenu({
           attributes: {
             hidden: role !== "owner",
           },
+          image: Platform.select({
+            ios: "pencil",
+          }),
         },
         {
           id: "delete",
@@ -137,6 +140,9 @@ function ListActionsMenu({
             destructive: true,
             hidden: role === "owner",
           },
+          image: Platform.select({
+            ios: "rectangle.portrait.and.arrow.right",
+          }),
         },
       ]}
       onPressAction={({ nativeEvent }) => {
