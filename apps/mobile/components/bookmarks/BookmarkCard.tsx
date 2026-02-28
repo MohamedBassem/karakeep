@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -543,17 +544,24 @@ export default function BookmarkCard({
   );
 
   const router = useRouter();
+  const { settings } = useAppSettings();
+
+  const onOpenLinkBookmark = () => {
+    if (
+      settings.defaultBookmarkView === "externalBrowser" &&
+      bookmark.content.type === BookmarkTypes.LINK
+    ) {
+      Linking.openURL(bookmark.content.url);
+    } else {
+      router.push(`/dashboard/bookmarks/${bookmark.id}`);
+    }
+  };
 
   let comp;
   switch (bookmark.content.type) {
     case BookmarkTypes.LINK:
       comp = (
-        <LinkCard
-          bookmark={bookmark}
-          onOpenBookmark={() =>
-            router.push(`/dashboard/bookmarks/${bookmark.id}`)
-          }
-        />
+        <LinkCard bookmark={bookmark} onOpenBookmark={onOpenLinkBookmark} />
       );
       break;
     case BookmarkTypes.TEXT:
