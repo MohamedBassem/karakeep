@@ -26,15 +26,21 @@ import {
 import {
   useDeleteBookmark,
   useRecrawlBookmark,
+  useSetBookmarkPin,
   useUpdateBookmark,
 } from "@karakeep/shared-react/hooks/bookmarks";
+import { useBookmarkGridContext } from "@karakeep/shared-react/hooks/bookmark-grid-context";
 import { useRemoveBookmarkFromList } from "@karakeep/shared-react/hooks/lists";
 import { limitConcurrency } from "@karakeep/shared/concurrency";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
 
 import BulkManageListsModal from "./bookmarks/BulkManageListsModal";
 import BulkTagModal from "./bookmarks/BulkTagModal";
-import { ArchivedActionIcon, FavouritedActionIcon } from "./bookmarks/icons";
+import {
+  ArchivedActionIcon,
+  FavouritedActionIcon,
+  PinnedActionIcon,
+} from "./bookmarks/icons";
 
 const MAX_CONCURRENT_BULK_ACTIONS = 50;
 
@@ -106,6 +112,23 @@ export default function BulkBookmarksAction() {
     },
     onError,
   });
+
+  const pinBookmarkMutator = useSetBookmarkPin({
+    onSuccess: () => {
+      setIsBulkEditEnabled(false);
+    },
+    onError,
+  });
+
+  // Determine pin context from the grid query
+  const gridContext = useBookmarkGridContext();
+  const pinContext = gridContext?.listId
+    ? { listId: gridContext.listId }
+    : gridContext?.tagId
+      ? { tagId: gridContext.tagId }
+      : {};
+  const isPinningAvailable =
+    !gridContext?.rssFeedId && gridContext !== undefined;
 
   interface UpdateBookmarkProps {
     favourited?: boolean;
@@ -224,6 +247,29 @@ export default function BulkBookmarksAction() {
     setIsRemoveFromListDialogOpen(false);
   };
 
+  const pinBookmarks = async (pinned: boolean) => {
+    await Promise.all(
+      limitConcurrency(
+        selectedBookmarks.map(
+          (item) => () =>
+            pinBookmarkMutator.mutateAsync({
+              bookmarkId: item.id,
+              pinned,
+              ...pinContext,
+            }),
+        ),
+        MAX_CONCURRENT_BULK_ACTIONS,
+      ),
+    );
+    toast({
+      description: `${selectedBookmarks.length} bookmarks have been ${pinned ? "pinned" : "unpinned"}!`,
+    });
+  };
+
+  const alreadyPinned =
+    selectedBookmarks.length &&
+    selectedBookmarks.every((item) => item.pinned === true);
+
   const alreadyFavourited =
     selectedBookmarks.length &&
     selectedBookmarks.every((item) => item.favourited === true);
@@ -274,6 +320,13 @@ export default function BulkBookmarksAction() {
       action: () => updateBookmarks({ favourited: !alreadyFavourited }),
       isPending: updateBookmarkMutator.isPending,
       hidden: !isBulkEditEnabled,
+    },
+    {
+      name: alreadyPinned ? t("actions.unpin") : t("actions.pin"),
+      icon: <PinnedActionIcon pinned={!!alreadyPinned} size={18} />,
+      action: () => pinBookmarks(!alreadyPinned),
+      isPending: pinBookmarkMutator.isPending,
+      hidden: !isBulkEditEnabled || !isPinningAvailable,
     },
     {
       name: alreadyArchived ? t("actions.unarchive") : t("actions.archive"),

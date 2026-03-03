@@ -8,6 +8,8 @@ import {
   gt,
   gte,
   inArray,
+  isNotNull,
+  isNull,
   lt,
   lte,
   or,
@@ -110,7 +112,8 @@ export class BareBookmark {
       });
     }
 
-    return new BareBookmark(ctx, bookmark);
+    const { pinnedAt, ...rest } = bookmark;
+    return new BareBookmark(ctx, { ...rest, pinned: pinnedAt != null });
   }
 
   protected static async isAllowedToAccessBookmark(
@@ -205,6 +208,8 @@ export class Bookmark extends BareBookmark {
       };
     }
 
+    // Transform pinnedAt (nullable timestamp) to pinned (boolean)
+    const { pinnedAt, ...restWithoutPinnedAt } = rest;
     return {
       tags: tagsOnBookmarks
         .map((t) => ({
@@ -220,7 +225,8 @@ export class Bookmark extends BareBookmark {
         assetType: mapDBAssetTypeToUserType(a.assetType),
         fileName: a.fileName,
       })),
-      ...rest,
+      pinned: pinnedAt != null,
+      ...restWithoutPinnedAt,
     };
   }
 
@@ -472,16 +478,47 @@ export class Bookmark extends BareBookmark {
         desc(bookmarks.id),
       ] as const;
 
+    // Determine if pinning is supported for this query context.
+    // Pinning is not supported for: RSS feeds, filtered archive/favourites views.
+    const supportsPinning =
+      !input.rssFeedId &&
+      input.archived === undefined &&
+      input.favourited === undefined;
+
+    // Helper to execute a CTE query with all the tag/link/text/asset joins
+    const executeWithJoins = async (
+      cte: ReturnType<(typeof ctx.db)["$with"]>,
+    ) => {
+      return ctx.db
+        .with(cte)
+        .select()
+        .from(cte)
+        .leftJoin(tagsOnBookmarks, eq(cte.id, tagsOnBookmarks.bookmarkId))
+        .leftJoin(bookmarkTags, eq(tagsOnBookmarks.tagId, bookmarkTags.id))
+        .leftJoin(bookmarkLinks, eq(bookmarkLinks.id, cte.id))
+        .leftJoin(bookmarkTexts, eq(bookmarkTexts.id, cte.id))
+        .leftJoin(bookmarkAssets, eq(bookmarkAssets.id, cte.id))
+        .leftJoin(assets, eq(assets.bookmarkId, cte.id))
+        .orderBy(desc(cte.createdAt), desc(cte.id));
+    };
+
     // Choose query strategy based on filters
     // Strategy: Use the most selective filter as the driving table
+    // When pinning is supported, build separate queries for pinned (first page only) and unpinned items
     let sq;
+    let pinnedSq;
 
     if (input.listId !== undefined) {
       // PATH: List filter - start from bookmarksInLists (more selective)
       // Access control is already verified by List.fromId() called above
+      // Use bookmarksInLists.pinnedAt for list-specific pinning
+      const selectCols = {
+        ...getTableColumns(bookmarks),
+        pinnedAt: bookmarksInLists.pinnedAt,
+      };
       sq = ctx.db.$with("bookmarksSq").as(
         ctx.db
-          .select(getTableColumns(bookmarks))
+          .select(selectCols)
           .from(bookmarksInLists)
           .innerJoin(bookmarks, eq(bookmarks.id, bookmarksInLists.bookmarkId))
           .where(
@@ -489,16 +526,43 @@ export class Bookmark extends BareBookmark {
               eq(bookmarksInLists.listId, input.listId),
               ...buildCommonFilters(),
               buildCursorCondition(bookmarks.createdAt, bookmarks.id),
+              supportsPinning
+                ? isNull(bookmarksInLists.pinnedAt)
+                : undefined,
             ),
           )
           .limit(input.limit + 1)
           .orderBy(...buildOrderBy()),
       );
+      if (supportsPinning && !input.cursor) {
+        pinnedSq = ctx.db.$with("bookmarksSq").as(
+          ctx.db
+            .select(selectCols)
+            .from(bookmarksInLists)
+            .innerJoin(
+              bookmarks,
+              eq(bookmarks.id, bookmarksInLists.bookmarkId),
+            )
+            .where(
+              and(
+                eq(bookmarksInLists.listId, input.listId),
+                ...buildCommonFilters(),
+                isNotNull(bookmarksInLists.pinnedAt),
+              ),
+            )
+            .orderBy(desc(bookmarksInLists.pinnedAt)),
+        );
+      }
     } else if (input.tagId !== undefined) {
       // PATH: Tag filter - start from tagsOnBookmarks (more selective)
+      // Use tagsOnBookmarks.pinnedAt for tag-specific pinning
+      const selectCols = {
+        ...getTableColumns(bookmarks),
+        pinnedAt: tagsOnBookmarks.pinnedAt,
+      };
       sq = ctx.db.$with("bookmarksSq").as(
         ctx.db
-          .select(getTableColumns(bookmarks))
+          .select(selectCols)
           .from(tagsOnBookmarks)
           .innerJoin(bookmarks, eq(bookmarks.id, tagsOnBookmarks.bookmarkId))
           .where(
@@ -507,13 +571,35 @@ export class Bookmark extends BareBookmark {
               eq(bookmarks.userId, ctx.user.id), // Access control
               ...buildCommonFilters(),
               buildCursorCondition(bookmarks.createdAt, bookmarks.id),
+              supportsPinning ? isNull(tagsOnBookmarks.pinnedAt) : undefined,
             ),
           )
           .limit(input.limit + 1)
           .orderBy(...buildOrderBy()),
       );
+      if (supportsPinning && !input.cursor) {
+        pinnedSq = ctx.db.$with("bookmarksSq").as(
+          ctx.db
+            .select(selectCols)
+            .from(tagsOnBookmarks)
+            .innerJoin(
+              bookmarks,
+              eq(bookmarks.id, tagsOnBookmarks.bookmarkId),
+            )
+            .where(
+              and(
+                eq(tagsOnBookmarks.tagId, input.tagId),
+                eq(bookmarks.userId, ctx.user.id),
+                ...buildCommonFilters(),
+                isNotNull(tagsOnBookmarks.pinnedAt),
+              ),
+            )
+            .orderBy(desc(tagsOnBookmarks.pinnedAt)),
+        );
+      }
     } else if (input.rssFeedId !== undefined) {
       // PATH: RSS feed filter - start from rssFeedImportsTable (more selective)
+      // No pinning support for RSS feeds
       sq = ctx.db.$with("bookmarksSq").as(
         ctx.db
           .select(getTableColumns(bookmarks))
@@ -536,6 +622,7 @@ export class Bookmark extends BareBookmark {
     } else {
       // PATH: No list/tag/rssFeed filter - query bookmarks directly
       // Uses composite index: bookmarks_userId_createdAt_id_idx (or archived/favourited variants)
+      // Use bookmarks.pinnedAt for homepage pinning
       sq = ctx.db.$with("bookmarksSq").as(
         ctx.db
           .select()
@@ -545,29 +632,40 @@ export class Bookmark extends BareBookmark {
               eq(bookmarks.userId, ctx.user.id),
               ...buildCommonFilters(),
               buildCursorCondition(bookmarks.createdAt, bookmarks.id),
+              supportsPinning ? isNull(bookmarks.pinnedAt) : undefined,
             ),
           )
           .limit(input.limit + 1)
           .orderBy(...buildOrderBy()),
       );
+      if (supportsPinning && !input.cursor) {
+        pinnedSq = ctx.db.$with("bookmarksSq").as(
+          ctx.db
+            .select()
+            .from(bookmarks)
+            .where(
+              and(
+                eq(bookmarks.userId, ctx.user.id),
+                ...buildCommonFilters(),
+                isNotNull(bookmarks.pinnedAt),
+              ),
+            )
+            .orderBy(desc(bookmarks.pinnedAt)),
+        );
+      }
     }
 
-    // Execute the query with joins for related data
+    // Execute the queries with joins for related data
     // TODO: Consider not inlining the tags in the response of getBookmarks as this query is getting kinda expensive
-    const results = await ctx.db
-      .with(sq)
-      .select()
-      .from(sq)
-      .leftJoin(tagsOnBookmarks, eq(sq.id, tagsOnBookmarks.bookmarkId))
-      .leftJoin(bookmarkTags, eq(tagsOnBookmarks.tagId, bookmarkTags.id))
-      .leftJoin(bookmarkLinks, eq(bookmarkLinks.id, sq.id))
-      .leftJoin(bookmarkTexts, eq(bookmarkTexts.id, sq.id))
-      .leftJoin(bookmarkAssets, eq(bookmarkAssets.id, sq.id))
-      .leftJoin(assets, eq(assets.bookmarkId, sq.id))
-      .orderBy(desc(sq.createdAt), desc(sq.id));
+    const results = await executeWithJoins(sq);
+    const pinnedResults = pinnedSq ? await executeWithJoins(pinnedSq) : [];
 
-    const bookmarksRes = results.reduce<Record<string, ZBookmark>>(
-      (acc, row) => {
+    // Helper to reduce query rows into ZBookmark objects
+    const reduceResults = (
+      rows: typeof results,
+      pinned: boolean,
+    ): Record<string, ZBookmark> => {
+      return rows.reduce<Record<string, ZBookmark>>((acc, row) => {
         const bookmarkId = row.bookmarksSq.id;
         if (!acc[bookmarkId]) {
           let content: ZBookmarkContent;
@@ -615,8 +713,14 @@ export class Bookmark extends BareBookmark {
               type: BookmarkTypes.UNKNOWN,
             };
           }
+          // Destructure pinnedAt out since ZBookmark uses `pinned: boolean` instead
+          const {
+            pinnedAt: _pinnedAt,
+            ...bookmarkFields
+          } = row.bookmarksSq;
           acc[bookmarkId] = {
-            ...row.bookmarksSq,
+            ...bookmarkFields,
+            pinned,
             content,
             tags: [],
             assets: [],
@@ -680,11 +784,20 @@ export class Bookmark extends BareBookmark {
         }
 
         return acc;
-      },
-      {},
-    );
+      }, {});
+    };
 
-    const bookmarksArr = Object.values(bookmarksRes);
+    // Reduce unpinned results
+    const unpinnedRes = reduceResults(results, false);
+    // Reduce pinned results (first page only)
+    const pinnedRes = reduceResults(pinnedResults, true);
+
+    const allBookmarks = {
+      ...unpinnedRes,
+      ...pinnedRes,
+    };
+
+    const bookmarksArr = Object.values(allBookmarks);
 
     // Fetch HTML content from assets for bookmarks that have contentAssetId (large content)
     if (input.includeContent) {
@@ -713,7 +826,12 @@ export class Bookmark extends BareBookmark {
       );
     }
 
+    // Sort: pinned items first, then by createdAt
     bookmarksArr.sort((a, b) => {
+      // Pinned items always come first
+      if (a.pinned !== b.pinned) {
+        return a.pinned ? -1 : 1;
+      }
       if (a.createdAt != b.createdAt) {
         return input.sortOrder === "asc"
           ? a.createdAt.getTime() - b.createdAt.getTime()
@@ -729,9 +847,17 @@ export class Bookmark extends BareBookmark {
       );
     });
 
+    // Cursor is based on unpinned items only
+    const unpinnedArr = bookmarksArr.filter((b) => !b.pinned);
     let nextCursor = null;
-    if (bookmarksArr.length > input.limit) {
-      const nextItem = bookmarksArr.pop()!;
+    if (unpinnedArr.length > input.limit) {
+      // Remove the extra unpinned item used for cursor detection
+      const nextItem = unpinnedArr[unpinnedArr.length - 1];
+      // Remove it from the main array too
+      const idx = bookmarksArr.indexOf(nextItem);
+      if (idx !== -1) {
+        bookmarksArr.splice(idx, 1);
+      }
       nextCursor = {
         id: nextItem.id,
         createdAt: nextItem.createdAt,
@@ -750,11 +876,12 @@ export class Bookmark extends BareBookmark {
     }
 
     // Collaborators shouldn't see owner-specific state such as favourites,
-    // archived flag, or personal notes.
+    // archived flag, pinned status, or personal notes.
     return {
       ...this.bookmark,
       archived: false,
       favourited: false,
+      pinned: false,
       note: null,
     };
   }

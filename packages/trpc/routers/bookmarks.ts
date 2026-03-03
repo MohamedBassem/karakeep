@@ -10,6 +10,7 @@ import {
   bookmarkAssets,
   bookmarkLinks,
   bookmarks,
+  bookmarksInLists,
   bookmarkTags,
   bookmarkTexts,
   customPrompts,
@@ -45,6 +46,7 @@ import {
   zNewBookmarkRequestSchema,
   zSearchBookmarksCursor,
   zSearchBookmarksRequestSchema,
+  zSetBookmarkPinRequestSchema,
   zUpdateBookmarksRequestSchema,
 } from "@karakeep/shared/types/bookmarks";
 import { ANCHOR_TEXT_MAX_LENGTH } from "@karakeep/shared/utils/reading-progress-dom";
@@ -55,6 +57,7 @@ import { authedProcedure, createRateLimitMiddleware, router } from "../index";
 import { getBookmarkIdsFromMatcher } from "../lib/search";
 import { Asset } from "../models/assets";
 import { BareBookmark, Bookmark } from "../models/bookmarks";
+import { List } from "../models/lists";
 
 export const ensureBookmarkOwnership = experimental_trpcMiddleware<{
   ctx: AuthedContext;
@@ -260,12 +263,14 @@ export const bookmarksAppRouter = router({
             }
           }
 
+          const { pinnedAt: _pinnedAt, ...bookmarkFields } = bookmark;
           return {
             alreadyExists: false,
             tags: [] as ZBookmarkTags[],
             assets: [],
             content,
-            ...bookmark,
+            pinned: false,
+            ...bookmarkFields,
           };
         },
         {
@@ -433,6 +438,7 @@ export const bookmarksAppRouter = router({
           title: string | null;
           archived: boolean;
           favourited: boolean;
+          pinnedAt: Date | null;
           note: string | null;
           summary: string | null;
           createdAt: Date;
@@ -445,6 +451,10 @@ export const bookmarksAppRouter = router({
         }
         if (input.archived !== undefined) {
           commonUpdateData.archived = input.archived;
+          // Clear homepage pin when archiving
+          if (input.archived) {
+            commonUpdateData.pinnedAt = null;
+          }
         }
         if (input.favourited !== undefined) {
           commonUpdateData.favourited = input.favourited;
@@ -806,6 +816,63 @@ export const bookmarksAppRouter = router({
         bookmarks: res.bookmarks.map((b) => b.asZBookmark()),
         nextCursor: res.nextCursor,
       };
+    }),
+
+  setBookmarkPin: authedProcedure
+    .input(zSetBookmarkPinRequestSchema)
+    .use(ensureBookmarkOwnership)
+    .mutation(async ({ input, ctx }) => {
+      const pinnedAt = input.pinned ? new Date() : null;
+
+      if (input.listId) {
+        // List-specific pinning: verify user can edit the list
+        const list = await List.fromId(ctx, input.listId);
+        list.ensureCanEdit();
+
+        const result = await ctx.db
+          .update(bookmarksInLists)
+          .set({ pinnedAt })
+          .where(
+            and(
+              eq(bookmarksInLists.bookmarkId, input.bookmarkId),
+              eq(bookmarksInLists.listId, input.listId),
+            ),
+          );
+        if (result.changes === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Bookmark is not in this list",
+          });
+        }
+      } else if (input.tagId) {
+        // Tag-specific pinning
+        const result = await ctx.db
+          .update(tagsOnBookmarks)
+          .set({ pinnedAt })
+          .where(
+            and(
+              eq(tagsOnBookmarks.bookmarkId, input.bookmarkId),
+              eq(tagsOnBookmarks.tagId, input.tagId),
+            ),
+          );
+        if (result.changes === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Bookmark does not have this tag",
+          });
+        }
+      } else {
+        // Homepage pinning
+        await ctx.db
+          .update(bookmarks)
+          .set({ pinnedAt })
+          .where(
+            and(
+              eq(bookmarks.id, input.bookmarkId),
+              eq(bookmarks.userId, ctx.user.id),
+            ),
+          );
+      }
     }),
 
   updateTags: authedProcedure

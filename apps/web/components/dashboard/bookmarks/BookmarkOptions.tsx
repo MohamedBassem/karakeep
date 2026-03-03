@@ -45,6 +45,7 @@ import { useBookmarkGridContext } from "@karakeep/shared-react/hooks/bookmark-gr
 import { useBookmarkListContext } from "@karakeep/shared-react/hooks/bookmark-list-context";
 import {
   useRecrawlBookmark,
+  useSetBookmarkPin,
   useUpdateBookmark,
 } from "@karakeep/shared-react/hooks/bookmarks";
 import { useRemoveBookmarkFromList } from "@karakeep/shared-react/hooks/lists";
@@ -54,7 +55,11 @@ import { getAssetUrl } from "@karakeep/shared/utils/assetUtils";
 import { BookmarkedTextEditor } from "./BookmarkedTextEditor";
 import DeleteBookmarkConfirmationDialog from "./DeleteBookmarkConfirmationDialog";
 import { EditBookmarkDialog } from "./EditBookmarkDialog";
-import { ArchivedActionIcon, FavouritedActionIcon } from "./icons";
+import {
+  ArchivedActionIcon,
+  FavouritedActionIcon,
+  PinnedActionIcon,
+} from "./icons";
 import { useManageListsModal } from "./ManageListsModal";
 
 interface ActionItem {
@@ -187,6 +192,28 @@ export default function BookmarkOptions({ bookmark }: { bookmark: ZBookmark }) {
     onError,
   });
 
+  const pinBookmarkMutator = useSetBookmarkPin({
+    onSuccess: () => {
+      toast.success(
+        bookmark.pinned
+          ? t("toasts.bookmarks.unpinned")
+          : t("toasts.bookmarks.pinned"),
+      );
+    },
+    onError,
+  });
+
+  // Determine the pin context based on the current view
+  const gridContext = useBookmarkGridContext();
+  const pinContext = gridContext?.listId
+    ? { listId: gridContext.listId }
+    : gridContext?.tagId
+      ? { tagId: gridContext.tagId }
+      : {};
+  // Pinning is available in homepage, list, and tag views, but not in RSS feeds or search
+  const isPinningAvailable =
+    isOwner && !gridContext?.rssFeedId && gridContext !== undefined;
+
   const handleBannerFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
@@ -262,6 +289,24 @@ export default function BookmarkOptions({ bookmark }: { bookmark: ZBookmark }) {
         updateBookmarkMutator.mutate({
           bookmarkId: linkId,
           favourited: !bookmark.favourited,
+        }),
+    },
+    {
+      id: "pin",
+      title: bookmark.pinned ? t("actions.unpin") : t("actions.pin"),
+      icon: (
+        <PinnedActionIcon
+          className="mr-2 size-4"
+          pinned={bookmark.pinned}
+        />
+      ),
+      visible: isPinningAvailable,
+      disabled: demoMode,
+      onClick: () =>
+        pinBookmarkMutator.mutate({
+          bookmarkId: linkId,
+          pinned: !bookmark.pinned,
+          ...pinContext,
         }),
     },
     {

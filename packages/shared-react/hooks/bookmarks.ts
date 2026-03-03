@@ -144,6 +144,30 @@ export function useSummarizeBookmark(
   );
 }
 
+export function useSetBookmarkPin(
+  opts?: Parameters<
+    TRPCApi["bookmarks"]["setBookmarkPin"]["mutationOptions"]
+  >[0],
+) {
+  const api = useTRPC();
+  const queryClient = useQueryClient();
+  return useMutation(
+    api.bookmarks.setBookmarkPin.mutationOptions({
+      ...opts,
+      onSuccess: (res, req, meta, context) => {
+        queryClient.invalidateQueries(api.bookmarks.getBookmarks.pathFilter());
+        queryClient.invalidateQueries(
+          api.bookmarks.searchBookmarks.pathFilter(),
+        );
+        queryClient.invalidateQueries(
+          api.bookmarks.getBookmark.queryFilter({ bookmarkId: req.bookmarkId }),
+        );
+        return opts?.onSuccess?.(res, req, meta, context);
+      },
+    }),
+  );
+}
+
 export function useRecrawlBookmark(
   opts?: Parameters<
     TRPCApi["bookmarks"]["recrawlBookmark"]["mutationOptions"]

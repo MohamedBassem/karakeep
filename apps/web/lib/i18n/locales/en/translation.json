@@ -69,6 +69,8 @@
     "unarchive": "Un-archive",
     "favorite": "Favorite",
     "unfavorite": "Unfavorite",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "delete": "Delete",
     "toggle_show_archived": "Show Archived",
     "refresh": "Refresh",
@@ -916,7 +918,9 @@
       "delete_from_list": "The bookmark has been deleted from the list",
       "clipboard_copied": "Link has been added to your clipboard!",
       "update_banner": "Banner has been updated!",
-      "uploading_banner": "Uploading banner..."
+      "uploading_banner": "Uploading banner...",
+      "pinned": "Bookmark has been pinned!",
+      "unpinned": "Bookmark has been unpinned!"
     },
     "lists": {
       "created": "List has been created!",

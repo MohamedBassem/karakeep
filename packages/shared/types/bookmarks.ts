@@ -106,6 +106,7 @@ export const zBareBookmarkSchema = z.object({
   title: z.string().nullish(),
   archived: z.boolean(),
   favourited: z.boolean(),
+  pinned: z.boolean(),
   taggingStatus: z.enum(["success", "failure", "pending"]).nullable(),
   summarizationStatus: z.enum(["success", "failure", "pending"]).nullable(),
   note: z.string().nullish(),
@@ -245,6 +246,18 @@ export const zUpdateBookmarksRequestSchema = z.object({
 });
 export type ZUpdateBookmarksRequest = z.infer<
   typeof zUpdateBookmarksRequestSchema
+>;
+
+// PUT /v1/bookmarks/[bookmarkId]/pin
+export const zSetBookmarkPinRequestSchema = z.object({
+  bookmarkId: z.string(),
+  pinned: z.boolean(),
+  listId: z.string().optional(),
+  tagId: z.string().optional(),
+  // If neither listId nor tagId is provided, it pins to the homepage
+});
+export type ZSetBookmarkPinRequest = z.infer<
+  typeof zSetBookmarkPinRequestSchema
 >;
 
 // The schema that's used to for attachig/detaching tags

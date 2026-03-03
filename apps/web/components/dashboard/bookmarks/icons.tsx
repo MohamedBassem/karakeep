@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Star } from "lucide-react";
+import { Archive, ArchiveRestore, Pin, PinOff, Star } from "lucide-react";
 
 export function FavouritedActionIcon({
   favourited,
@@ -13,6 +13,22 @@ export function FavouritedActionIcon({
     <Star size={size} className={className} color="#ebb434" fill="#ebb434" />
   ) : (
     <Star size={size} className={className} />
+  );
+}
+
+export function PinnedActionIcon({
+  pinned,
+  className,
+  size,
+}: {
+  pinned: boolean;
+  className?: string;
+  size?: number;
+}) {
+  return pinned ? (
+    <PinOff size={size} className={className} />
+  ) : (
+    <Pin size={size} className={className} />
   );
 }
 

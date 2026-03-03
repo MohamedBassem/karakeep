@@ -193,6 +193,7 @@ export const bookmarks = sqliteTable(
     favourited: integer("favourited", { mode: "boolean" })
       .notNull()
       .default(false),
+    pinnedAt: integer("pinnedAt", { mode: "timestamp" }),
     userId: text("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -234,6 +235,12 @@ export const bookmarks = sqliteTable(
     index("bookmarks_userId_favourited_createdAt_id_idx").on(
       b.userId,
       b.favourited,
+      b.createdAt,
+      b.id,
+    ),
+    index("bookmarks_userId_pinnedAt_createdAt_id_idx").on(
+      b.userId,
+      b.pinnedAt,
       b.createdAt,
       b.id,
     ),
@@ -453,6 +460,7 @@ export const tagsOnBookmarks = sqliteTable(
       () => new Date(),
     ),
     attachedBy: text("attachedBy", { enum: ["ai", "human"] }).notNull(),
+    pinnedAt: integer("pinnedAt", { mode: "timestamp" }),
   },
   (tb) => [
     primaryKey({ columns: [tb.bookmarkId, tb.tagId] }),
@@ -460,6 +468,7 @@ export const tagsOnBookmarks = sqliteTable(
     index("tagsOnBookmarks_bookmarkId_idx").on(tb.bookmarkId),
     // Composite index for tag-first queries (when filtering by tagId)
     index("tagsOnBookmarks_tagId_bookmarkId_idx").on(tb.tagId, tb.bookmarkId),
+    index("tagsOnBookmarks_tagId_pinnedAt_idx").on(tb.tagId, tb.pinnedAt),
   ],
 );
 
@@ -514,6 +523,7 @@ export const bookmarksInLists = sqliteTable(
         onDelete: "cascade",
       },
     ),
+    pinnedAt: integer("pinnedAt", { mode: "timestamp" }),
   },
   (tb) => [
     primaryKey({ columns: [tb.bookmarkId, tb.listId] }),
@@ -524,6 +534,7 @@ export const bookmarksInLists = sqliteTable(
       tb.listId,
       tb.bookmarkId,
     ),
+    index("bookmarksInLists_listId_pinnedAt_idx").on(tb.listId, tb.pinnedAt),
   ],
 );
 

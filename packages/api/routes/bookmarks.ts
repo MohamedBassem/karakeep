@@ -7,6 +7,7 @@ import {
   zAssetSchema,
   zManipulatedTagSchema,
   zNewBookmarkRequestSchema,
+  zSetBookmarkPinRequestSchema,
   zUpdateBookmarksRequestSchema,
 } from "@karakeep/shared/types/bookmarks";
 
@@ -238,6 +239,24 @@ const app = new Hono()
     await c.var.api.bookmarks.deleteBookmark({ bookmarkId });
     return c.body(null, 204);
   })
+
+  // PUT /bookmarks/[bookmarkId]/pin
+  .put(
+    "/:bookmarkId/pin",
+    zValidator(
+      "json",
+      zSetBookmarkPinRequestSchema.omit({ bookmarkId: true }),
+    ),
+    async (c) => {
+      const bookmarkId = c.req.param("bookmarkId");
+      const body = c.req.valid("json");
+      await c.var.api.bookmarks.setBookmarkPin({
+        bookmarkId,
+        ...body,
+      });
+      return c.body(null, 204);
+    },
+  )
 
   // GET /bookmarks/[bookmarkId]/lists
   .get("/:bookmarkId/lists", async (c) => {

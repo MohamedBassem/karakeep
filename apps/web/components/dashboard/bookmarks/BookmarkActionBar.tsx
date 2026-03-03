@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, Pin } from "lucide-react";
 
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 
@@ -15,6 +15,9 @@ export default function BookmarkActionBar({
 }) {
   return (
     <div className="flex text-gray-500">
+      {bookmark.pinned && (
+        <Pin className="m-1 size-8 rounded p-1" size={16} />
+      )}
       {bookmark.favourited && (
         <FavouritedActionIcon className="m-1 size-8 rounded p-1" favourited />
       )}
