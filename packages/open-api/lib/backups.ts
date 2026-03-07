@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zBackupSchema } from "@karakeep/shared/types/backups";
 
 import { BearerAuth } from "./common";
-import { ErrorSchema, UnauthorizedResponse } from "./errors";
+import { ErrorSchema, RateLimitResponse, UnauthorizedResponse } from "./errors";
 
 export const registry = new OpenAPIRegistry();
 extendZodWithOpenApi(z);
@@ -45,6 +45,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -68,6 +69,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -93,6 +95,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Backup not found.",
       content: {
@@ -126,6 +129,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Backup not found.",
       content: {
@@ -153,6 +157,7 @@ registry.registerPath({
       description: "No content — the backup was deleted successfully.",
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Backup not found.",
       content: {

@@ -16,7 +16,7 @@ import {
 
 import { AssetIdSchema } from "./assets";
 import { BearerAuth } from "./common";
-import { ErrorSchema, UnauthorizedResponse } from "./errors";
+import { ErrorSchema, RateLimitResponse, UnauthorizedResponse } from "./errors";
 import {
   BookmarkSchema,
   IncludeContentSearchParamSchema,
@@ -78,6 +78,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -115,6 +116,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -150,6 +152,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -200,6 +203,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -226,6 +230,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -254,6 +259,7 @@ registry.registerPath({
       description: "No content — the bookmark was deleted successfully.",
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -297,6 +303,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -331,6 +338,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -374,6 +382,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -416,6 +425,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -448,6 +458,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -480,6 +491,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -526,6 +538,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark not found.",
       content: {
@@ -569,6 +582,7 @@ registry.registerPath({
       description: "No content — asset was replaced successfully.",
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark or asset not found.",
       content: {
@@ -599,6 +613,7 @@ registry.registerPath({
       description: "No content — asset was detached successfully.",
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Bookmark or asset not found.",
       content: {

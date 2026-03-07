@@ -10,7 +10,7 @@ import {
 } from "@karakeep/shared/types/highlights";
 
 import { BearerAuth } from "./common";
-import { ErrorSchema, UnauthorizedResponse } from "./errors";
+import { ErrorSchema, RateLimitResponse, UnauthorizedResponse } from "./errors";
 import { PaginationSchema } from "./pagination";
 import { HighlightSchema, PaginatedHighlightsSchema } from "./types";
 
@@ -51,6 +51,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -92,6 +93,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description:
         "Bookmark not found — the specified bookmarkId does not exist.",
@@ -125,6 +127,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Highlight not found.",
       content: {
@@ -157,6 +160,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Highlight not found.",
       content: {
@@ -199,6 +203,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Highlight not found.",
       content: {

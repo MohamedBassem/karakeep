@@ -13,7 +13,7 @@ import {
 } from "@karakeep/shared/types/tags";
 
 import { BearerAuth } from "./common";
-import { ErrorSchema, UnauthorizedResponse } from "./errors";
+import { ErrorSchema, RateLimitResponse, UnauthorizedResponse } from "./errors";
 import {
   IncludeContentSearchParamSchema,
   PaginatedBookmarksSchema,
@@ -66,6 +66,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -98,6 +99,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -123,6 +125,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Tag not found.",
       content: {
@@ -151,6 +154,7 @@ registry.registerPath({
       description: "No content — the tag was deleted successfully.",
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Tag not found.",
       content: {
@@ -191,6 +195,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Tag not found.",
       content: {
@@ -234,6 +239,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     404: {
       description: "Tag not found.",
       content: {

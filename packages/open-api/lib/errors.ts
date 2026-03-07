@@ -10,6 +10,16 @@ export const ErrorSchema = z
   })
   .openapi("Error");
 
+export const RateLimitResponse = {
+  description:
+    "Too Many Requests — rate limit exceeded. Retry after the indicated number of seconds.",
+  content: {
+    "application/json": {
+      schema: ErrorSchema,
+    },
+  },
+} as const;
+
 export const UnauthorizedResponse = {
   description:
     "Unauthorized — the Bearer token is missing, invalid, or expired.",

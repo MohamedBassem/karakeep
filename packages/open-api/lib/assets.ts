@@ -5,7 +5,7 @@ import {
 import { z } from "zod";
 
 import { BearerAuth } from "./common";
-import { UnauthorizedResponse } from "./errors";
+import { RateLimitResponse, UnauthorizedResponse } from "./errors";
 
 export const registry = new OpenAPIRegistry();
 extendZodWithOpenApi(z);
@@ -71,6 +71,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -92,5 +93,6 @@ registry.registerPath({
         "The asset's binary content. The Content-Type header reflects the asset's MIME type (e.g., image/png, application/pdf).",
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });

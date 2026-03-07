@@ -10,7 +10,7 @@ import {
 } from "@karakeep/shared/types/users";
 
 import { BearerAuth } from "./common";
-import { UnauthorizedResponse } from "./errors";
+import { RateLimitResponse, UnauthorizedResponse } from "./errors";
 
 export const registry = new OpenAPIRegistry();
 extendZodWithOpenApi(z);
@@ -35,6 +35,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });
 
@@ -59,5 +60,6 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
   },
 });

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { updateUserSchema } from "@karakeep/shared/types/admin";
 
 import { BearerAuth } from "./common";
-import { ErrorSchema, UnauthorizedResponse } from "./errors";
+import { ErrorSchema, RateLimitResponse, UnauthorizedResponse } from "./errors";
 
 export const registry = new OpenAPIRegistry();
 extendZodWithOpenApi(z);
@@ -71,6 +71,7 @@ registry.registerPath({
       },
     },
     401: UnauthorizedResponse,
+    429: RateLimitResponse,
     403: {
       description: "Forbidden — admin access required.",
       content: {
