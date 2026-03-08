@@ -12,7 +12,14 @@ export const ErrorSchema = z
 
 export const RateLimitResponse = {
   description:
-    "Too Many Requests — rate limit exceeded. Retry after the indicated number of seconds.",
+    "Too Many Requests — rate limit exceeded. Retry after the indicated number of seconds. The `Retry-After` header contains the number of seconds to wait before retrying.",
+  headers: {
+    "Retry-After": {
+      description:
+        "The number of seconds to wait before making another request.",
+      schema: { type: "integer" },
+    },
+  },
   content: {
     "application/json": {
       schema: ErrorSchema,

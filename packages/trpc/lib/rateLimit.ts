@@ -40,6 +40,7 @@ export function createRateLimitMiddleware<T>(config: RateLimitConfig) {
       throw new TRPCError({
         code: "TOO_MANY_REQUESTS",
         message: `Rate limit exceeded. Try again in ${result.resetInSeconds} seconds.`,
+        cause: { resetInSeconds: result.resetInSeconds },
       });
     }
 

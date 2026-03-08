@@ -33,6 +33,27 @@ const trpcAdapter = createMiddleware(async (c, next) => {
   const e = c.error;
   if (e instanceof TRPCError) {
     const code = trpcCodeToHttpCode(e.code);
+    if (
+      e.code === "TOO_MANY_REQUESTS" &&
+      e.cause &&
+      typeof e.cause === "object" &&
+      "resetInSeconds" in e.cause
+    ) {
+      const retryAfter = String(
+        (e.cause as { resetInSeconds: number }).resetInSeconds,
+      );
+      const res = new Response(
+        JSON.stringify({ code: "TOO_MANY_REQUESTS", message: e.message }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": retryAfter,
+          },
+        },
+      );
+      throw new HTTPException(429, { res });
+    }
     throw new HTTPException(code, {
       message: e.message,
       cause: e.cause,
