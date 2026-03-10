@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AIChatToggle } from "@/components/chat/AIChatToggle";
 import AllLists from "@/components/dashboard/sidebar/AllLists";
 import MobileSidebar from "@/components/shared/sidebar/MobileSidebar";
 import Sidebar from "@/components/shared/sidebar/Sidebar";
@@ -19,6 +20,7 @@ import {
   Tag,
 } from "lucide-react";
 
+import serverConfig from "@karakeep/shared/config";
 import { PluginManager, PluginType } from "@karakeep/shared/plugins";
 import { tryCatch } from "@karakeep/shared/tryCatch";
 
@@ -116,6 +118,7 @@ export default async function Dashboard({
           modal={modal}
         >
           {children}
+          {serverConfig.inference.isConfigured && <AIChatToggle />}
         </SidebarLayout>
       </ReaderSettingsProvider>
     </UserSettingsContextProvider>
