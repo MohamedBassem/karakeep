@@ -10,7 +10,7 @@ const TOOL_LABELS: Record<string, string> = {
   deleteBookmark: "Deleting bookmark",
   updateBookmark: "Updating bookmark",
   getBookmarkContent: "Reading bookmark content",
-  listTags: "Listing tags",
+  searchTags: "Searching tags",
   addTagsToBookmark: "Adding tags",
   removeTagsFromBookmark: "Removing tags",
   getLists: "Listing collections",

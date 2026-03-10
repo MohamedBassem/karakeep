@@ -79,7 +79,7 @@ Examples:
         tagId: z
           .string()
           .optional()
-          .describe("Filter by tag ID. Use listTags first to find the ID."),
+          .describe("Filter by tag ID. Use searchTags first to find the ID."),
         limit: z.number().max(20).default(10),
       }),
       execute: withErrorHandling(
@@ -192,11 +192,18 @@ Examples:
       }),
     }),
 
-    listTags: tool({
-      description: "List all of the user's tags with bookmark counts.",
-      parameters: z.object({}),
-      execute: withErrorHandling(async () => {
-        const result = (await api.tags.list({})) as {
+    searchTags: tool({
+      description:
+        "Search for tags by name. Returns matching tags with bookmark counts. Use this to find tag IDs before filtering bookmarks by tag.",
+      parameters: z.object({
+        query: z.string().describe("Search text to match against tag names"),
+        limit: z.number().max(20).default(10),
+      }),
+      execute: withErrorHandling(async ({ query, limit }) => {
+        const result = (await api.tags.list({
+          nameContains: query,
+          limit,
+        })) as {
           tags: { id: string; name: string; numBookmarks: number }[];
         };
         return result.tags.map((t) => ({
