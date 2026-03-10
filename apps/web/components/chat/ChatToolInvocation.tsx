@@ -9,6 +9,7 @@ const TOOL_LABELS: Record<string, string> = {
   createBookmark: "Creating bookmark",
   deleteBookmark: "Deleting bookmark",
   updateBookmark: "Updating bookmark",
+  getBookmarkContent: "Reading bookmark content",
   summarizeBookmark: "Summarizing bookmark",
   listTags: "Listing tags",
   addTagsToBookmark: "Adding tags",
@@ -17,6 +18,7 @@ const TOOL_LABELS: Record<string, string> = {
   createList: "Creating list",
   addBookmarkToList: "Adding to list",
   removeBookmarkFromList: "Removing from list",
+  deleteList: "Deleting list",
 };
 
 export function ChatToolInvocation({

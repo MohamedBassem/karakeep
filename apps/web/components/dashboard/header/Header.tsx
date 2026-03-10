@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AIChatToggle } from "@/components/chat/AIChatToggle";
 import GlobalActions from "@/components/dashboard/GlobalActions";
 import ProfileOptions from "@/components/dashboard/header/ProfileOptions";
 import { SearchInput } from "@/components/dashboard/search/SearchInput";
 import KarakeepLogo from "@/components/KarakeepIcon";
 import { getServerAuthSession } from "@/server/auth";
+
+import serverConfig from "@karakeep/shared/config";
 
 export default async function Header() {
   const session = await getServerAuthSession();
@@ -23,7 +26,8 @@ export default async function Header() {
         <SearchInput className="rounded-md bg-muted" />
         <GlobalActions />
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
+        {serverConfig.inference.isConfigured && <AIChatToggle />}
         <ProfileOptions />
       </div>
     </header>

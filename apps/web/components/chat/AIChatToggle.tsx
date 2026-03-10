@@ -12,16 +12,15 @@ export function AIChatToggle() {
 
   return (
     <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-full"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <MessageCircle className="h-5 w-5" />
+      </Button>
       <AIChatPanel open={open} onClose={() => setOpen(false)} />
-      {!open && (
-        <Button
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
-          size="icon"
-          onClick={() => setOpen(true)}
-        >
-          <MessageCircle className="h-6 w-6" />
-        </Button>
-      )}
     </>
   );
 }

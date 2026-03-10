@@ -17,7 +17,9 @@ export function ChatMessage({ message }: { message: UIMessage }) {
       </div>
       <div
         className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-          isUser ? "bg-primary text-primary-foreground" : "bg-muted"
+          isUser
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-foreground"
         }`}
       >
         {message.parts.map((part, i) => {
@@ -26,7 +28,7 @@ export function ChatMessage({ message }: { message: UIMessage }) {
               <ReactMarkdown
                 key={i}
                 remarkPlugins={[remarkGfm]}
-                className="prose prose-sm max-w-none break-words dark:prose-invert"
+                className="max-w-none break-words [&_a]:text-primary [&_a]:underline [&_code]:rounded [&_code]:bg-background/50 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_li]:ml-4 [&_ol]:list-decimal [&_p+p]:mt-2 [&_ul]:list-disc"
               >
                 {part.text}
               </ReactMarkdown>

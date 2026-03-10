@@ -26,7 +26,7 @@ export function AIChatPanel({
   if (!open) return null;
 
   return (
-    <div className="fixed bottom-20 right-6 z-50 flex h-[600px] w-[420px] flex-col rounded-lg border bg-background shadow-2xl">
+    <div className="fixed right-4 top-16 z-50 flex h-[min(600px,calc(100vh-5rem))] w-[420px] flex-col rounded-lg border bg-background shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <span className="text-sm font-semibold">Bookmark Assistant</span>
