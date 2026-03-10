@@ -192,15 +192,6 @@ Examples:
       }),
     }),
 
-    summarizeBookmark: tool({
-      description: "Generate an AI summary of a bookmark's content.",
-      parameters: z.object({ bookmarkId: z.string() }),
-      execute: withErrorHandling(async ({ bookmarkId }) => {
-        await api.bookmarks.summarizeBookmark({ bookmarkId });
-        return { message: "Summary generation triggered" };
-      }),
-    }),
-
     listTags: tool({
       description: "List all of the user's tags with bookmark counts.",
       parameters: z.object({}),
