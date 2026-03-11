@@ -7,6 +7,7 @@ import { Loader2, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { ChatMessage } from "./ChatMessage";
+import { useChatCacheInvalidation } from "./useChatCacheInvalidation";
 
 export function AIChatPanel({
   open,
@@ -15,8 +16,9 @@ export function AIChatPanel({
   open: boolean;
   onClose: () => void;
 }) {
+  const onFinish = useChatCacheInvalidation();
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } =
-    useChat({ api: "/api/chat" });
+    useChat({ api: "/api/chat", onFinish });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
