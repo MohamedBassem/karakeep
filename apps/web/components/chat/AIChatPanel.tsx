@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useChat } from "ai/react";
-import { Loader2, Send, X } from "lucide-react";
+import { Loader2, Plus, Send, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -17,8 +17,16 @@ export function AIChatPanel({
   onClose: () => void;
 }) {
   const onFinish = useChatCacheInvalidation();
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } =
-    useChat({ api: "/api/chat", onFinish });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    error,
+    setMessages,
+    setInput,
+  } = useChat({ api: "/api/chat", onFinish });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,15 +39,30 @@ export function AIChatPanel({
     <div className="fixed right-4 top-16 z-50 flex h-[min(600px,calc(100vh-5rem))] w-[420px] flex-col rounded-lg border bg-background shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3">
-        <span className="text-sm font-semibold">Bookmark Assistant</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={onClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <span className="text-sm font-semibold">AI Assistant</span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => {
+              setMessages([]);
+              setInput("");
+            }}
+            disabled={isLoading || messages.length === 0}
+            title="New chat"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}

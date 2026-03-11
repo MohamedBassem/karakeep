@@ -247,6 +247,30 @@ Examples:
       }),
     }),
 
+    updateTag: tool({
+      description: "Rename a tag. Use searchTags first to find the tag ID.",
+      parameters: z.object({
+        tagId: z.string(),
+        name: z.string().describe("The new name for the tag"),
+      }),
+      execute: withErrorHandling(async ({ tagId, name }) => {
+        const tag = await api.tags.update({ tagId, name });
+        return { success: true, id: tag.id, name: tag.name };
+      }),
+    }),
+
+    deleteTag: tool({
+      description:
+        "Delete a tag by ID. Always confirm with the user before calling this. Use searchTags first to find the tag ID.",
+      parameters: z.object({
+        tagId: z.string(),
+      }),
+      execute: withErrorHandling(async ({ tagId }) => {
+        await api.tags.delete({ tagId });
+        return { success: true, message: "Tag deleted" };
+      }),
+    }),
+
     getLists: tool({
       description: "Get all of the user's bookmark lists/collections.",
       parameters: z.object({}),

@@ -18,6 +18,8 @@ const TOOL_INVALIDATION_MAP: Record<string, InvalidationGroup[]> = {
   updateBookmark: ["bookmarksList", "bookmarkDetail", "stats"],
   addTagsToBookmark: ["bookmarkDetail", "tags", "stats"],
   removeTagsFromBookmark: ["bookmarkDetail", "tags", "stats"],
+  updateTag: ["tags", "bookmarkDetail"],
+  deleteTag: ["tags", "bookmarkDetail"],
   createList: ["lists", "stats"],
   deleteList: ["lists", "stats"],
   addBookmarkToList: ["bookmarksList", "listsOfBookmark", "stats"],
