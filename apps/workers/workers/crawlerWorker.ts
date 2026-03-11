@@ -18,7 +18,6 @@ import {
 import {
   fetchWithProxy,
   getBookmarkDomain,
-  getProxyUrl,
   getRandomProxy,
   matchesNoProxy,
   validateUrl,
@@ -493,6 +492,7 @@ async function browserlessCrawlPage(
   jobId: string,
   url: string,
   abortSignal: AbortSignal,
+  proxyConfig: BrowserContextOptions["proxy"],
 ) {
   return await withSpan(
     tracer,
@@ -508,7 +508,9 @@ async function browserlessCrawlPage(
       logger.info(
         `[Crawler][${jobId}] Running in browserless mode. Will do a plain http request to "${url}". Screenshots will be disabled.`,
       );
-      const proxyUrl = getProxyUrl(url);
+      const isRunningInProxyContext =
+        proxyConfig !== undefined &&
+        !matchesNoProxy(url, proxyConfig.bypass?.split(",") ?? []);
       const response = await fetchWithProxy(url, {
         signal: AbortSignal.any([AbortSignal.timeout(5000), abortSignal]),
       });
@@ -521,7 +523,9 @@ async function browserlessCrawlPage(
         screenshot: undefined,
         pdf: undefined,
         url: response.url,
-        proxy: proxyUrl ? new URL(proxyUrl).host : "none",
+        proxy: isRunningInProxyContext
+          ? new URL(proxyConfig.server).host
+          : "none",
       };
     },
   );
@@ -533,6 +537,7 @@ async function crawlPage(
   userId: string,
   forceStorePdf: boolean,
   abortSignal: AbortSignal,
+  proxyConfig: BrowserContextOptions["proxy"],
 ): Promise<{
   htmlContent: string;
   screenshot: Buffer | undefined;
@@ -566,7 +571,7 @@ async function crawlPage(
       const browserCrawlingEnabled = userData.browserCrawlingEnabled;
 
       if (browserCrawlingEnabled !== null && !browserCrawlingEnabled) {
-        return browserlessCrawlPage(jobId, url, abortSignal);
+        return browserlessCrawlPage(jobId, url, abortSignal, proxyConfig);
       }
 
       let browser: Browser | undefined;
@@ -586,10 +591,8 @@ async function crawlPage(
         },
       );
       if (!browser) {
-        return browserlessCrawlPage(jobId, url, abortSignal);
+        return browserlessCrawlPage(jobId, url, abortSignal, proxyConfig);
       }
-
-      const proxyConfig = getPlaywrightProxyConfig();
       const isRunningInProxyContext =
         proxyConfig !== undefined &&
         !matchesNoProxy(url, proxyConfig.bypass?.split(",") ?? []);
@@ -1729,6 +1732,8 @@ async function crawlAndParseUrl(
       },
     },
     async () => {
+      const proxyConfig = getPlaywrightProxyConfig();
+
       let result: {
         htmlContent: string;
         screenshot: Buffer | undefined;
@@ -1761,6 +1766,7 @@ async function crawlAndParseUrl(
           userId,
           forceStorePdf,
           abortSignal,
+          proxyConfig,
         );
       }
       abortSignal.throwIfAborted();

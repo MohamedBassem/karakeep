@@ -236,31 +236,6 @@ export function matchesNoProxy(url: string, noProxy: string[]) {
   }
 }
 
-export function getProxyUrl(url: string): string | undefined {
-  const { proxy } = serverConfig;
-
-  if (!proxy.httpProxy && !proxy.httpsProxy) {
-    return undefined;
-  }
-
-  const urlObj = new URL(url);
-  const protocol = urlObj.protocol;
-
-  if (proxy.noProxy && matchesNoProxy(url, proxy.noProxy)) {
-    return undefined;
-  }
-
-  if (protocol === "https:" && proxy.httpsProxy) {
-    return getRandomProxy(proxy.httpsProxy);
-  } else if (protocol === "http:" && proxy.httpProxy) {
-    return getRandomProxy(proxy.httpProxy);
-  } else if (proxy.httpProxy) {
-    return getRandomProxy(proxy.httpProxy);
-  }
-
-  return undefined;
-}
-
 export function getProxyAgent(url: string) {
   const { proxy } = serverConfig;
 
