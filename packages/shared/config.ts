@@ -77,6 +77,8 @@ const allEnv = z.object({
     .default("structured"),
   INFERENCE_ENABLE_AUTO_TAGGING: stringBool("true"),
   INFERENCE_ENABLE_AUTO_SUMMARIZATION: stringBool("false"),
+  INFERENCE_CHAT_ENABLED: stringBool("true"),
+  INFERENCE_CHAT_MODEL: z.string().optional(),
   OCR_CACHE_DIR: z.string().optional(),
   OCR_LANGS: z
     .string()
@@ -313,6 +315,8 @@ const serverConfigSchema = allEnv.transform((val, ctx) => {
           : val.INFERENCE_OUTPUT_SCHEMA,
       enableAutoTagging: val.INFERENCE_ENABLE_AUTO_TAGGING,
       enableAutoSummarization: val.INFERENCE_ENABLE_AUTO_SUMMARIZATION,
+      chatEnabled: val.INFERENCE_CHAT_ENABLED,
+      chatModel: val.INFERENCE_CHAT_MODEL ?? val.INFERENCE_TEXT_MODEL,
     },
     embedding: {
       textModel: val.EMBEDDING_TEXT_MODEL,
@@ -503,6 +507,7 @@ export const clientConfig = {
     inferredTagLang: serverConfig.inference.inferredTagLang,
     enableAutoTagging: serverConfig.inference.enableAutoTagging,
     enableAutoSummarization: serverConfig.inference.enableAutoSummarization,
+    chatEnabled: serverConfig.inference.chatEnabled,
   },
   legal: {
     termsOfServiceUrl: serverConfig.legal.termsOfServiceUrl,

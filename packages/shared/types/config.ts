@@ -23,6 +23,7 @@ export const zClientConfigSchema = z.object({
     inferredTagLang: z.string(),
     enableAutoTagging: z.boolean(),
     enableAutoSummarization: z.boolean(),
+    chatEnabled: z.boolean(),
   }),
   legal: z.object({
     termsOfServiceUrl: z.string().optional(),

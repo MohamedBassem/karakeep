@@ -27,7 +27,8 @@ export default async function Header() {
         <GlobalActions />
       </div>
       <div className="flex items-center gap-1">
-        {serverConfig.inference.isConfigured && <AIChatToggle />}
+        {serverConfig.inference.isConfigured &&
+          serverConfig.inference.chatEnabled && <AIChatToggle />}
         <ProfileOptions />
       </div>
     </header>

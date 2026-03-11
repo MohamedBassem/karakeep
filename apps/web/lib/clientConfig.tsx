@@ -17,6 +17,7 @@ export const ClientConfigCtx = createContext<ClientConfig>({
     inferredTagLang: "english",
     enableAutoTagging: false,
     enableAutoSummarization: false,
+    chatEnabled: true,
   },
   legal: {
     termsOfServiceUrl: undefined,

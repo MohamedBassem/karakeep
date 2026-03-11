@@ -50,6 +50,10 @@ export async function POST(req: Request) {
     return new Response("AI inference is not configured", { status: 503 });
   }
 
+  if (!serverConfig.inference.chatEnabled) {
+    return new Response("AI chat assistant is disabled", { status: 403 });
+  }
+
   const { messages } = await req.json();
 
   const api = createTrcpClientFromCtx(() => ctx);
@@ -60,7 +64,7 @@ export async function POST(req: Request) {
   });
 
   const result = streamText({
-    model: provider(serverConfig.inference.textModel),
+    model: provider(serverConfig.inference.chatModel),
     system: SYSTEM_PROMPT,
     messages: sanitizeMessages(messages),
     tools: getTools(api),
