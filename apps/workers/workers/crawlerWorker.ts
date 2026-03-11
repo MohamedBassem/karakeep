@@ -18,6 +18,7 @@ import {
 import {
   fetchWithProxy,
   getBookmarkDomain,
+  getProxyUrl,
   getRandomProxy,
   matchesNoProxy,
   validateUrl,
@@ -507,6 +508,7 @@ async function browserlessCrawlPage(
       logger.info(
         `[Crawler][${jobId}] Running in browserless mode. Will do a plain http request to "${url}". Screenshots will be disabled.`,
       );
+      const proxyUrl = getProxyUrl(url);
       const response = await fetchWithProxy(url, {
         signal: AbortSignal.any([AbortSignal.timeout(5000), abortSignal]),
       });
@@ -519,6 +521,7 @@ async function browserlessCrawlPage(
         screenshot: undefined,
         pdf: undefined,
         url: response.url,
+        proxy: proxyUrl ? new URL(proxyUrl).host : "none",
       };
     },
   );
@@ -536,6 +539,7 @@ async function crawlPage(
   pdf: Buffer | undefined;
   statusCode: number;
   url: string;
+  proxy: string;
 }> {
   return await withSpan(
     tracer,
@@ -925,6 +929,9 @@ async function crawlPage(
           screenshot,
           pdf,
           url: activePage.url(),
+          proxy: isRunningInProxyContext && proxyConfig
+            ? new URL(proxyConfig.server).host
+            : "none",
         };
       } finally {
         await withSpan(
@@ -1728,6 +1735,7 @@ async function crawlAndParseUrl(
         pdf: Buffer | undefined;
         statusCode: number | null;
         url: string;
+        proxy: string;
       };
 
       if (precrawledArchiveAssetId) {
@@ -1744,6 +1752,7 @@ async function crawlAndParseUrl(
           pdf: undefined,
           statusCode: 200,
           url,
+          proxy: "none",
         };
       } else {
         result = await crawlPage(
@@ -1762,11 +1771,12 @@ async function crawlAndParseUrl(
         pdf,
         statusCode,
         url: browserUrl,
+        proxy,
       } = result;
 
       // Track status code in Prometheus
       if (statusCode !== null) {
-        crawlerStatusCodeCounter.labels(statusCode.toString()).inc();
+        crawlerStatusCodeCounter.labels(statusCode.toString(), proxy).inc();
         setSpanAttributes({
           "crawler.statusCode": statusCode,
         });
