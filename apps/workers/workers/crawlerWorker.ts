@@ -281,6 +281,46 @@ function startContextReaper() {
   );
 }
 
+/**
+ * Close any non-page CDP targets (e.g. shared_worker, service_worker) that
+ * would cause Playwright's connectOverCDP to throw an assertion error.
+ */
+async function closeNonPageCDPTargets(webUrl: URL): Promise<void> {
+  const jsonListUrl = new URL("/json/list", webUrl);
+  try {
+    const resp = await fetch(jsonListUrl.toString(), {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!resp.ok) {
+      logger.warn(
+        `[Crawler] Failed to list CDP targets (HTTP ${resp.status}), skipping cleanup`,
+      );
+      return;
+    }
+    const targets: { id: string; type: string; title: string }[] =
+      await resp.json();
+    const nonPageTargets = targets.filter(
+      (t) => t.type !== "page" && t.type !== "browser" && t.type !== "other",
+    );
+    for (const target of nonPageTargets) {
+      logger.info(
+        `[Crawler] Closing non-page CDP target: type=${target.type}, title="${target.title}", id=${target.id}`,
+      );
+      const closeUrl = new URL(`/json/close/${target.id}`, webUrl);
+      const closeResp = await fetch(closeUrl.toString(), {
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!closeResp.ok) {
+        logger.warn(
+          `[Crawler] Failed to close CDP target ${target.id} (HTTP ${closeResp.status})`,
+        );
+      }
+    }
+  } catch (e) {
+    logger.warn(`[Crawler] Error while cleaning up CDP targets: ${e}`);
+  }
+}
+
 async function startBrowserInstance() {
   if (serverConfig.crawler.browserWebSocketUrl) {
     logger.info(
@@ -300,6 +340,12 @@ async function startBrowserInstance() {
     logger.info(
       `[Crawler] Successfully resolved IP address, new address: ${redactUrlCredentials(webUrl.toString())}`,
     );
+
+    // Before connecting with Playwright, close any non-page targets (e.g.
+    // shared_worker) via the CDP HTTP API. Playwright's connectOverCDP
+    // asserts on unexpected target types like shared_worker, which causes
+    // a crash when the browser has such targets open.
+    await closeNonPageCDPTargets(webUrl);
 
     return await chromium.connectOverCDP(webUrl.toString(), {
       timeout: 5000,
