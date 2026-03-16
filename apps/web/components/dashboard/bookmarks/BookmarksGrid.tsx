@@ -20,6 +20,7 @@ import { useBookmarkListContext } from "@karakeep/shared-react/hooks/bookmark-li
 
 import BookmarkCard from "./BookmarkCard";
 import EditorCard from "./EditorCard";
+import EmptyBookmarksState from "./EmptyBookmarksState";
 import UnknownCard from "./UnknownCard";
 
 function StyledBookmarkCard({ children }: { children: React.ReactNode }) {
@@ -97,6 +98,17 @@ export default function BookmarksGrid({
 
   if (bookmarks.length == 0 && !showEditorCard) {
     return <NoBookmarksBanner />;
+  }
+
+  if (bookmarks.length == 0 && showEditorCard) {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-full max-w-lg">
+          <EditorCard className="border border-border shadow-sm" />
+        </div>
+        <EmptyBookmarksState />
+      </div>
+    );
   }
 
   const children = [

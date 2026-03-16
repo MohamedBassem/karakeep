@@ -934,6 +934,13 @@
     "no_bookmarks": {
       "title": "No bookmarks yet",
       "description": "Save interesting articles, links, and pages to access them quickly later."
+    },
+    "empty_state": {
+      "title": "Your collection is empty",
+      "description": "Use the editor above to save your first bookmark. Paste a link, write a note, or drop an image to get started.",
+      "hint_links": "Save links",
+      "hint_notes": "Write notes",
+      "hint_images": "Store images"
     }
   },
   "cleanups": {
