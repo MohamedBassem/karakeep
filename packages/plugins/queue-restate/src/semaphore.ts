@@ -127,6 +127,34 @@ export const semaphore = object({
         setState(ctx, state);
       },
     ),
+    clear: restate.handlers.object.exclusive(
+      {},
+      async (
+        ctx: ObjectContext<LegacyQueueState>,
+        req: {
+          groupId?: string;
+        },
+      ): Promise<number> => {
+        const state = await getState(ctx);
+        let cleared = 0;
+
+        if (req.groupId) {
+          const group = state.groups[req.groupId];
+          if (group) {
+            cleared = group.items.length;
+            delete state.groups[req.groupId];
+          }
+        } else {
+          for (const group of Object.values(state.groups)) {
+            cleared += group.items.length;
+          }
+          state.groups = {};
+        }
+
+        setState(ctx, state);
+        return cleared;
+      },
+    ),
     tick: restate.handlers.object.exclusive(
       {},
       async (ctx: ObjectContext<LegacyQueueState>): Promise<void> => {
@@ -319,5 +347,11 @@ export class RestateSemaphore {
     await this.ctx
       .objectClient<typeof semaphore>({ name: "Semaphore" }, this.id)
       .release({ leaseId, capacity: this.capacity });
+  }
+
+  async clear(groupId?: string): Promise<number> {
+    return this.ctx
+      .objectClient<typeof semaphore>({ name: "Semaphore" }, this.id)
+      .clear({ groupId });
   }
 }

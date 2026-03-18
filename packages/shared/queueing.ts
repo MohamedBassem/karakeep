@@ -72,7 +72,7 @@ export interface Queue<T> {
     running: number;
     failed: number;
   }>;
-  cancelAllNonRunning?(): Promise<number>;
+  cancelAllNonRunning?(groupId?: string): Promise<number>;
 }
 
 export interface Runner<_T> {
