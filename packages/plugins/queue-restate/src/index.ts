@@ -87,13 +87,13 @@ class RestateQueueWrapper<T> implements Queue<T> {
     };
   }
 
-  async cancelAllNonRunning(groupId?: string): Promise<number> {
+  async cancelAllNonRunning(): Promise<number> {
     const semaphoreId = `queue:${this.name()}`;
     const client = this.client.objectClient<typeof semaphore>(
       { name: "Semaphore" },
       semaphoreId,
     );
-    return client.clear({ groupId });
+    return client.clear({});
   }
 }
 

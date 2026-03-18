@@ -60,9 +60,9 @@ function createDeferredQueue<T>(name: string, options: QueueOptions): Queue<T> {
     async stats() {
       return (await ensureQueue()).stats();
     },
-    async cancelAllNonRunning(groupId?: string) {
+    async cancelAllNonRunning() {
       const q = await ensureQueue();
-      return q.cancelAllNonRunning?.(groupId) ?? 0;
+      return q.cancelAllNonRunning?.() ?? 0;
     },
   };
 }

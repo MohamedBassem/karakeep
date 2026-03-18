@@ -155,6 +155,32 @@ export const semaphore = object({
         return cleared;
       },
     ),
+    updateGroupPriority: restate.handlers.object.exclusive(
+      {},
+      async (
+        ctx: ObjectContext<LegacyQueueState>,
+        req: {
+          groupId: string;
+          priority: number;
+        },
+      ): Promise<number> => {
+        const state = await getState(ctx);
+        const group = state.groups[req.groupId];
+        if (!group) {
+          setState(ctx, state);
+          return 0;
+        }
+
+        let updated = 0;
+        for (const item of group.items) {
+          item.priority = req.priority;
+          updated++;
+        }
+
+        setState(ctx, state);
+        return updated;
+      },
+    ),
     tick: restate.handlers.object.exclusive(
       {},
       async (ctx: ObjectContext<LegacyQueueState>): Promise<void> => {
