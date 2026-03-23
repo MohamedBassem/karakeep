@@ -357,6 +357,7 @@
       "rule_has_been_created": "Rule has been created!",
       "rule_has_been_updated": "Rule has been updated!",
       "rule_has_been_deleted": "Rule has been deleted!",
+      "preview_matches": "Preview Matches",
       "no_rules_created_yet": "No rules created yet",
       "create_your_first_rule": "Create your first rule to automate your workflow",
       "conditions_types": {

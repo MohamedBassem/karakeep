@@ -1,8 +1,10 @@
 import type React from "react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ActionBuilder } from "@/components/dashboard/rules/RuleEngineActionBuilder";
 import { ConditionBuilder } from "@/components/dashboard/rules/RuleEngineConditionBuilder";
 import { EventSelector } from "@/components/dashboard/rules/RuleEngineEventSelector";
+import { useConditionPreviewQuery } from "@/components/dashboard/rules/useConditionPreviewQuery";
 import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, X } from "lucide-react";
+import { ExternalLink, Save, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type {
@@ -93,6 +95,8 @@ export function RuleEditor({ rule, onCancel }: RuleEditorProps) {
   });
 
   const [editedRule, setEditedRule] = useState<typeof rule>({ ...rule });
+  const { query: previewQuery, isLoading: isPreviewLoading } =
+    useConditionPreviewQuery(editedRule.condition);
 
   useEffect(() => {
     setEditedRule({ ...rule });
@@ -177,6 +181,30 @@ export function RuleEditor({ rule, onCancel }: RuleEditorProps) {
               onChange={handleConditionChange}
               eventType={editedRule.event.type}
             />
+            {editedRule.condition.type !== "alwaysTrue" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPreviewLoading || !previewQuery}
+                asChild={!isPreviewLoading && !!previewQuery}
+              >
+                {!isPreviewLoading && previewQuery ? (
+                  <Link
+                    href={`/dashboard/search?q=${encodeURIComponent(previewQuery)}`}
+                    target="_blank"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    {t("settings.rules.preview_matches")}
+                  </Link>
+                ) : (
+                  <span>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    {t("settings.rules.preview_matches")}
+                  </span>
+                )}
+              </Button>
+            )}
           </div>
 
           <div className="space-y-2">
