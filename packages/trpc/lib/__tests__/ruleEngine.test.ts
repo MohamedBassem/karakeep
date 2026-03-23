@@ -138,6 +138,7 @@ describe("RuleEngine", () => {
     await db.insert(bookmarkLinks).values({
       id: linkBookmarkId,
       url: "https://example.com/test",
+      author: "John Doe",
     });
     await db.insert(tagsOnBookmarks).values({
       bookmarkId: linkBookmarkId,
@@ -265,6 +266,38 @@ describe("RuleEngine", () => {
     it("should return true for titleDoesNotContain condition when title does not contain string", () => {
       const condition: RuleEngineCondition = {
         type: "titleDoesNotContain",
+        str: "nonexistent",
+      };
+      expect(engine.doesBookmarkMatchConditions(condition)).toBe(true);
+    });
+
+    it("should return true for authorContains condition", () => {
+      const condition: RuleEngineCondition = {
+        type: "authorContains",
+        str: "John",
+      };
+      expect(engine.doesBookmarkMatchConditions(condition)).toBe(true);
+    });
+
+    it("should return false for authorContains condition mismatch", () => {
+      const condition: RuleEngineCondition = {
+        type: "authorContains",
+        str: "nonexistent",
+      };
+      expect(engine.doesBookmarkMatchConditions(condition)).toBe(false);
+    });
+
+    it("should return false for authorDoesNotContain condition when author contains string", () => {
+      const condition: RuleEngineCondition = {
+        type: "authorDoesNotContain",
+        str: "John",
+      };
+      expect(engine.doesBookmarkMatchConditions(condition)).toBe(false);
+    });
+
+    it("should return true for authorDoesNotContain condition when author does not contain string", () => {
+      const condition: RuleEngineCondition = {
+        type: "authorDoesNotContain",
         str: "nonexistent",
       };
       expect(engine.doesBookmarkMatchConditions(condition)).toBe(true);

@@ -365,6 +365,8 @@
         "url_does_not_contain": "URL Does Not Contain",
         "title_contains": "Title Contains",
         "title_does_not_contain": "Title Does Not Contain",
+        "author_contains": "Author Contains",
+        "author_does_not_contain": "Author Does Not Contain",
         "imported_from_feed": "Imported From Feed",
         "bookmark_type_is": "Bookmark Type Is",
         "bookmark_source_is": "Bookmark Source Is",

@@ -71,6 +71,16 @@ const zTitleDoesNotContainCondition = z.object({
   str: z.string(),
 });
 
+const zAuthorContainsCondition = z.object({
+  type: z.literal("authorContains"),
+  str: z.string(),
+});
+
+const zAuthorDoesNotContainCondition = z.object({
+  type: z.literal("authorDoesNotContain"),
+  str: z.string(),
+});
+
 const zImportedFromFeedCondition = z.object({
   type: z.literal("importedFromFeed"),
   feedId: z.string(),
@@ -105,6 +115,8 @@ const nonRecursiveCondition = z.discriminatedUnion("type", [
   zUrlDoesNotContainCondition,
   zTitleContainsCondition,
   zTitleDoesNotContainCondition,
+  zAuthorContainsCondition,
+  zAuthorDoesNotContainCondition,
   zImportedFromFeedCondition,
   zBookmarkTypeIsCondition,
   zBookmarkSourceIsCondition,
@@ -127,6 +139,8 @@ export const zRuleEngineConditionSchema: z.ZodType<RuleEngineCondition> =
       zUrlDoesNotContainCondition,
       zTitleContainsCondition,
       zTitleDoesNotContainCondition,
+      zAuthorContainsCondition,
+      zAuthorDoesNotContainCondition,
       zImportedFromFeedCondition,
       zBookmarkTypeIsCondition,
       zBookmarkSourceIsCondition,
@@ -274,6 +288,17 @@ const ruleValidaitorFn = (
           ctx.addIssue({
             code: "custom",
             message: "You must specify a title for this condition type",
+            path: ["condition", "str"],
+          });
+          return false;
+        }
+        return true;
+      case "authorContains":
+      case "authorDoesNotContain":
+        if (condition.str.length == 0) {
+          ctx.addIssue({
+            code: "custom",
+            message: "You must specify an author for this condition type",
             path: ["condition", "str"],
           });
           return false;

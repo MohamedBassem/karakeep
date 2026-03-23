@@ -30,6 +30,7 @@ async function fetchBookmark(db: AuthedContext["db"], bookmarkId: string) {
         columns: {
           url: true,
           title: true,
+          author: true,
         },
       },
       text: true,
@@ -174,6 +175,15 @@ export class RuleEngine {
       }
       case "titleDoesNotContain": {
         return !this.bookmarkTitle.includes(condition.str);
+      }
+      case "authorContains": {
+        return (this.bookmark.link?.author ?? "").includes(condition.str);
+      }
+      case "authorDoesNotContain": {
+        return (
+          this.bookmark.type == BookmarkTypes.LINK &&
+          !(this.bookmark.link?.author ?? "").includes(condition.str)
+        );
       }
       case "importedFromFeed": {
         return this.bookmark.rssFeeds.some(

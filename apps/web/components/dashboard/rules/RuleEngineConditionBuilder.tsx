@@ -26,6 +26,7 @@ import {
   Star,
   Tag,
   Trash2,
+  User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -70,6 +71,12 @@ export function ConditionBuilder({
       case "titleDoesNotContain":
         onChange({ type: "titleDoesNotContain", str: "" });
         break;
+      case "authorContains":
+        onChange({ type: "authorContains", str: "" });
+        break;
+      case "authorDoesNotContain":
+        onChange({ type: "authorDoesNotContain", str: "" });
+        break;
       case "importedFromFeed":
         onChange({ type: "importedFromFeed", feedId: "" });
         break;
@@ -112,6 +119,9 @@ export function ConditionBuilder({
       case "titleContains":
       case "titleDoesNotContain":
         return <Heading className="h-4 w-4" />;
+      case "authorContains":
+      case "authorDoesNotContain":
+        return <User className="h-4 w-4" />;
       case "importedFromFeed":
         return <Rss className="h-4 w-4" />;
       case "bookmarkTypeIs":
@@ -174,6 +184,30 @@ export function ConditionBuilder({
               value={value.str}
               onChange={(e) => onChange({ ...value, str: e.target.value })}
               placeholder="Title does not contain..."
+              className="w-full"
+            />
+          </div>
+        );
+
+      case "authorContains":
+        return (
+          <div className="mt-2">
+            <Input
+              value={value.str}
+              onChange={(e) => onChange({ ...value, str: e.target.value })}
+              placeholder="Author contains..."
+              className="w-full"
+            />
+          </div>
+        );
+
+      case "authorDoesNotContain":
+        return (
+          <div className="mt-2">
+            <Input
+              value={value.str}
+              onChange={(e) => onChange({ ...value, str: e.target.value })}
+              placeholder="Author does not contain..."
               className="w-full"
             />
           </div>
@@ -339,6 +373,16 @@ export function ConditionBuilder({
         {showTitleConditions && (
           <SelectItem value="titleDoesNotContain">
             {t("settings.rules.conditions_types.title_does_not_contain")}
+          </SelectItem>
+        )}
+        {showTitleConditions && (
+          <SelectItem value="authorContains">
+            {t("settings.rules.conditions_types.author_contains")}
+          </SelectItem>
+        )}
+        {showTitleConditions && (
+          <SelectItem value="authorDoesNotContain">
+            {t("settings.rules.conditions_types.author_does_not_contain")}
           </SelectItem>
         )}
         <SelectItem value="importedFromFeed">
