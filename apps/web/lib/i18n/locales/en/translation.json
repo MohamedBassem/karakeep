@@ -66,6 +66,10 @@
   "actions": {
     "change_layout": "Change Layout",
     "archive": "Archive",
+    "open_in_new_tabs": "Open in New Tabs",
+    "lists": "Lists",
+    "organize": "Organize",
+    "more_actions": "More Actions",
     "unarchive": "Un-archive",
     "favorite": "Favorite",
     "unfavorite": "Unfavorite",
