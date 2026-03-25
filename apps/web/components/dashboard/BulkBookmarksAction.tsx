@@ -371,39 +371,64 @@ export default function BulkBookmarksAction() {
               )}
             </BulkDropdownButton>
 
-            {/* Organize dropdown */}
-            <BulkDropdownButton
-              icon={<Hash size={18} />}
-              tooltip={t("actions.organize")}
+            {/* Edit Tags */}
+            <ActionButtonWithTooltip
+              tooltip={t("actions.edit_tags")}
               disabled={!hasSelection}
+              delayDuration={100}
+              loading={false}
+              variant="ghost"
+              onClick={() => setBulkTagModalOpen(true)}
             >
-              <DropdownMenuItem onClick={() => setBulkTagModalOpen(true)}>
-                <Hash size={16} />
-                {t("actions.edit_tags")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() =>
-                  updateBookmarks({ favourited: !alreadyFavourited })
-                }
-              >
-                <FavouritedActionIcon
-                  favourited={!!alreadyFavourited}
-                  size={16}
-                />
-                {alreadyFavourited
+              <Hash size={18} />
+            </ActionButtonWithTooltip>
+
+            {/* Favorite/Unfavorite */}
+            <ActionButtonWithTooltip
+              tooltip={
+                alreadyFavourited
                   ? t("actions.unfavorite")
-                  : t("actions.favorite")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => updateBookmarks({ archived: !alreadyArchived })}
-              >
-                <ArchivedActionIcon size={16} archived={!!alreadyArchived} />
-                {alreadyArchived
-                  ? t("actions.unarchive")
-                  : t("actions.archive")}
-              </DropdownMenuItem>
-            </BulkDropdownButton>
+                  : t("actions.favorite")
+              }
+              disabled={!hasSelection}
+              delayDuration={100}
+              loading={updateBookmarkMutator.isPending}
+              variant="ghost"
+              onClick={() =>
+                updateBookmarks({ favourited: !alreadyFavourited })
+              }
+            >
+              <FavouritedActionIcon
+                favourited={!!alreadyFavourited}
+                size={18}
+              />
+            </ActionButtonWithTooltip>
+
+            {/* Archive/Unarchive */}
+            <ActionButtonWithTooltip
+              tooltip={
+                alreadyArchived ? t("actions.unarchive") : t("actions.archive")
+              }
+              disabled={!hasSelection}
+              delayDuration={100}
+              loading={updateBookmarkMutator.isPending}
+              variant="ghost"
+              onClick={() => updateBookmarks({ archived: !alreadyArchived })}
+            >
+              <ArchivedActionIcon size={18} archived={!!alreadyArchived} />
+            </ActionButtonWithTooltip>
+
+            {/* Delete */}
+            <ActionButtonWithTooltip
+              tooltip={t("actions.delete")}
+              disabled={!hasSelection}
+              delayDuration={100}
+              loading={false}
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 size={18} color="red" />
+            </ActionButtonWithTooltip>
 
             {/* More actions dropdown */}
             <BulkDropdownButton
@@ -429,14 +454,6 @@ export default function BulkBookmarksAction() {
               <DropdownMenuItem onClick={() => recrawlBookmarks(false)}>
                 <RotateCw size={16} />
                 {t("actions.refresh")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                <Trash2 size={16} />
-                {t("actions.delete")}
               </DropdownMenuItem>
             </BulkDropdownButton>
 
