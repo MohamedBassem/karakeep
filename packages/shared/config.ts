@@ -175,6 +175,7 @@ const allEnv = z.object({
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID: z.string().optional(),
+  STRIPE_YEARLY_PRICE_ID: z.string().optional(),
 
   FREE_QUOTA_BOOKMARK_LIMIT: z.coerce.number().optional(),
   FREE_QUOTA_ASSET_SIZE_BYTES: z.coerce.number().optional(),
@@ -426,6 +427,7 @@ const serverConfigSchema = allEnv.transform((val, ctx) => {
       publishableKey: val.STRIPE_PUBLISHABLE_KEY,
       webhookSecret: val.STRIPE_WEBHOOK_SECRET,
       priceId: val.STRIPE_PRICE_ID,
+      yearlyPriceId: val.STRIPE_YEARLY_PRICE_ID,
       isConfigured: !!val.STRIPE_SECRET_KEY && !!val.STRIPE_PUBLISHABLE_KEY,
     },
     quotas: {

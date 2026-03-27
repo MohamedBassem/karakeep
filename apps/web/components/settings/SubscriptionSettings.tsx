@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -17,6 +17,9 @@ import { SettingsSection } from "./SettingsPage";
 export default function SubscriptionSettings() {
   const api = useTRPC();
   const { t } = useTranslation();
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(
+    "monthly",
+  );
   const {
     data: subscriptionStatus,
     refetch,
@@ -72,6 +75,13 @@ export default function SubscriptionSettings() {
     syncStripeState();
   }, []);
 
+  const hasYearlyPricing = !!subscriptionPrice?.yearly;
+
+  const currentPrice =
+    billingPeriod === "yearly" && subscriptionPrice?.yearly
+      ? subscriptionPrice.yearly
+      : subscriptionPrice?.monthly;
+
   const formatDate = (date: Date | null) => {
     if (!date) return "N/A";
     return new Intl.DateTimeFormat("en-US", {
@@ -94,6 +104,11 @@ export default function SubscriptionSettings() {
           <Badge variant="outline">{t("settings.subscription.free")}</Badge>
         );
     }
+  };
+
+  const formatPrice = (amount: number | null, currency: string) => {
+    if (amount === null) return null;
+    return `${amount / 100} ${currency.toUpperCase()}`;
   };
 
   return (
@@ -169,22 +184,67 @@ export default function SubscriptionSettings() {
                       <p className="text-sm text-muted-foreground">
                         {t("settings.subscription.unlock_bigger_quota")}
                       </p>
-                      {subscriptionPrice && subscriptionPrice.amount ? (
+                      {hasYearlyPricing && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setBillingPeriod("monthly")}
+                            className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                              billingPeriod === "monthly"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {t("settings.subscription.monthly")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setBillingPeriod("yearly")}
+                            className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                              billingPeriod === "yearly"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {t("settings.subscription.yearly")}
+                          </button>
+                        </div>
+                      )}
+                      {currentPrice && currentPrice.amount ? (
                         <span className="flex items-baseline gap-2">
-                          <p className="mt-2 text-lg font-bold uppercase">
-                            {subscriptionPrice.amount / 100}{" "}
-                            {subscriptionPrice.currency}
+                          <p className="mt-2 text-lg font-bold">
+                            {formatPrice(currentPrice.amount, currentPrice.currency)}
                           </p>
+                          <span className="text-xs text-muted-foreground">
+                            /{billingPeriod === "yearly"
+                              ? t("settings.subscription.per_year")
+                              : t("settings.subscription.per_month")}
+                          </span>
                           <span className="text-xs italic text-muted-foreground">
-                            (excl. VAT)
+                            ({t("settings.subscription.excl_vat")})
                           </span>
                         </span>
                       ) : (
                         <Skeleton className="h-4 w-24" />
                       )}
+                      {billingPeriod === "yearly" &&
+                        subscriptionPrice?.monthly?.amount &&
+                        subscriptionPrice?.yearly?.amount && (
+                          <p className="mt-1 text-xs text-green-600">
+                            {t("settings.subscription.yearly_savings", {
+                              amount: formatPrice(
+                                subscriptionPrice.monthly.amount * 12 -
+                                  subscriptionPrice.yearly.amount,
+                                subscriptionPrice.monthly.currency,
+                              ),
+                            })}
+                          </p>
+                        )}
                     </div>
                     <Button
-                      onClick={() => createCheckoutSession.mutate()}
+                      onClick={() =>
+                        createCheckoutSession.mutate({ billingPeriod })
+                      }
                       disabled={isLoading}
                       size="lg"
                       className="shadow-md transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"

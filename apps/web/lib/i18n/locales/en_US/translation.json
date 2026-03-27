@@ -496,7 +496,13 @@
       "approaching_quota_limit": "Approaching quota limit",
       "loading_usage": "Loading usage information...",
       "free": "Free",
-      "paid": "Paid"
+      "paid": "Paid",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "per_month": "month",
+      "per_year": "year",
+      "excl_vat": "excl. VAT",
+      "yearly_savings": "Save {{amount}} per year"
     },
     "import_sessions": {
       "title": "Import Sessions",
