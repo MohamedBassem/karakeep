@@ -411,6 +411,9 @@ export function FeedRow({ feed }: { feed: ZFeed }) {
       </TableCell>
       <TableCell>{feed.lastFetchedAt?.toLocaleString()}</TableCell>
       <TableCell>
+        {feed.lastSuccessfulFetchedAt?.toLocaleString()}
+      </TableCell>
+      <TableCell>
         {feed.lastFetchedStatus === "success" ? (
           <span title="Successful">
             <CheckCircle />
@@ -489,6 +492,7 @@ export default function FeedSettings() {
                 <TableHead>{t("common.name")}</TableHead>
                 <TableHead>{t("common.url")}</TableHead>
                 <TableHead>Last Fetch</TableHead>
+                <TableHead>Last Success</TableHead>
                 <TableHead>Last Status</TableHead>
                 <TableHead>{t("common.actions")}</TableHead>
               </TableRow>

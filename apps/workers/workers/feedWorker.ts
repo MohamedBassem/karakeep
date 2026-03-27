@@ -96,7 +96,11 @@ export class FeedWorker {
           logger.info(`[feed][${jobId}] Completed successfully`);
           await db
             .update(rssFeedsTable)
-            .set({ lastFetchedStatus: "success", lastFetchedAt: new Date() })
+            .set({
+              lastFetchedStatus: "success",
+              lastFetchedAt: new Date(),
+              lastSuccessfulFetchedAt: new Date(),
+            })
             .where(eq(rssFeedsTable.id, job.data?.feedId));
         },
         onError: async (job) => {

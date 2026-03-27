@@ -621,6 +621,9 @@ export const rssFeedsTable = sqliteTable(
       .default(false),
     createdAt: createdAtField(),
     lastFetchedAt: integer("lastFetchedAt", { mode: "timestamp" }),
+    lastSuccessfulFetchedAt: integer("lastSuccessfulFetchedAt", {
+      mode: "timestamp",
+    }),
     lastFetchedStatus: text("lastFetchedStatus", {
       enum: ["pending", "failure", "success"],
     }).default("pending"),

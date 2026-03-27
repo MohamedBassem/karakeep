@@ -1,0 +1,1 @@
+ALTER TABLE `rssFeeds` ADD `lastSuccessfulFetchedAt` integer;
