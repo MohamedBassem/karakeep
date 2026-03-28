@@ -156,7 +156,7 @@ function PricingCards({
           </div>
           {billingPeriod === "yearly" && tier.monthlyPrice !== tier.yearlyPrice && tier.yearlyPeriod && (
             <p className="mt-1 text-sm text-green-600">
-              ${Number(tier.yearlyPrice.replace("$", "")) / 12}/mo equivalent
+              ${(Number(tier.yearlyPrice.replace("$", "")) / 12).toFixed(2)}/mo equivalent
             </p>
           )}
           <p className="mt-2 text-gray-600">{tier.description}</p>
