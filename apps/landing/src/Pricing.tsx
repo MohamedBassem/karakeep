@@ -154,11 +154,14 @@ function PricingCards({
             <span className="text-4xl font-bold">{price}</span>
             {period && <span className="ml-1 text-gray-500">/{period}</span>}
           </div>
-          {billingPeriod === "yearly" && tier.monthlyPrice !== tier.yearlyPrice && tier.yearlyPeriod && (
-            <p className="mt-1 text-sm text-green-600">
-              ${(Number(tier.yearlyPrice.replace("$", "")) / 12).toFixed(2)}/mo equivalent
-            </p>
-          )}
+          {billingPeriod === "yearly" &&
+            tier.monthlyPrice !== tier.yearlyPrice &&
+            tier.yearlyPeriod && (
+              <p className="mt-1 text-sm text-green-600">
+                ${(Number(tier.yearlyPrice.replace("$", "")) / 12).toFixed(2)}
+                /mo equivalent
+              </p>
+            )}
           <p className="mt-2 text-gray-600">{tier.description}</p>
         </div>
 
