@@ -1,226 +1,131 @@
-# Karakeep CLI Skill
+# Karakeep
 
 ## What is Karakeep?
 
-Karakeep is an open-source, self-hosted "Bookmark Everything" application that uses AI to automatically tag and organize content. It supports saving links, text notes, images, and PDFs with full-text search, AI-powered tagging/summarization, and powerful organization features (lists, tags, highlights).
+Karakeep is an open-source, self-hosted "Bookmark Everything" application. Users capture content from the web (links, text notes, images, PDFs) and Karakeep automatically processes it: fetching metadata, taking screenshots, archiving full pages, extracting text via OCR, and using AI to generate tags and summaries. The name comes from Arabic "karakeeb" - miscellaneous clutter worth keeping.
 
-The name comes from Arabic "karakeeb" meaning miscellaneous clutter - a digital space for items you don't want to throw away.
+## Core Concepts
 
-## CLI Overview
+### Bookmarks
 
-The Karakeep CLI (`@karakeep/cli`) provides full command-line control over a Karakeep server. It connects via the tRPC API using Bearer token authentication.
+A bookmark is the fundamental unit in Karakeep. There are three types:
 
-## Installation
+- **Links** - A URL. When saved, background workers crawl the page to fetch its title, description, favicon, screenshot, and optionally a full-page archive (via Monolith) and video download (via yt-dlp). The crawled content becomes searchable.
+- **Text/Notes** - Plain text snippets: ideas, quotes, reminders. No crawling needed.
+- **Media** - Uploaded images or PDFs. Karakeep runs OCR (Tesseract.js or LLM-based) to extract searchable text from them.
 
-**NPM (recommended):**
-```bash
-npm install -g @karakeep/cli
-```
+Every bookmark tracks a `source` indicating how it was created: `web`, `extension`, `mobile`, `cli`, `api`, `rss`, `import`, or `singlefile`.
 
-**Docker:**
-```bash
-docker run --rm ghcr.io/karakeep-app/karakeep-cli:release --help
-```
+### Bookmark States
 
-## Configuration
+- **Favourited** - Starred for quick access. A dedicated "Favourites" view shows only these.
+- **Archived** - Hidden from the main feed but still fully searchable and accessible. Think of it as "done processing" or "read later, dealt with." Archiving is the primary inbox-zero mechanism.
+- **Notes** - Free-text annotations attached to any bookmark for personal context (searchable).
+- **Highlights** - Saved quotes, summaries, or TODOs extracted from reading. Visible in the bookmark detail view and searchable.
 
-The CLI requires two settings, provided as flags or environment variables:
+### Tags
 
-| Flag | Env Variable | Description |
-|------|-------------|-------------|
-| `--api-key <key>` | `KARAKEEP_API_KEY` | API key for authentication |
-| `--server-addr <addr>` | `KARAKEEP_SERVER_ADDR` | Server base URL |
+Lightweight labels attached to bookmarks. Tags are flat (no hierarchy) and a bookmark can have any number of them.
 
-**Additional global flags:**
-- `--json` - Output results as JSON
-- `--version` - Display CLI version
+Tags serve two purposes:
+1. **AI-generated tags** - Applied automatically by the inference worker after crawling. These enable broad discovery across content you might not have manually categorized.
+2. **User tags** - Applied manually for personal taxonomy (e.g., `to-read`, `project-x`, `recipes`).
 
-**Obtaining an API key:** Generate one from the Karakeep web UI under Settings. Validate with:
-```bash
-karakeep --api-key <key> --server-addr <addr> whoami
-```
+Both kinds are equal once applied - they can be used in searches, smart lists, and rules.
 
-## Commands Reference
+### Lists
 
-### `whoami`
-Returns info about the authenticated user (ID, name, email).
-```bash
-karakeep whoami
-```
+Lists are the main organizational structure. A bookmark can belong to multiple lists without duplication.
 
----
+**Manual lists:**
+- Hand-curated collections (projects, reading queues, topic groups).
+- Support hierarchy: lists can have parent lists for nested organization.
+- Privacy: can be private or public (read-only shareable link).
+- Collaboration: invite users by email as viewers (browse only) or editors (can add bookmarks). Personal states like favourites/archive remain private even in shared lists.
 
-### `bookmarks`
+**Smart lists:**
+- Defined by a saved search query (e.g., `#ai -is:archived age:<7d`).
+- Auto-updating: bookmarks matching the query appear automatically.
+- Useful for dynamic views like "unread articles from this week" or "all YouTube links tagged #tutorial".
 
-**`bookmarks add`** - Create new bookmarks.
-```bash
-karakeep bookmarks add --link https://example.com
-karakeep bookmarks add --note "My note text"
-karakeep bookmarks add --link https://example.com --tag-name "reading" --tag-name "tech"
-karakeep bookmarks add --link https://example.com --list-id <list-id> --title "Custom Title"
-echo "Note from stdin" | karakeep bookmarks add --stdin
-```
-Options: `--link <url>` (repeatable), `--note <text>` (repeatable), `--stdin`, `--list-id <id>`, `--tag-name <tag>` (repeatable), `--title <title>`
+### RSS Feeds
 
-**`bookmarks get <id>`** - Fetch a bookmark.
-```bash
-karakeep bookmarks get <id>
-karakeep bookmarks get <id> --include-content
-```
+Bidirectional RSS support:
 
-**`bookmarks update <id>`** - Update bookmark properties.
-```bash
-karakeep bookmarks update <id> --title "New Title"
-karakeep bookmarks update <id> --archive
-karakeep bookmarks update <id> --favourite
-karakeep bookmarks update <id> --no-archive --no-favourite
-```
-Options: `--title`, `--note`, `--archive`/`--no-archive`, `--favourite`/`--no-favourite`
+- **Consuming feeds** - Add external RSS feed URLs. Karakeep checks them hourly and creates link bookmarks for new entries. Duplicate URLs are skipped. Feed categories can be imported as tags.
+- **Publishing feeds** - Any list can be published as an RSS feed with a unique token URL, allowing others to subscribe to your curated collections.
 
-**`bookmarks update-tags <id>`** - Add or remove tags.
-```bash
-karakeep bookmarks update-tags <id> --add-tag "important" --remove-tag "old-tag"
-```
+### Rules (Automation)
 
-**`bookmarks list`** - List all bookmarks (auto-paginates).
-```bash
-karakeep bookmarks list
-karakeep bookmarks list --include-archived --include-content
-karakeep bookmarks list --list-id <id>
-```
+An if-this-then-that engine that runs on bookmark events. Rules match bookmarks based on metadata (URL patterns, tags, content) and execute actions like:
+- Auto-tagging (e.g., all youtube.com links get tagged `video`)
+- Auto-archiving
+- Adding to specific lists
+- Auto-favouriting
 
-**`bookmarks search <query>`** - Search bookmarks.
-```bash
-karakeep bookmarks search "my query"
-karakeep bookmarks search "#tag-name" --all
-karakeep bookmarks search "is:fav" --sort-order desc --limit 10
-```
-Options: `--limit <n>` (default 50), `--sort-order <relevance|asc|desc>`, `--include-content`, `--all`
+### Webhooks
 
-**`bookmarks delete <id>`** - Delete a bookmark.
+Subscribe to bookmark lifecycle events (created, updated, crawled) to trigger external systems. The payload includes bookmarkId, userId, URL, and operation type.
 
----
+## How Processing Works
 
-### `lists`
+When a bookmark enters the system, background workers process it through a pipeline:
 
-**`lists list`** - List all lists (shows hierarchy with parent relationships).
+1. **Crawling worker** - For links: uses a headless Chrome browser to fetch the page, extract metadata (title, description, image), take a screenshot, and optionally create a full-page archive and download video.
+2. **Inference worker** - Sends the content to an AI provider (OpenAI, Ollama, Gemini, etc.) to generate tags and an optional summary. Uses configurable models for text vs. image content.
+3. **Search indexing worker** - Pushes content to Meilisearch for full-text search.
+4. **Asset preprocessing worker** - For media bookmarks: runs OCR to extract text, generates thumbnails.
 
-**`lists get`** - Get bookmarks in a list.
-```bash
-karakeep lists get --list <id>
-karakeep lists get --list <id> --include-content
-```
+Each step is an independent background job. The `admin jobs stats` command shows queue depths. Individual bookmarks can be re-processed (recrawl, retag, resummarize, reindex) and bulk operations can target all bookmarks by status (success/failure/pending).
 
-**`lists add-bookmark`** - Add a bookmark to a list.
-```bash
-karakeep lists add-bookmark --list <list-id> --bookmark <bookmark-id>
-```
+## Architecture
 
-**`lists remove-bookmark`** - Remove a bookmark from a list.
-```bash
-karakeep lists remove-bookmark --list <list-id> --bookmark <bookmark-id>
-```
+- **Web app** - Next.js frontend + tRPC API, backed by SQLite.
+- **Workers** - Separate process consuming background jobs (crawling, inference, indexing, asset processing, webhooks, feeds, rule engine).
+- **Meilisearch** - Optional but recommended search engine for full-text search.
+- **Headless Chrome** - Used by the crawler for rendering pages and taking screenshots.
+- **Storage** - Assets stored on local filesystem (`DATA_DIR/assets`) or S3-compatible object storage.
 
-**`lists delete <id>`** - Delete a list.
+## CLI
 
----
+The CLI (`@karakeep/cli`, command name `karakeep`) provides full control over a Karakeep server. It connects via tRPC using an API key for authentication.
 
-### `tags`
+**Configuration** (flags or env vars):
+- `--api-key` / `KARAKEEP_API_KEY` - API key from the web UI Settings page
+- `--server-addr` / `KARAKEEP_SERVER_ADDR` - Server base URL
+- `--json` - Machine-readable JSON output
 
-**`tags list`** - List all tags with bookmark counts (sorted by count descending).
+**Commands:** `whoami`, `bookmarks` (add/get/update/update-tags/list/search/delete), `lists` (list/get/add-bookmark/remove-bookmark/delete), `tags` (list/delete), `admin` (users/bookmarks/jobs management), `migrate` (server-to-server migration), `dump` (full account export to tar.gz), `wipe` (delete all data).
 
-**`tags delete <id>`** - Delete a tag.
-
----
-
-### `admin`
-
-Admin commands for server management.
-
-**User management:**
-```bash
-karakeep admin users list
-```
-
-**Bookmark debugging and re-processing:**
-```bash
-karakeep admin bookmarks debug <id>
-karakeep admin bookmarks recrawl <id>
-karakeep admin bookmarks reindex <id>
-karakeep admin bookmarks retag <id>
-karakeep admin bookmarks resummarize <id>
-```
-
-**Bulk job operations:**
-```bash
-karakeep admin jobs stats
-karakeep admin jobs recrawl-links --status <success|failure|pending|all> [--run-inference]
-karakeep admin jobs reindex-all
-karakeep admin jobs retag-all --status <success|failure|pending|all>
-karakeep admin jobs resummarize-all --status <success|failure|pending|all>
-karakeep admin jobs reprocess-assets
-```
-
----
-
-### `migrate`
-
-Migrate data between Karakeep servers.
-```bash
-karakeep migrate --dest-server <url> --dest-api-key <key>
-karakeep migrate --dest-server <url> --dest-api-key <key> -y --exclude-assets
-```
-Exclusion flags: `--exclude-assets`, `--exclude-lists`, `--exclude-ai-prompts`, `--exclude-rules`, `--exclude-feeds`, `--exclude-webhooks`, `--exclude-bookmarks`, `--exclude-tags`, `--exclude-user-settings`
-Other options: `-y` (skip confirmation), `--batch-size <n>` (max 500, default 50)
-
----
-
-### `dump`
-
-Export all account data to a tar.gz archive.
-```bash
-karakeep dump
-karakeep dump --output backup.tar.gz --exclude-assets
-```
-Exclusion flags: `--exclude-assets`, `--exclude-bookmarks`, `--exclude-lists`, `--exclude-tags`, `--exclude-ai-prompts`, `--exclude-rules`, `--exclude-feeds`, `--exclude-webhooks`, `--exclude-user-settings`, `--exclude-link-content`
-Other options: `--output <file>`, `--batch-size <n>`
-
-Archive structure: `manifest.json`, `users/settings.json`, `lists/`, `tags/`, `rules/`, `feeds/`, `prompts/`, `webhooks/`, `bookmarks/index.jsonl`, `assets/`
-
----
-
-### `wipe`
-
-Permanently delete all user data from the server.
-```bash
-karakeep wipe
-karakeep wipe -y --exclude-bookmarks --exclude-lists
-```
-Same exclusion flags as `migrate`. Deletion order: rules, feeds, webhooks, prompts, bookmarks, lists (deepest first), unused tags.
+Run `karakeep --help` or `karakeep <command> --help` for full option details.
 
 ## Search Query Language
 
-When using `bookmarks search`, these qualifiers are supported:
+The search system supports structured qualifiers combined with full-text search:
 
 | Qualifier | Example | Description |
 |-----------|---------|-------------|
-| `is:` | `is:fav`, `is:archived`, `is:tagged`, `is:link`, `is:text`, `is:media` | Filter by status/type |
-| `url:` | `url:example.com` | Match URL |
-| `title:` | `title:recipe` | Match title |
+| `is:` | `is:fav`, `is:archived`, `is:tagged`, `is:inlist`, `is:link`, `is:text`, `is:media`, `is:broken` | Filter by state or type |
+| `url:` | `url:example.com` | Match against bookmark URL |
+| `title:` | `title:recipe` | Match against bookmark title |
 | `#tag` or `tag:` | `#cooking`, `tag:cooking` | Filter by tag |
-| `list:` | `list:Reading` | Filter by list name |
-| `after:`/`before:` | `after:2024-01-01` | Date range |
-| `age:` | `age:<1d`, `age:>2w` | Relative time |
-| `source:` | `source:cli`, `source:web` | Content source |
-| `feed:` | `feed:HackerNews` | RSS feed source |
+| `list:` | `list:Reading` | Filter by list membership |
+| `after:`/`before:` | `after:2024-01-01` | Absolute date range (YYYY-MM-DD) |
+| `age:` | `age:<1d`, `age:>2w` | Relative time (d=days, w=weeks, m=months, y=years) |
+| `source:` | `source:cli`, `source:extension` | How the bookmark was created |
+| `feed:` | `feed:HackerNews` | Which RSS feed it came from |
 
-Boolean operators: `and`, `or`, parentheses, negation with `-` or `!`
+**Boolean logic:** `and`, `or`, parentheses for grouping, `-` or `!` prefix for negation. Spaces are implicit AND.
 
-Example: `is:fav #tech -is:archived after:2024-01-01`
+**Examples:**
+- `is:fav #tech -is:archived` - Favourited tech bookmarks not yet archived
+- `url:github.com after:2024-01-01` - GitHub links from 2024 onward
+- `(#recipe or #cooking) is:link age:<30d` - Recipe links from the last month
+- `source:extension -is:tagged` - Browser extension captures that AI hasn't tagged yet
 
 ## CLI Source Code
 
-The CLI source code lives in `apps/cli/src/`. Key files:
-- `apps/cli/src/index.ts` - Entry point and global options
-- `apps/cli/src/commands/` - Command implementations (bookmarks.ts, lists.ts, tags.ts, whoami.ts, admin.ts, migrate.ts, dump.ts, wipe.ts)
+Located in `apps/cli/src/`:
+- `index.ts` - Entry point, global options
+- `commands/` - One file per command group (bookmarks.ts, lists.ts, tags.ts, whoami.ts, admin.ts, migrate.ts, dump.ts, wipe.ts)
 - Built with Commander.js, connects to `{serverAddr}/api/trpc`
