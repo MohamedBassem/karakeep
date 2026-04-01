@@ -5,4 +5,6 @@ cd /app/apps/workers;
 if [ "${USE_JEMALLOC:-false}" = "true" ]; then
     export LD_PRELOAD=/usr/local/lib/libjemalloc.so
 fi
+# Disable core dumps to prevent disk filling up from subprocess crashes (e.g. V8 OOM aborts)
+ulimit -c 0
 exec node dist/index.js
