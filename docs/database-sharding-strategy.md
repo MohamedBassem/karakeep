@@ -1,254 +1,465 @@
-# Database Sharding Strategy for Karakeep
+# Karakeep Pod Decomposition & Sharding Strategy
 
-## Current State
+## Current Architecture
 
-Karakeep uses **SQLite** (single file at `${DATA_DIR}/db.db`) with Drizzle ORM. The schema has ~32 tables, all scoped by `userId`. This is a single-process, single-database architecture.
+Karakeep runs as a **monolith** -- a single all-in-one container (via s6-overlay) that bundles:
+- Next.js web server (SSR + API routes + tRPC + Hono REST)
+- 11 background worker types (crawler, inference, search indexer, etc.)
+- SQLite database (single file)
+- Plus external services: Meilisearch, headless Chrome, optional Redis
 
-## Why Shard?
+The Docker build already produces separate `web` and `workers` images, but they share the same SQLite file via a volume mount, and workers are toggled by env vars rather than deployed independently.
 
-SQLite is a great fit for small-to-medium deployments, but it has hard limits:
-- Single-writer concurrency (WAL mode helps reads, not writes)
-- Vertical scaling only (one machine)
-- No read replicas
-- Database file size becomes unwieldy at scale
+---
 
-## Recommended Approach: User-Based Sharding
-
-The natural shard key is **`userId`**. This works because:
-
-1. **Every table already has a `userId` column** (or is reachable via one FK hop from a table that does)
-2. **Queries are already user-scoped** -- tRPC routers filter by `ctx.user.id` on every operation
-3. **No cross-user joins** in normal operations (the one exception is shared lists, addressed below)
-
-### Shard Topology
+## Target Architecture: Service Pods
 
 ```
-                    ┌──────────────┐
-                    │  Routing     │
-                    │  Layer       │
-                    │  (userId →   │
-                    │   shard)     │
-                    └──────┬───────┘
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ Shard 0  │ │ Shard 1  │ │ Shard 2  │
-        │ users    │ │ users    │ │ users    │
-        │ 0-999    │ │ 1000-    │ │ 2000-    │
-        │          │ │ 1999     │ │ 2999     │
-        └──────────┘ └──────────┘ └──────────┘
+                         ┌─────────────┐
+                         │   Ingress   │
+                         │  (nginx/    │
+                         │  traefik)   │
+                         └──────┬──────┘
+                                │
+                 ┌──────────────┼──────────────┐
+                 ▼              ▼               ▼
+          ┌────────────┐ ┌───────────┐  ┌────────────┐
+          │  API Pod   │ │  Web Pod  │  │  Public    │
+          │  (Hono +   │ │  (Next.js │  │  Asset CDN │
+          │   tRPC)    │ │   SSR)    │  │            │
+          └─────┬──────┘ └─────┬─────┘  └────────────┘
+                │              │
+                ▼              ▼
+          ┌──────────────────────┐      ┌──────────────┐
+          │     Message Queue    │      │   Auth Pod   │
+          │  (Redis / Restate)   │      │  (NextAuth)  │
+          └──────────┬───────────┘      └──────────────┘
+       ┌─────────┬───┴────┬──────────┐
+       ▼         ▼        ▼          ▼
+  ┌─────────┐ ┌──────┐ ┌──────┐ ┌────────┐
+  │Crawler  │ │Infer-│ │Search│ │General │
+  │Pod(s)   │ │ence  │ │Index │ │Workers │
+  │         │ │Pod   │ │Pod   │ │Pod     │
+  └─────────┘ └──────┘ └──────┘ └────────┘
+       │                   │
+       ▼                   ▼
+  ┌─────────┐        ┌──────────┐
+  │ Chrome  │        │Meilisearch│
+  │ Pod(s)  │        │ Pod       │
+  └─────────┘        └──────────┘
 
-   + Global DB (accounts, sessions, config, invites)
+       All pods ──▶ PostgreSQL (sharded)
+       All pods ──▶ S3 / Asset Storage
+       All pods ──▶ Redis (cache + rate limiting)
 ```
 
-### Phase 1: Migrate from SQLite to PostgreSQL
+---
 
-Before sharding, move to PostgreSQL. This is a prerequisite because:
-- PostgreSQL supports multiple concurrent writers
-- Native support for logical replication and partitioning
-- Drizzle ORM already supports PostgreSQL (dialect swap + schema adjustments)
-- Connection pooling (PgBouncer) handles many concurrent connections
+## Pod Breakdown
+
+### Pod 1: API Pod (stateless, horizontally scalable)
+
+**What it runs:** Hono REST API + tRPC procedures -- the business logic layer, extracted from Next.js.
+
+**Current code:** `packages/api/` + `packages/trpc/`
+
+**Why separate it:**
+- The API is the bottleneck for mobile, CLI, browser extension, and third-party SDK consumers
+- Decoupling from Next.js SSR lets you scale API independently of page rendering
+- Enables running API closer to users (edge deployment) while keeping SSR centralized
+
+**What changes:**
+- Extract the Hono app from `apps/web/app/api/[[...route]]/route.ts` into a standalone Hono server (`apps/api/`)
+- Move auth middleware to use JWT validation only (no NextAuth session lookup on every request)
+- The API pod connects to PostgreSQL and Redis directly, enqueues jobs to the message queue
+
+**Scaling:** 2-10 replicas behind a load balancer. Stateless -- any replica handles any request.
+
+---
+
+### Pod 2: Web Pod (stateless, horizontally scalable)
+
+**What it runs:** Next.js app for SSR pages and the web UI.
+
+**Current code:** `apps/web/`
+
+**Why separate it:**
+- SSR is CPU-bound and memory-hungry (React rendering)
+- Separating it lets you scale page rendering independently
+- Can be replaced/supplemented with a static export + client-side fetching later
+
+**What changes:**
+- Web pod calls the API pod via HTTP (internal service URL) instead of importing tRPC directly
+- Or: keep tRPC direct calls for SSR (faster) and use API pod for client-side calls
+- Remove worker code entirely -- web pod only serves pages
+
+**Scaling:** 2-5 replicas. Stateless.
+
+---
+
+### Pod 3: Crawler Pod (stateful, resource-intensive)
+
+**What it runs:** `LinkCrawlerQueue` + `LowPriorityCrawlerQueue` workers
+
+**Current code:** `apps/workers/` (crawler + lowPriorityCrawler workers)
+
+**Why separate it:**
+- Crawling is the most resource-intensive operation (Playwright, memory, CPU)
+- Requires a headless Chrome connection -- tight coupling with Chrome pod
+- Import crawling (low-priority) should never starve interactive crawling
+
+**What changes:**
+- Deploy as its own service consuming from `link_crawler_queue` and `low_priority_crawler_queue`
+- Each pod instance connects to a Chrome pod (or sidecar) via `BROWSER_WEB_URL`
+- Writes results to PostgreSQL + S3 for assets
+
+**Scaling:** 1-N replicas. Each consumes jobs independently. Scale based on queue depth.
+
+**Split option:** Run high-priority and low-priority crawlers as separate deployments with different resource limits and replica counts.
+
+---
+
+### Pod 4: Inference Pod (optional, expensive)
+
+**What it runs:** `OpenAIQueue` worker -- AI tagging and summarization
+
+**Current code:** `apps/workers/` (inference worker)
+
+**Why separate it:**
+- AI inference has very different cost/latency characteristics
+- External API calls (OpenAI) are I/O-bound, not CPU-bound
+- Can be scaled to zero when AI features are disabled
+- Ollama sidecar deployment needs GPU resources
+
+**What changes:**
+- Consumes from `openai_queue`
+- Connects to OpenAI API or local Ollama instance
+- Writes tags/summaries back to PostgreSQL
+
+**Scaling:** 0-N replicas. Scale based on queue depth. Can be completely disabled.
+
+---
+
+### Pod 5: Search Indexing Pod
+
+**What it runs:** `SearchIndexingQueue` worker
+
+**Current code:** `apps/workers/` (search worker)
+
+**Why separate it:**
+- Meilisearch indexing is bursty (bulk imports generate thousands of index jobs)
+- Isolating it prevents search lag from affecting other workers
+- Can be tuned independently (batch size, concurrency)
+
+**What changes:**
+- Consumes from `searching_indexing` queue
+- Reads bookmark data from PostgreSQL, writes to Meilisearch
+
+**Scaling:** 1-3 replicas. Meilisearch itself handles concurrent writes.
+
+---
+
+### Pod 6: General Workers Pod
+
+**What it runs:** All remaining workers:
+- `webhook` -- delivers webhook events
+- `feed` -- refreshes RSS feeds
+- `backup` -- creates user backups
+- `video` -- downloads videos (yt-dlp)
+- `assetPreprocessing` -- image/PDF processing
+- `adminMaintenance` -- cleanup tasks
+- `ruleEngine` -- automation rules
+- `import` -- import session polling
+
+**Why group them:**
+- These are lower-volume, less resource-intensive workers
+- Splitting each into its own pod would be over-engineering
+- Can be split later if any becomes a bottleneck
+
+**What changes:**
+- Single deployment consuming from all remaining queues
+- Configure via `WORKERS_ENABLED_WORKERS` env var
+
+**Scaling:** 1-3 replicas. Split into separate pods if a specific worker becomes a bottleneck.
+
+---
+
+### Infrastructure Pods (already external)
+
+| Pod | Current | Change |
+|-----|---------|--------|
+| **Chrome** | Separate container, port 9222 | No change. Scale if crawler pods increase. |
+| **Meilisearch** | Separate container, port 7700 | No change. Add replicas for read scaling. |
+| **Redis** | Optional (rate limiting) | **Required** -- becomes the shared cache, rate limiter, and optionally the queue backend. |
+| **PostgreSQL** | N/A (currently SQLite) | **New** -- replaces SQLite. See database section below. |
+| **S3 / Object Storage** | Optional (filesystem default) | **Required** -- shared asset storage across all pods (no more local PVC). |
+
+---
+
+## Queue Architecture
+
+The current queue system uses **Liteque** (SQLite-based, embedded). This won't work across pods.
+
+### Migration: Liteque → Redis-backed queue (or Restate)
+
+The codebase already has a plugin system for queues (`packages/shared/queueing.ts`) with a Restate plugin (`packages/plugins/queue-restate/`). Options:
+
+**Option A: BullMQ (Redis)** -- recommended
+- Mature, battle-tested, great observability (Bull Board)
+- Write a `queue-bullmq` plugin implementing the existing `QueueProvider` interface
+- Redis is already needed for rate limiting, so no new infrastructure
+
+**Option B: Restate** -- already partially implemented
+- Built-in durable execution, retries, workflow orchestration
+- Heavier infrastructure, more complex operations
+- Better for complex multi-step workflows (crawl → infer → index)
+
+**Option C: PostgreSQL-backed queue (pgBoss/Graphile Worker)**
+- No new infrastructure beyond PostgreSQL
+- Lower throughput than Redis but simpler
+- Good fit if queue volume is modest
+
+### Queue topology
+
+```
+Queues (in Redis/Restate):
+├── link_crawler_queue        → Crawler Pod
+├── low_priority_crawler_queue → Crawler Pod (or separate)
+├── openai_queue              → Inference Pod
+├── searching_indexing        → Search Indexing Pod
+├── webhook_queue             → General Workers Pod
+├── feed_queue                → General Workers Pod
+├── backup_queue              → General Workers Pod
+├── video_queue               → General Workers Pod
+├── asset_preprocessing_queue → General Workers Pod
+├── admin_maintenance_queue   → General Workers Pod
+└── rule_engine_queue         → General Workers Pod
+```
+
+---
+
+## Database Strategy
+
+### Phase 1: SQLite → PostgreSQL
+
+**Prerequisite for pod decomposition.** SQLite can't be shared across pods (file locking, single-writer).
 
 **Steps:**
-1. Add a `pg` dialect variant of the Drizzle schema (change `sqliteTable` → `pgTable`, adjust types)
-2. Write a migration script that reads SQLite and bulk-inserts into PostgreSQL
-3. Update `drizzle.config.ts` and `drizzle.ts` to use `postgres-js` driver
-4. Replace SQLite-specific features:
-   - `text("normalizedName").generatedAlwaysAs(...)` → PostgreSQL generated column or `citext`
-   - JSON columns → native `jsonb`
-   - `integer` timestamps → proper `timestamp` type
+1. Add `pgTable` schema variants in `packages/db/` (Drizzle supports both dialects)
+2. Replace SQLite-specific features:
+   - Generated columns → PostgreSQL `GENERATED ALWAYS AS`
+   - `integer` timestamps → `timestamp`
+   - JSON text columns → `jsonb`
+3. Update `drizzle.ts` to use `postgres-js` driver with connection pooling
+4. Write a data migration script (SQLite → PostgreSQL bulk insert)
+5. Add PgBouncer for connection pooling across pods
 
-### Phase 2: Partition by User (Single DB, Table Partitioning)
+### Phase 2: Table Partitioning (single PostgreSQL)
 
-Before distributed sharding, use PostgreSQL's native **declarative partitioning** to validate the model:
-
-```sql
--- Example: partition bookmarks by userId hash
-CREATE TABLE bookmarks (
-    id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    ...
-) PARTITION BY HASH (user_id);
-
-CREATE TABLE bookmarks_p0 PARTITION OF bookmarks FOR VALUES WITH (MODULUS 8, REMAINDER 0);
-CREATE TABLE bookmarks_p1 PARTITION OF bookmarks FOR VALUES WITH (MODULUS 8, REMAINDER 1);
--- ... etc
-```
-
-**Tables to partition** (high-row-count, user-scoped):
-- `bookmarks` (core data)
-- `bookmarkLinks`, `bookmarkTexts`, `bookmarkAssets` (1:1 with bookmarks)
-- `tagsOnBookmarks` (junction, very high row count)
-- `assets` (storage metadata, used for quota sums)
-- `highlights`, `userReadingProgress`
-- `importStagingBookmarks` (bulk operations)
-
-**Tables to keep unpartitioned** (low cardinality or global):
-- `user`, `account`, `session`, `verificationToken` (auth, queried by email/token)
-- `config` (global key-value)
-- `invites` (queried by token)
-- `subscriptions` (low row count)
-
-### Phase 3: Distributed Sharding (Multiple Databases)
-
-When a single PostgreSQL instance is no longer sufficient:
-
-#### Architecture
-
-**Global Database** -- Stores data that must be queryable across all users:
-- `user` (lookup by email, id)
-- `account`, `session`, `verificationToken`, `passwordResetToken`
-- `config`, `invites`, `subscriptions`
-- **Shard map**: `userId → shardId` mapping
-
-**User Shard Databases** (N shards) -- Each stores the full set of user-scoped tables for a subset of users:
+Use declarative partitioning by `userId` hash on high-volume tables:
 - `bookmarks`, `bookmarkLinks`, `bookmarkTexts`, `bookmarkAssets`
-- `bookmarkTags`, `tagsOnBookmarks`
-- `bookmarkLists`, `bookmarksInLists`
-- `assets`, `highlights`, `userReadingProgress`
-- `rssFeeds`, `rssFeedImports`
-- `customPrompts`, `ruleEngineRules`, `ruleEngineActions`
-- `webhooks`, `apiKey`
-- `importSessions`, `importSessionBookmarks`, `importStagingBookmarks`
-- `backups`
+- `tagsOnBookmarks`, `assets`, `highlights`
 
-#### Routing Layer
+This validates the shard key and improves query planning without application changes.
 
+### Phase 3: Distributed Database Sharding
+
+When single-PostgreSQL vertical scaling is exhausted:
+
+**Global DB** (1 instance):
+- `user`, `account`, `session`, `verificationToken`, `passwordResetToken`
+- `config`, `invites`, `subscriptions`
+- Shard map: `userId → shardId`
+
+**User Shard DBs** (N instances):
+- All user-scoped tables (bookmarks, tags, lists, assets, etc.)
+- Each shard holds a subset of users
+
+**Routing layer:**
 ```typescript
-// Pseudocode for shard-aware DB access
-class ShardRouter {
-  private shardMap: Map<string, number>; // userId → shardId
-  private shards: Map<number, DrizzleDB>; // shardId → DB connection
-
-  getDbForUser(userId: string): DrizzleDB {
-    const shardId = this.shardMap.get(userId)
-        ?? consistentHash(userId, this.shards.size);
-    return this.shards.get(shardId)!;
-  }
-
-  getGlobalDb(): DrizzleDB {
-    return this.globalDb;
-  }
-}
+// Inject into tRPC context
+const ctx = {
+  db: shardRouter.getDbForUser(user.id),  // user's shard
+  globalDb: shardRouter.getGlobalDb(),     // auth/config
+  user,
+};
 ```
 
-**Integration with existing code:** The current `AuthedContext` already carries `ctx.db` and `ctx.user.id`. Modify the context factory to resolve the shard:
+**Shared lists (cross-shard):** When User B accesses User A's shared list, resolve User A's shard from the global DB and read from it. Accept slightly higher latency for this uncommon path.
 
-```typescript
-// Before (single DB)
-const ctx = { db: globalDb, user };
+---
 
-// After (sharded)
-const ctx = { db: shardRouter.getDbForUser(user.id), globalDb, user };
+## Implementation Phases
+
+### Phase 1: Extract Queue Backend (effort: low)
+
+**Goal:** Replace Liteque with a distributed queue so workers can run in separate processes.
+
+1. Implement `queue-bullmq` plugin (or adopt the existing Restate plugin)
+2. Deploy Redis
+3. Validate: run web and workers as separate processes pointing at the same Redis
+
+**This alone enables the current `web` + `workers` Docker split to work properly in Kubernetes.**
+
+### Phase 2: SQLite → PostgreSQL (effort: medium)
+
+**Goal:** Enable multiple pods to share a database.
+
+1. Dual-dialect Drizzle schema
+2. Migration script
+3. Deploy PostgreSQL + PgBouncer
+4. Switch `DATABASE_URL` and validate
+
+### Phase 3: Split Workers by Function (effort: low)
+
+**Goal:** Independent scaling of resource-intensive workers.
+
+1. Deploy crawler workers as a separate pod with `WORKERS_ENABLED_WORKERS=crawler,lowPriorityCrawler`
+2. Deploy inference workers with `WORKERS_ENABLED_WORKERS=inference`
+3. Deploy remaining workers as general-purpose pod
+4. Each pod type gets its own resource limits and replica count
+
+**The env var mechanism already exists** -- this is purely a deployment/Kubernetes change.
+
+### Phase 4: Extract API from Next.js (effort: medium)
+
+**Goal:** Independent scaling of API vs SSR.
+
+1. Create `apps/api/` as a standalone Hono server
+2. Move tRPC adapter from Next.js API route to standalone server
+3. Web pod calls API pod for client-side requests
+4. API pod handles mobile/CLI/extension/SDK traffic directly
+
+### Phase 5: Asset Storage Migration (effort: low)
+
+**Goal:** Shared asset access across pods.
+
+1. Switch from filesystem to S3-compatible storage (MinIO for self-hosted)
+2. Already supported via `ASSET_STORE_S3_*` env vars
+3. Remove PVC dependency from web/worker pods
+
+### Phase 6: Database Sharding (effort: high)
+
+**Goal:** Horizontal database scaling.
+
+Only pursue this after exhausting vertical PostgreSQL scaling (which handles millions of users with proper indexing).
+
+---
+
+## Kubernetes Manifests (Sketch)
+
+```yaml
+# API Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep-api
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: api
+        image: karakeep/api:latest
+        resources:
+          requests: { cpu: 250m, memory: 512Mi }
+          limits:   { cpu: 1000m, memory: 1Gi }
+        env:
+        - name: DATABASE_URL
+          valueFrom: { secretKeyRef: { name: db-secret, key: url } }
+        - name: REDIS_URL
+          value: redis://redis:6379
+
+---
+# Crawler Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep-crawler
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: crawler
+        image: karakeep/workers:latest
+        resources:
+          requests: { cpu: 500m, memory: 1Gi }
+          limits:   { cpu: 2000m, memory: 4Gi }
+        env:
+        - name: WORKERS_ENABLED_WORKERS
+          value: "crawler,lowPriorityCrawler"
+        - name: BROWSER_WEB_URL
+          value: "ws://chrome:9222"
+
+---
+# Inference Pod (scale to zero when unused)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep-inference
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: inference
+        image: karakeep/workers:latest
+        resources:
+          requests: { cpu: 100m, memory: 256Mi }
+        env:
+        - name: WORKERS_ENABLED_WORKERS
+          value: "inference"
+
+---
+# General Workers Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep-workers
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: workers
+        image: karakeep/workers:latest
+        env:
+        - name: WORKERS_ENABLED_WORKERS
+          value: "search,feed,webhook,backup,video,assetPreprocessing,adminMaintenance,ruleEngine"
 ```
 
-Most tRPC routers need **zero changes** since they already use `ctx.db` exclusively.
+---
 
-#### Handling Shared Lists (The Hard Part)
+## What You Get at Each Phase
 
-Shared lists (`listCollaborators`) are the **only cross-user data access pattern**. When User A shares a list with User B, User B needs to read bookmarks owned by User A.
+| Phase | Pods | Key Unlock |
+|-------|------|-----------|
+| **1. Distributed queue** | web + workers (2 pods) | Workers can crash/restart independently |
+| **2. PostgreSQL** | web + workers + postgres (3 pods) | Multiple readers/writers, connection pooling |
+| **3. Split workers** | api + web + crawler + inference + search + workers (6 pods) | Independent scaling per workload type |
+| **4. Extract API** | +1 pod | API scales separately from SSR |
+| **5. S3 assets** | Same pods, no PVC | Pods are truly stateless |
+| **6. DB sharding** | Same pods + multiple DB instances | Horizontal database scaling |
 
-**Option A: Cross-shard reads (recommended)**
-- When User B accesses a shared list, the routing layer resolves User A's shard from the global DB
-- Fetches the list data from User A's shard
-- Simple, consistent, no data duplication
-- Slightly higher latency for shared list access (extra DB round-trip)
+---
 
-```typescript
-async getSharedList(listId: string, requestingUserId: string) {
-  // 1. Look up list ownership in global DB
-  const { ownerId } = await globalDb.query.listOwnership.findFirst({
-    where: eq(listOwnership.listId, listId)
-  });
+## Key Risks & Mitigations
 
-  // 2. Route to owner's shard
-  const ownerDb = shardRouter.getDbForUser(ownerId);
-
-  // 3. Verify access & fetch
-  const collab = await ownerDb.query.listCollaborators.findFirst({
-    where: and(eq(listCollaborators.listId, listId),
-               eq(listCollaborators.userId, requestingUserId))
-  });
-  if (!collab) throw new TRPCError({ code: "FORBIDDEN" });
-
-  return ownerDb.query.bookmarkLists.findFirst({ ... });
-}
-```
-
-**Option B: Materialized references**
-- Store lightweight references to shared lists in the collaborator's shard
-- Fetch full data from owner's shard on access
-- Better for listing "my shared lists" without cross-shard scatter
-
-**Option C: Denormalize shared list bookmarks**
-- Copy bookmark data into collaborator's shard
-- Requires eventual consistency and sync mechanisms
-- Only consider if shared list read latency becomes critical
-
-#### Handling Background Workers
-
-Workers currently process jobs from queues and write results back. With sharding:
-
-1. **Job payloads must include `userId`** (most already do via `bookmarkId` lookup)
-2. Workers resolve the correct shard before writing:
-   ```typescript
-   const db = shardRouter.getDbForUser(job.userId);
-   await db.update(bookmarkLinks).set({ crawlStatus: "success" }).where(...);
-   ```
-3. The job queue itself (Redis/BullMQ) remains unsharded -- it's just a dispatcher
-
-#### Handling Search (Meilisearch)
-
-Meilisearch is already a separate service. With sharding:
-- Each shard's indexing worker writes to the same Meilisearch instance
-- Search results return `bookmarkId` + `userId`, which routes to the correct shard for full data fetch
-- Alternatively, run per-shard Meilisearch indices for isolation
-
-## Migration Path Summary
-
-| Phase | Effort | Benefit |
-|-------|--------|---------|
-| **1. SQLite → PostgreSQL** | Medium | Concurrent writes, connection pooling, read replicas |
-| **2. Table partitioning** | Low | Validate shard key, improve query planning, easier maintenance |
-| **3. Distributed shards** | High | Horizontal scaling, per-user data isolation, independent scaling |
-
-## What NOT to Shard
-
-- **Auth tables**: Keep in a single global DB. Auth is low-write, high-read, and must be globally consistent.
-- **Config table**: Single global key-value store.
-- **Meilisearch**: Already external. Can be scaled independently.
-- **Asset storage**: Already uses object storage (filesystem/S3). Not a DB concern.
-
-## Key Risks
-
-1. **Cross-shard transactions**: Shared list operations (add collaborator, add bookmark to shared list) may need two-phase commit or eventual consistency. Recommendation: accept eventual consistency for shared list membership.
-
-2. **Shard rebalancing**: Moving users between shards requires copying all their data atomically. Mitigate by over-provisioning shards upfront (e.g., 64 logical shards mapped to fewer physical DBs).
-
-3. **Schema migrations**: Must be applied to all shards. Use a migration orchestrator that rolls out to one shard first, validates, then proceeds.
-
-4. **Global aggregations**: Admin queries that span all users (e.g., total bookmark count) require scatter-gather across all shards. Keep admin-specific aggregations in the global DB via async rollup jobs.
-
-## Alternative: Per-User SQLite (SQLite Sharding)
-
-An unconventional but viable alternative given the current SQLite architecture:
-
-- One SQLite file per user: `${DATA_DIR}/users/${userId}/db.db`
-- Perfect isolation, no cross-user interference
-- Backups are per-user (already a feature)
-- Shared lists use cross-database reads via `ATTACH DATABASE`
-
-**Pros**: Zero migration from SQLite, perfect isolation, simple backup/restore per user
-**Cons**: Thousands of open file handles, no connection pooling, `ATTACH` has limits (max 10 DBs), harder to run admin queries
-
-This approach works surprisingly well for deployments up to ~10K users but doesn't scale beyond that.
+| Risk | Mitigation |
+|------|-----------|
+| **Increased operational complexity** | Start with Phase 1-3 only. Phases 4-6 are optional and only needed at scale. |
+| **Network latency between pods** | Keep pods in the same cluster/region. Use gRPC for internal calls if HTTP becomes a bottleneck. |
+| **Queue reliability** | Redis with AOF persistence + Sentinel/Cluster for HA. Or use Restate for durable execution. |
+| **Database migration downtime** | Use pgLoader for zero-downtime SQLite→PostgreSQL migration. Run both in parallel during cutover. |
+| **Shared list cross-shard reads** | Only relevant in Phase 6. Accept higher latency for this uncommon operation. |
+| **Schema migrations across shards** | Phase 6 only. Use a migration orchestrator with canary rollout. |
 
 ## Recommendation
 
-For Karakeep's current architecture and scale:
+**Do Phases 1-3 first.** They give you 90% of the scaling benefit with modest effort:
+- Phase 1 (distributed queue) is almost free -- the plugin interface exists
+- Phase 2 (PostgreSQL) is the biggest single investment but unlocks everything else
+- Phase 3 (split workers) is purely a deployment change -- zero code changes
 
-1. **Short term**: Enable WAL mode, add read connection pooling, optimize heavy queries (quota checks, tag stats)
-2. **Medium term**: Migrate to PostgreSQL (Phase 1), add table partitioning (Phase 2)
-3. **Long term**: Distributed sharding (Phase 3) only when single-PostgreSQL vertical scaling is exhausted
-
-The user-based shard key is already implicit in the schema. The main engineering work is the SQLite→PostgreSQL migration and the routing layer -- the business logic (tRPC routers) needs minimal changes.
+Phases 4-6 are only worth pursuing when you hit concrete scaling limits, not preemptively.
