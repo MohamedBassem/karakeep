@@ -22,7 +22,6 @@ import FeaturesGrid from "./components/FeaturesGrid";
 import Hero from "./components/Hero";
 import OpenSource from "./components/OpenSource";
 import Platforms from "./components/Platforms";
-import SEO from "./SEO";
 import readerViewScreenshot from "/screenshots/reader-view.webp?url";
 import ruleEngineScreenshot from "/screenshots/rule-engine.webp?url";
 import searchScreenshot from "/screenshots/search.webp?url";
@@ -165,7 +164,6 @@ const _showcases = [
 export default function Homepage() {
   return (
     <>
-      <SEO path="/" />
       <Hero />
       <FeaturesGrid features={featuresList} />
       <Platforms />

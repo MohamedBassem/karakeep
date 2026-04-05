@@ -1,4 +1,3 @@
-import SEO from "./SEO";
 import appleIcon from "/apple-icon.svg?url";
 import chromeIcon from "/chrome-icon.svg?url";
 import firefoxIcon from "/firefox-icon.svg?url";
@@ -100,39 +99,32 @@ function ListingSection({
 
 export default function Apps() {
   return (
-    <>
-      <SEO
-        title="Apps & Extensions"
-        description="Download Karakeep for iOS, Android, Chrome, and Firefox. Save bookmarks from any device with our mobile apps and browser extensions."
-        path="/apps"
-      />
-      <div className="container mx-auto pb-16">
-        <main className="px-4 py-8 sm:px-6 sm:py-14">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Apps & Extensions
-          </h1>
-          <p className="mt-3 max-w-2xl text-base text-gray-600 sm:text-lg">
-            Use Karakeep anywhere with our mobile apps and browser extensions.
-          </p>
-          <div className="mt-10 space-y-6">
-            <ListingSection
-              title="Mobile Apps"
-              description="Take your bookmarks with you on iOS and Android."
-              items={mobileApps}
-            />
-            <ListingSection
-              title="Browser Extensions"
-              description="Save content from your browser in one click."
-              items={browserExtensions}
-            />
-            <ListingSection
-              title="Community Projects"
-              description="Integrations built by the Karakeep community."
-              items={communityProjects}
-            />
-          </div>
-        </main>
-      </div>
-    </>
+    <div className="container mx-auto pb-16">
+      <main className="px-4 py-8 sm:px-6 sm:py-14">
+        <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+          Apps & Extensions
+        </h1>
+        <p className="mt-3 max-w-2xl text-base text-gray-600 sm:text-lg">
+          Use Karakeep anywhere with our mobile apps and browser extensions.
+        </p>
+        <div className="mt-10 space-y-6">
+          <ListingSection
+            title="Mobile Apps"
+            description="Take your bookmarks with you on iOS and Android."
+            items={mobileApps}
+          />
+          <ListingSection
+            title="Browser Extensions"
+            description="Save content from your browser in one click."
+            items={browserExtensions}
+          />
+          <ListingSection
+            title="Community Projects"
+            description="Integrations built by the Karakeep community."
+            items={communityProjects}
+          />
+        </div>
+      </main>
+    </div>
   );
 }

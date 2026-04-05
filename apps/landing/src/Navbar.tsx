@@ -2,7 +2,6 @@ import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
-import { Link } from "react-router";
 
 import { CLOUD_SIGNUP_LINK, DOCS_LINK, GITHUB_LINK } from "./constants";
 import Logo from "/icons/karakeep-full.svg?url";
@@ -13,18 +12,18 @@ export default function NavBar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/70 backdrop-blur-xl">
       <div className="container flex items-center justify-between px-4 py-3">
-        <Link to="/">
+        <a href="/">
           <img src={Logo} alt="logo" className="w-36" />
-        </Link>
+        </a>
 
         {/* Desktop navigation */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link
-            to="/pricing"
+          <a
+            href="/pricing"
             className="text-sm text-gray-600 transition-colors hover:text-gray-900"
           >
             Pricing
-          </Link>
+          </a>
           <a
             href={DOCS_LINK}
             target="_blank"
@@ -83,13 +82,13 @@ export default function NavBar() {
       {mobileOpen && (
         <div className="border-t border-gray-200/50 bg-white/95 px-4 pb-4 pt-2 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-3">
-            <Link
-              to="/pricing"
+            <a
+              href="/pricing"
               className="text-sm text-gray-600 hover:text-gray-900"
               onClick={() => setMobileOpen(false)}
             >
               Pricing
-            </Link>
+            </a>
             <a
               href={DOCS_LINK}
               target="_blank"

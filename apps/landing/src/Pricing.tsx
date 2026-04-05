@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Check, ExternalLink } from "lucide-react";
 
 import { CLOUD_SIGNUP_LINK, GITHUB_LINK } from "./constants";
-import SEO from "./SEO";
 
 const CONTACT_EMAIL = "mailto:support@karakeep.app";
 
@@ -270,22 +269,15 @@ export default function Pricing() {
   );
 
   return (
-    <>
-      <SEO
-        title="Pricing"
-        description="Simple, transparent pricing for Karakeep. Free plan available. Pro plan at $4/month or $40/year with AI tagging, full-text search, and 50GB storage. Self-hosted option is free forever."
-        path="/pricing"
-      />
-      <div className="container mx-auto">
-        <div className="py-16">
-          <PricingHeader
-            billingPeriod={billingPeriod}
-            setBillingPeriod={setBillingPeriod}
-          />
-          <PricingCards billingPeriod={billingPeriod} />
-          <FAQ />
-        </div>
+    <div className="container mx-auto">
+      <div className="py-16">
+        <PricingHeader
+          billingPeriod={billingPeriod}
+          setBillingPeriod={setBillingPeriod}
+        />
+        <PricingCards billingPeriod={billingPeriod} />
+        <FAQ />
       </div>
-    </>
+    </div>
   );
 }
