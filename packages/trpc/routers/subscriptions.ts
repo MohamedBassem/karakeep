@@ -82,6 +82,10 @@ async function syncStripeDataToDatabase(customerId: string, db: Context["db"]) {
     });
 
     if (subscriptionsList.data.length === 0) {
+      if (existingSubscription.tier === "paid") {
+        subscriptionEventsCounter.labels("cancellation").inc();
+      }
+
       await db.transaction(async (trx) => {
         await trx
           .update(subscriptions)
@@ -129,6 +133,22 @@ async function syncStripeDataToDatabase(customerId: string, db: Context["db"]) {
         ? new Date(subscriptionItem.current_period_end * 1000)
         : null,
     };
+
+    // Track subscription lifecycle events by comparing old vs new state
+    const oldTier = existingSubscription.tier;
+    const newTier = subData.tier;
+
+    if (oldTier !== "paid" && newTier === "paid") {
+      subscriptionEventsCounter.labels("creation").inc();
+    } else if (oldTier === "paid" && newTier !== "paid") {
+      subscriptionEventsCounter.labels("cancellation").inc();
+    } else if (
+      oldTier === "paid" &&
+      newTier === "paid" &&
+      existingSubscription.endDate?.getTime() !== subData.endDate?.getTime()
+    ) {
+      subscriptionEventsCounter.labels("renewal").inc();
+    }
 
     await db.transaction(async (trx) => {
       await trx
@@ -181,15 +201,6 @@ async function processEvent(event: Stripe.Event, db: Context["db"]) {
     throw new Error(
       `[STRIPE HOOK] Customer ID isn't string. Event type: ${event.type}`,
     );
-  }
-
-  if (event.type === "customer.subscription.deleted") {
-    subscriptionEventsCounter.labels("cancellation").inc();
-  } else if (
-    event.type === "invoice.paid" ||
-    event.type === "invoice.payment_succeeded"
-  ) {
-    subscriptionEventsCounter.labels("renewal").inc();
   }
 
   return await syncStripeDataToDatabase(customerId, db);
@@ -353,8 +364,6 @@ export const subscriptionsRouter = router({
           enabled: true,
         },
       });
-
-      subscriptionEventsCounter.labels("creation").inc();
 
       return {
         sessionId: session.id,
