@@ -9,6 +9,7 @@ import { assets, bookmarks, subscriptions, users } from "@karakeep/db/schema";
 import serverConfig from "@karakeep/shared/config";
 
 import { authedProcedure, Context, publicProcedure, router } from "../index";
+import { subscriptionEventsCounter } from "../stats";
 
 const stripe = serverConfig.stripe.secretKey
   ? new Stripe(serverConfig.stripe.secretKey, {
@@ -182,6 +183,15 @@ async function processEvent(event: Stripe.Event, db: Context["db"]) {
     );
   }
 
+  if (event.type === "customer.subscription.deleted") {
+    subscriptionEventsCounter.labels("cancellation").inc();
+  } else if (
+    event.type === "invoice.paid" ||
+    event.type === "invoice.payment_succeeded"
+  ) {
+    subscriptionEventsCounter.labels("renewal").inc();
+  }
+
   return await syncStripeDataToDatabase(customerId, db);
 }
 
@@ -343,6 +353,8 @@ export const subscriptionsRouter = router({
           enabled: true,
         },
       });
+
+      subscriptionEventsCounter.labels("creation").inc();
 
       return {
         sessionId: session.id,

@@ -1,8 +1,8 @@
-import { count, sum } from "drizzle-orm";
+import { count, eq, sum } from "drizzle-orm";
 import { Counter, Gauge, Histogram, register } from "prom-client";
 
 import { db } from "@karakeep/db";
-import { assets, bookmarks, users } from "@karakeep/db/schema";
+import { assets, bookmarks, subscriptions, users } from "@karakeep/db/schema";
 import {
   AdminMaintenanceQueue,
   AssetPreprocessingQueue,
@@ -107,6 +107,30 @@ const totalBookmarksGauge = new Gauge({
   },
 });
 
+// Subscription metrics
+const paidSubscribersGauge = new Gauge({
+  name: "karakeep_paid_subscribers",
+  help: "Number of users with an active paid subscription",
+  async collect() {
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(subscriptions)
+        .where(eq(subscriptions.tier, "paid"));
+      this.set(result[0]?.count ?? 0);
+    } catch (error) {
+      console.error("Failed to get paid subscriber count:", error);
+      this.set(0);
+    }
+  },
+});
+
+const subscriptionEventsCounter = new Counter({
+  name: "karakeep_subscription_events_total",
+  help: "Total number of subscription events",
+  labelNames: ["event"],
+});
+
 // Bookmark creation metrics
 const bookmarkCreationCounter = new Counter({
   name: "karakeep_bookmark_creations_total",
@@ -141,6 +165,8 @@ register.registerMetric(queuePendingJobsGauge);
 register.registerMetric(totalUsersGauge);
 register.registerMetric(totalAssetSizeGauge);
 register.registerMetric(totalBookmarksGauge);
+register.registerMetric(paidSubscribersGauge);
+register.registerMetric(subscriptionEventsCounter);
 register.registerMetric(bookmarkCreationCounter);
 register.registerMetric(apiRequestsTotalCounter);
 register.registerMetric(apiErrorsTotalCounter);
@@ -151,6 +177,8 @@ export {
   totalUsersGauge,
   totalAssetSizeGauge,
   totalBookmarksGauge,
+  paidSubscribersGauge,
+  subscriptionEventsCounter,
   bookmarkCreationCounter,
   apiRequestsTotalCounter,
   apiErrorsTotalCounter,
