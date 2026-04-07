@@ -26,6 +26,7 @@ export interface Context {
   req: {
     ip: string | null;
   };
+  apiKeyType?: "readwrite" | "readonly";
 }
 
 export interface AuthedContext {
@@ -34,6 +35,7 @@ export interface AuthedContext {
   req: {
     ip: string | null;
   };
+  apiKeyType?: "readwrite" | "readonly";
 }
 
 // Avoid exporting the entire t-object
@@ -126,6 +128,15 @@ export const authedProcedure = procedure
         user,
       },
     });
+  })
+  .use(function isReadOnlyApiKey(opts) {
+    if (opts.ctx.apiKeyType === "readonly" && opts.type === "mutation") {
+      throw new TRPCError({
+        message: "This API key is read-only and cannot perform mutations",
+        code: "FORBIDDEN",
+      });
+    }
+    return opts.next();
   });
 
 export const adminProcedure = authedProcedure.use(function isAdmin(opts) {

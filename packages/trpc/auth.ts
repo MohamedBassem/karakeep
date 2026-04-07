@@ -51,6 +51,7 @@ export async function generateApiKey(
   name: string,
   userId: string,
   database: Context["db"],
+  type: "readwrite" | "readonly" = "readwrite",
 ) {
   const { keyId, secret, secretHash } = generateApiKeySecret();
 
@@ -64,6 +65,7 @@ export async function generateApiKey(
         userId: userId,
         keyId,
         keyHash: secretHash,
+        type,
       })
       .returning()
   )[0];
@@ -73,6 +75,7 @@ export async function generateApiKey(
     name: key.name,
     createdAt: key.createdAt,
     key: plain,
+    type: key.type,
   };
 }
 
@@ -138,7 +141,10 @@ export async function authenticateApiKey(key: string, database: Context["db"]) {
       });
   }
 
-  return apiKey.user;
+  return {
+    user: apiKey.user,
+    keyType: apiKey.type,
+  };
 }
 
 export async function hashPassword(password: string, salt: string | null) {

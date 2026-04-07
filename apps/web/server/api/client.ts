@@ -17,13 +17,14 @@ export async function createContextFromRequest(req: Request) {
   if (authorizationHeader && authorizationHeader.startsWith("Bearer ")) {
     const token = authorizationHeader.split(" ")[1];
     try {
-      const user = await authenticateApiKey(token, db);
+      const { user, keyType } = await authenticateApiKey(token, db);
       return {
         user,
         db,
         req: {
           ip,
         },
+        apiKeyType: keyType,
       };
     } catch {
       // Fallthrough to cookie-based auth

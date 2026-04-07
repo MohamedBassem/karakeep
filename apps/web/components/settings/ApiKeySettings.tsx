@@ -25,6 +25,7 @@ export default async function ApiKeys() {
           <TableRow>
             <TableHead>{t("common.name")}</TableHead>
             <TableHead>{t("common.key")}</TableHead>
+            <TableHead>{t("common.type")}</TableHead>
             <TableHead>{t("common.created_at")}</TableHead>
             <TableHead>{t("common.last_used")}</TableHead>
             <TableHead>{t("common.action")}</TableHead>
@@ -36,6 +37,11 @@ export default async function ApiKeys() {
               <TableRow key={key.id}>
                 <TableCell>{key.name}</TableCell>
                 <TableCell>**_{key.keyId}_**</TableCell>
+                <TableCell>
+                  {key.type === "readonly"
+                    ? t("settings.api_keys.read_only")
+                    : t("settings.api_keys.read_write")}
+                </TableCell>
                 <TableCell>
                   {formatDistanceToNow(key.createdAt, { addSuffix: true })}
                 </TableCell>

@@ -172,6 +172,9 @@ export const apiKeys = sqliteTable(
     lastUsedAt: integer("lastUsedAt", { mode: "timestamp" }),
     keyId: text("keyId").notNull().unique(),
     keyHash: text("keyHash").notNull(),
+    type: text("type", { enum: ["readwrite", "readonly"] })
+      .notNull()
+      .default("readwrite"),
     userId: text("userId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

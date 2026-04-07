@@ -355,7 +355,11 @@
       "key_regenerated": "Key was successfully regenerated",
       "key_regenerated_please_copy": "Please copy the new key and store it somewhere safe. The old key has been revoked and will no longer work.",
       "regenerate_warning": "Are you sure you want to regenerate the API key \"{{name}}\"?",
-      "regenerate_confirmation": "This will revoke the current key and generate a new one. Any applications using the current key will stop working."
+      "regenerate_confirmation": "This will revoke the current key and generate a new one. Any applications using the current key will stop working.",
+      "key_type": "Key Type",
+      "key_type_desc": "Read-only keys can only access data but cannot create, update, or delete anything.",
+      "read_write": "Read / Write",
+      "read_only": "Read Only"
     },
     "broken_links": {
       "broken_links": "Broken Links",

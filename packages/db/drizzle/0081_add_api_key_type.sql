@@ -1,0 +1,1 @@
+ALTER TABLE `apiKey` ADD `type` text DEFAULT 'readwrite' NOT NULL;

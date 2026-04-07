@@ -18,11 +18,14 @@ import {
   router,
 } from "../index";
 
+const zApiKeyTypeSchema = z.enum(["readwrite", "readonly"]);
+
 const zApiKeySchema = z.object({
   id: z.string(),
   name: z.string(),
   key: z.string(),
   createdAt: z.date(),
+  type: zApiKeyTypeSchema,
 });
 
 export const apiKeysAppRouter = router({
@@ -30,11 +33,12 @@ export const apiKeysAppRouter = router({
     .input(
       z.object({
         name: z.string(),
+        type: zApiKeyTypeSchema.default("readwrite"),
       }),
     )
     .output(zApiKeySchema)
     .mutation(async ({ input, ctx }) => {
-      return await generateApiKey(input.name, ctx.user.id, ctx.db);
+      return await generateApiKey(input.name, ctx.user.id, ctx.db, input.type);
     }),
   regenerate: authedProcedure
     .input(
@@ -61,6 +65,7 @@ export const apiKeysAppRouter = router({
         name: existingKey.name,
         createdAt: existingKey.createdAt,
         key: await regenerateApiKey(existingKey.id, ctx.user.id, ctx.db),
+        type: existingKey.type,
       };
     }),
   revoke: authedProcedure
@@ -84,6 +89,7 @@ export const apiKeysAppRouter = router({
             createdAt: z.date(),
             keyId: z.string(),
             lastUsedAt: z.date().nullish(),
+            type: zApiKeyTypeSchema,
           }),
         ),
       }),
@@ -97,6 +103,7 @@ export const apiKeysAppRouter = router({
           createdAt: true,
           lastUsedAt: true,
           keyId: true,
+          type: true,
         },
         orderBy: desc(apiKeys.createdAt),
       });
@@ -117,6 +124,7 @@ export const apiKeysAppRouter = router({
         keyName: z.string(),
         email: z.string(),
         password: z.string(),
+        type: zApiKeyTypeSchema.default("readwrite"),
       }),
     )
     .output(zApiKeySchema)
@@ -144,7 +152,7 @@ export const apiKeysAppRouter = router({
         });
       }
 
-      return await generateApiKey(input.keyName, user.id, ctx.db);
+      return await generateApiKey(input.keyName, user.id, ctx.db, input.type);
     }),
   validate: publicProcedure
     .use(

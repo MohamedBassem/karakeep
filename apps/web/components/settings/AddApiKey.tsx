@@ -24,6 +24,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { useTranslation } from "@/lib/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +48,7 @@ function AddApiKeyForm({ onSuccess }: { onSuccess: (key: string) => void }) {
   const { t } = useTranslation();
   const formSchema = z.object({
     name: z.string(),
+    type: z.enum(["readwrite", "readonly"]).default("readwrite"),
   });
   const router = useRouter();
   const mutator = useMutation(
@@ -60,10 +68,13 @@ function AddApiKeyForm({ onSuccess }: { onSuccess: (key: string) => void }) {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      type: "readwrite",
+    },
   });
 
   async function onSubmit(value: z.infer<typeof formSchema>) {
-    mutator.mutate({ name: value.name });
+    mutator.mutate({ name: value.name, type: value.type });
   }
 
   const onError: SubmitErrorHandler<z.infer<typeof formSchema>> = (errors) => {
@@ -79,14 +90,14 @@ function AddApiKeyForm({ onSuccess }: { onSuccess: (key: string) => void }) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit, onError)}
-        className="flex w-full space-x-3 space-y-8 pt-4"
+        className="space-y-4 pt-4"
       >
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => {
             return (
-              <FormItem className="flex-1">
+              <FormItem>
                 <FormLabel>{t("common.name")}</FormLabel>
                 <FormControl>
                   <Input
@@ -97,6 +108,39 @@ function AddApiKeyForm({ onSuccess }: { onSuccess: (key: string) => void }) {
                 </FormControl>
                 <FormDescription>
                   {t("settings.api_keys.new_api_key_desc")}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>{t("settings.api_keys.key_type")}</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="readwrite">
+                      {t("settings.api_keys.read_write")}
+                    </SelectItem>
+                    <SelectItem value="readonly">
+                      {t("settings.api_keys.read_only")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  {t("settings.api_keys.key_type_desc")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
