@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import "@karakeep/tailwind-config/globals.css";
 
 interface Props {
@@ -63,6 +64,7 @@ const url = `${BASE_URL}${path}`;
     <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
     <link rel="apple-touch-icon" href="/icons/apple-icon.png" />
 
+    <ClientRouter />
     <slot name="head" />
   </head>
   <body>
