@@ -944,6 +944,12 @@
     "no_bookmarks": {
       "title": "No bookmarks yet",
       "description": "Save interesting articles, links, and pages to access them quickly later."
+    },
+    "welcome": {
+      "title": "Start building your collection",
+      "description": "Paste a link, write a note, or drop an image to save your first bookmark.",
+      "browser_extension": "Browser extension",
+      "mobile_app": "Mobile app"
     }
   },
   "cleanups": {

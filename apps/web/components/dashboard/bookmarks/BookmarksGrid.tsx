@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import NoBookmarksBanner from "@/components/dashboard/bookmarks/NoBookmarksBanner";
 import { ActionButton } from "@/components/ui/action-button";
 import useBulkActionsStore from "@/lib/bulkActions";
+import { useTranslation } from "@/lib/i18n/client";
 import { useInBookmarkGridStore } from "@/lib/store/useInBookmarkGridStore";
 import {
   bookmarkLayoutSwitch,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/userLocalSettings/bookmarksLayout";
 import tailwindConfig from "@/tailwind.config";
 import { Slot } from "@radix-ui/react-slot";
+import { Bookmark, Puzzle, Smartphone } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useInView } from "react-intersection-observer";
 import Masonry from "react-masonry-css";
@@ -61,6 +63,7 @@ export default function BookmarksGrid({
   isFetchingNextPage?: boolean;
   fetchNextPage?: () => void;
 }) {
+  const { t } = useTranslation();
   const layout = useBookmarkLayout();
   const gridColumns = useGridColumns();
   const bulkActionsStore = useBulkActionsStore();
@@ -97,6 +100,50 @@ export default function BookmarksGrid({
 
   if (bookmarks.length == 0 && !showEditorCard) {
     return <NoBookmarksBanner />;
+  }
+
+  if (bookmarks.length == 0 && showEditorCard) {
+    return (
+      <div className="flex w-full flex-col items-center gap-8 rounded-xl border border-border bg-card px-6 py-8 shadow-sm sm:py-12">
+        {/* Welcome text */}
+        <div className="text-center">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            {t("banners.welcome.title")}
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {t("banners.welcome.description")}
+          </p>
+        </div>
+
+        {/* Editor card — primary action */}
+        <div className="w-full max-w-xl">
+          <EditorCard className="border-2 border-border bg-card shadow-md" />
+        </div>
+
+        {/* App links */}
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+          <a
+            href="https://karakeep.app/apps"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+          >
+            <Puzzle className="size-4" />
+            {t("banners.welcome.browser_extension")}
+          </a>
+          <span className="hidden text-border sm:inline">|</span>
+          <a
+            href="https://karakeep.app/apps"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+          >
+            <Smartphone className="size-4" />
+            {t("banners.welcome.mobile_app")}
+          </a>
+        </div>
+      </div>
+    );
   }
 
   const children = [
