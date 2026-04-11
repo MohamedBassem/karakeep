@@ -7,25 +7,37 @@ import { migrateCmd } from "@/commands/migrate";
 import { tagsCmd } from "@/commands/tags";
 import { whoamiCmd } from "@/commands/whoami";
 import { wipeCmd } from "@/commands/wipe";
+import { loadConfig } from "@/lib/config";
 import { setGlobalOptions } from "@/lib/globals";
 import { Command, Option } from "@commander-js/extra-typings";
+
+const config = loadConfig();
+
+const apiKeyOption = new Option(
+  "--api-key <key>",
+  "the API key to interact with the API",
+)
+  .makeOptionMandatory(true)
+  .env("KARAKEEP_API_KEY");
+if (config.apiKey) {
+  apiKeyOption.default(config.apiKey);
+}
+
+const serverAddrOption = new Option(
+  "--server-addr <addr>",
+  "the address of the server to connect to",
+)
+  .makeOptionMandatory(true)
+  .env("KARAKEEP_SERVER_ADDR");
+if (config.serverAddr) {
+  serverAddrOption.default(config.serverAddr);
+}
 
 const program = new Command()
   .name("karakeep")
   .description("A CLI interface to interact with the karakeep api")
-  .addOption(
-    new Option("--api-key <key>", "the API key to interact with the API")
-      .makeOptionMandatory(true)
-      .env("KARAKEEP_API_KEY"),
-  )
-  .addOption(
-    new Option(
-      "--server-addr <addr>",
-      "the address of the server to connect to",
-    )
-      .makeOptionMandatory(true)
-      .env("KARAKEEP_SERVER_ADDR"),
-  )
+  .addOption(apiKeyOption)
+  .addOption(serverAddrOption)
   .addOption(new Option("--json", "to output the result as JSON"))
   .version(
     import.meta.env && "CLI_VERSION" in import.meta.env

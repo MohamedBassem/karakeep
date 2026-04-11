@@ -89,6 +89,28 @@ Commands:
   help [command]             display help for command
 ```
 
+## Configuration File
+
+Instead of passing `--api-key` and `--server-addr` on every command (or setting environment variables), you can store them in a configuration file:
+
+- **Linux / macOS:** `~/.config/karakeep/config.json` (respects `XDG_CONFIG_HOME`)
+- **Windows:** `%APPDATA%\karakeep\config.json`
+
+Example `config.json`:
+
+```json
+{
+  "serverAddr": "https://try.karakeep.app",
+  "apiKey": "mysupersecretkey"
+}
+```
+
+The priority order (highest to lowest) is:
+
+1. CLI flags (`--api-key`, `--server-addr`)
+2. Environment variables (`KARAKEEP_API_KEY`, `KARAKEEP_SERVER_ADDR`)
+3. Config file
+
 ## Obtaining an API Key
 
 To use the CLI, you'll need to get an API key from your karakeep settings. You can validate that it's working by running:
