@@ -1,5 +1,6 @@
 import { adminCmd } from "@/commands/admin";
 import { bookmarkCmd } from "@/commands/bookmarks";
+import { configureCmd } from "@/commands/configure";
 import { dumpCmd } from "@/commands/dump";
 import { highlightsCmd } from "@/commands/highlights";
 import { listsCmd } from "@/commands/lists";
@@ -16,9 +17,7 @@ const config = loadConfig();
 const apiKeyOption = new Option(
   "--api-key <key>",
   "the API key to interact with the API",
-)
-  .makeOptionMandatory(true)
-  .env("KARAKEEP_API_KEY");
+).env("KARAKEEP_API_KEY");
 if (config.apiKey) {
   apiKeyOption.default(config.apiKey);
 }
@@ -26,9 +25,7 @@ if (config.apiKey) {
 const serverAddrOption = new Option(
   "--server-addr <addr>",
   "the address of the server to connect to",
-)
-  .makeOptionMandatory(true)
-  .env("KARAKEEP_SERVER_ADDR");
+).env("KARAKEEP_SERVER_ADDR");
 if (config.serverAddr) {
   serverAddrOption.default(config.serverAddr);
 }
@@ -47,6 +44,7 @@ const program = new Command()
 
 program.addCommand(adminCmd);
 program.addCommand(bookmarkCmd);
+program.addCommand(configureCmd);
 program.addCommand(highlightsCmd);
 program.addCommand(listsCmd);
 program.addCommand(tagsCmd);

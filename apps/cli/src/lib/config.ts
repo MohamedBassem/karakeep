@@ -33,3 +33,12 @@ export function loadConfig(): ConfigFile {
     return {};
   }
 }
+
+export function saveConfig(config: ConfigFile): void {
+  const configDir = getConfigDir();
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(configDir, "config.json"),
+    JSON.stringify(config, null, 2) + "\n",
+  );
+}

@@ -96,7 +96,19 @@ Instead of passing `--api-key` and `--server-addr` on every command (or setting 
 - **Linux / macOS:** `~/.config/karakeep/config.json` (respects `XDG_CONFIG_HOME`)
 - **Windows:** `%APPDATA%\karakeep\config.json`
 
-Example `config.json`:
+The easiest way to set it up is with the `configure` command:
+
+```
+karakeep configure
+```
+
+This will interactively prompt you for the server address and API key, then save them to the config file. You can also pass them directly:
+
+```
+karakeep configure --addr https://try.karakeep.app --key mysupersecretkey
+```
+
+The resulting `config.json` looks like:
 
 ```json
 {
