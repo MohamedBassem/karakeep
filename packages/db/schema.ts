@@ -487,6 +487,8 @@ export const bookmarkLists = sqliteTable(
     // Whoever have access to this token can read the content of this list
     rssToken: text("rssToken"),
     public: integer("public", { mode: "boolean" }).notNull().default(false),
+    // User-controlled ordering among siblings (same parentId). Lower comes first.
+    position: integer("position").notNull().default(0),
   },
   (bl) => [
     index("bookmarkLists_userId_idx").on(bl.userId),

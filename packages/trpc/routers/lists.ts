@@ -6,6 +6,7 @@ import {
   zEditBookmarkListSchemaWithValidation,
   zMergeListSchema,
   zNewBookmarkListSchema,
+  zReorderListsSchema,
 } from "@karakeep/shared/types/lists";
 
 import type { AuthedContext } from "../index";
@@ -155,6 +156,11 @@ export const listsAppRouter = router({
     .query(async ({ ctx }) => {
       const results = await List.getAll(ctx);
       return { lists: results.map((l) => l.asZBookmarkList()) };
+    }),
+  reorder: authedProcedure
+    .input(zReorderListsSchema)
+    .mutation(async ({ input, ctx }) => {
+      await List.reorderSiblings(ctx, input.parentId, input.orderedListIds);
     }),
   getListsOfBookmark: authedProcedure
     .input(z.object({ bookmarkId: z.string() }))

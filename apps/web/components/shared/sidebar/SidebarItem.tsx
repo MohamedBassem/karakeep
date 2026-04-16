@@ -15,10 +15,14 @@ export default function SidebarItem({
   collapseButton,
   right = null,
   dropHighlight = false,
+  insertIndicator = null,
+  draggable = false,
   onDrop,
   onDragOver,
   onDragEnter,
   onDragLeave,
+  onDragStart,
+  onDragEnd,
 }: {
   name: string;
   logo: React.ReactNode;
@@ -29,10 +33,14 @@ export default function SidebarItem({
   right?: React.ReactNode;
   collapseButton?: React.ReactNode;
   dropHighlight?: boolean;
+  insertIndicator?: "above" | "below" | null;
+  draggable?: boolean;
   onDrop?: React.DragEventHandler;
   onDragOver?: React.DragEventHandler;
   onDragEnter?: React.DragEventHandler;
   onDragLeave?: React.DragEventHandler;
+  onDragStart?: React.DragEventHandler;
+  onDragEnd?: React.DragEventHandler;
 }) {
   const currentPath = usePathname();
   return (
@@ -46,11 +54,26 @@ export default function SidebarItem({
         className,
       )}
       style={style}
+      draggable={draggable}
       onDrop={onDrop}
       onDragOver={onDragOver}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
+      {insertIndicator === "above" && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-px h-0.5 rounded-full bg-primary"
+        />
+      )}
+      {insertIndicator === "below" && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary"
+        />
+      )}
       <div className="flex-1">
         {collapseButton}
         <Link

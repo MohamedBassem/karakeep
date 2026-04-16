@@ -7,6 +7,19 @@ export interface ZBookmarkListTreeNode {
 
 export type ZBookmarkListRoot = Record<string, ZBookmarkListTreeNode>;
 
+export function compareLists(a: ZBookmarkList, b: ZBookmarkList): number {
+  const positionDiff = (a.position ?? 0) - (b.position ?? 0);
+  if (positionDiff !== 0) return positionDiff;
+  return a.name.localeCompare(b.name);
+}
+
+export function compareListNodes(
+  a: ZBookmarkListTreeNode,
+  b: ZBookmarkListTreeNode,
+): number {
+  return compareLists(a.item, b.item);
+}
+
 export function listsToTree(lists: ZBookmarkList[]) {
   const idToList = lists.reduce<Record<string, ZBookmarkList>>((acc, list) => {
     acc[list.id] = list;

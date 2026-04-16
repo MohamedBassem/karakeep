@@ -514,6 +514,10 @@
               "viewer",
               "public"
             ]
+          },
+          "position": {
+            "type": "integer",
+            "default": 0
           }
         },
         "required": [

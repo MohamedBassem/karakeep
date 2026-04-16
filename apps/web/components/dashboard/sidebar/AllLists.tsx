@@ -13,6 +13,11 @@ import {
 import { toast } from "@/components/ui/sonner";
 import { BOOKMARK_DRAG_MIME } from "@/lib/bookmark-drag";
 import { useTranslation } from "@/lib/i18n/client";
+import {
+  decodeListDragPayload,
+  encodeListDragPayload,
+  LIST_DRAG_MIME,
+} from "@/lib/list-drag";
 import { cn } from "@/lib/utils";
 import { MoreHorizontal, Plus } from "lucide-react";
 
@@ -21,6 +26,7 @@ import {
   augmentBookmarkListsWithInitialData,
   useAddBookmarkToList,
   useBookmarkLists,
+  useReorderBookmarkLists,
 } from "@karakeep/shared-react/hooks/lists";
 import { ZBookmarkListTreeNode } from "@karakeep/shared/utils/listUtils";
 
@@ -29,42 +35,14 @@ import { EditListModal } from "../lists/EditListModal";
 import { ListOptions } from "../lists/ListOptions";
 import { InvitationNotificationBadge } from "./InvitationNotificationBadge";
 
-function useDropTarget(listId: string, listName: string) {
+function useBookmarkDropTarget(listId: string, listName: string) {
   const { mutateAsync: addToList } = useAddBookmarkToList();
-  const [dropHighlight, setDropHighlight] = useState(false);
-  const dragCounterRef = useRef(0);
   const { t } = useTranslation();
 
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes(BOOKMARK_DRAG_MIME)) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
-    }
-  }, []);
-
-  const onDragEnter = useCallback((e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes(BOOKMARK_DRAG_MIME)) {
-      e.preventDefault();
-      dragCounterRef.current++;
-      setDropHighlight(true);
-    }
-  }, []);
-
-  const onDragLeave = useCallback(() => {
-    dragCounterRef.current--;
-    if (dragCounterRef.current <= 0) {
-      dragCounterRef.current = 0;
-      setDropHighlight(false);
-    }
-  }, []);
-
-  const onDrop = useCallback(
+  const onBookmarkDrop = useCallback(
     async (e: React.DragEvent) => {
-      dragCounterRef.current = 0;
-      setDropHighlight(false);
       const bookmarkId = e.dataTransfer.getData(BOOKMARK_DRAG_MIME);
       if (!bookmarkId) return;
-      e.preventDefault();
       try {
         await addToList({ bookmarkId, listId });
         toast({
@@ -85,11 +63,40 @@ function useDropTarget(listId: string, listName: string) {
     [addToList, listId, listName, t],
   );
 
-  return { dropHighlight, onDragOver, onDragEnter, onDragLeave, onDrop };
+  return { onBookmarkDrop };
+}
+
+type ListDropPosition = "above" | "below" | "into";
+
+function getListDropPosition(
+  e: React.DragEvent,
+  canAcceptBookmark: boolean,
+): ListDropPosition | null {
+  const target = e.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  if (rect.height === 0) return null;
+  const offset = e.clientY - rect.top;
+  const ratio = offset / rect.height;
+  const hasList = e.dataTransfer.types.includes(LIST_DRAG_MIME);
+  const hasBookmark =
+    canAcceptBookmark && e.dataTransfer.types.includes(BOOKMARK_DRAG_MIME);
+
+  if (hasBookmark && !hasList) {
+    return "into";
+  }
+  if (!hasList) return null;
+  // When also a valid bookmark drop target, give the middle region to "into".
+  if (hasBookmark) {
+    if (ratio < 0.25) return "above";
+    if (ratio > 0.75) return "below";
+    return "into";
+  }
+  return ratio < 0.5 ? "above" : "below";
 }
 
 function DroppableListSidebarItem({
   node,
+  siblings,
   level,
   open,
   numBookmarks,
@@ -97,17 +104,157 @@ function DroppableListSidebarItem({
   setSelectedListId,
 }: {
   node: ZBookmarkListTreeNode;
+  siblings: ZBookmarkListTreeNode[];
   level: number;
   open: boolean;
   numBookmarks?: number;
   selectedListId: string | null;
   setSelectedListId: (id: string | null) => void;
 }) {
-  const canDrop =
+  const { t } = useTranslation();
+  const canAcceptBookmark =
     node.item.type === "manual" &&
     (node.item.userRole === "owner" || node.item.userRole === "editor");
-  const { dropHighlight, onDragOver, onDragEnter, onDragLeave, onDrop } =
-    useDropTarget(node.item.id, node.item.name);
+  const canBeReordered = node.item.userRole === "owner";
+
+  const { onBookmarkDrop } = useBookmarkDropTarget(
+    node.item.id,
+    node.item.name,
+  );
+  const { mutateAsync: reorderLists } = useReorderBookmarkLists();
+
+  const [dropPosition, setDropPosition] = useState<ListDropPosition | null>(
+    null,
+  );
+  const dragCounterRef = useRef(0);
+
+  const siblingIds = useMemo(
+    () =>
+      siblings.filter((s) => s.item.userRole === "owner").map((s) => s.item.id),
+    [siblings],
+  );
+
+  const onDragStart = useCallback(
+    (e: React.DragEvent) => {
+      if (!canBeReordered) return;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData(
+        LIST_DRAG_MIME,
+        encodeListDragPayload({
+          id: node.item.id,
+          parentId: node.item.parentId,
+        }),
+      );
+    },
+    [canBeReordered, node.item.id, node.item.parentId],
+  );
+
+  const onDragOver = useCallback(
+    (e: React.DragEvent) => {
+      const pos = getListDropPosition(e, canAcceptBookmark);
+      if (!pos) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = pos === "into" ? "copy" : "move";
+      setDropPosition(pos);
+    },
+    [canAcceptBookmark],
+  );
+
+  const onDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      const pos = getListDropPosition(e, canAcceptBookmark);
+      if (!pos) return;
+      e.preventDefault();
+      dragCounterRef.current++;
+      setDropPosition(pos);
+    },
+    [canAcceptBookmark],
+  );
+
+  const onDragLeave = useCallback(() => {
+    dragCounterRef.current--;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setDropPosition(null);
+    }
+  }, []);
+
+  const onDragEnd = useCallback(() => {
+    dragCounterRef.current = 0;
+    setDropPosition(null);
+  }, []);
+
+  const handleListReorderDrop = useCallback(
+    async (e: React.DragEvent, pos: "above" | "below") => {
+      const payload = decodeListDragPayload(
+        e.dataTransfer.getData(LIST_DRAG_MIME),
+      );
+      if (!payload) return;
+      // Only allow reorder within the same parent and among owned siblings.
+      if ((payload.parentId ?? null) !== (node.item.parentId ?? null)) {
+        return;
+      }
+      if (payload.id === node.item.id) return;
+      if (!siblingIds.includes(payload.id)) return;
+
+      const filtered = siblingIds.filter((id) => id !== payload.id);
+      const targetIndex = filtered.indexOf(node.item.id);
+      if (targetIndex === -1) return;
+      const insertAt = pos === "above" ? targetIndex : targetIndex + 1;
+      const newOrder = [
+        ...filtered.slice(0, insertAt),
+        payload.id,
+        ...filtered.slice(insertAt),
+      ];
+
+      // Avoid a no-op roundtrip.
+      if (newOrder.every((id, i) => id === siblingIds[i])) return;
+
+      try {
+        await reorderLists({
+          parentId: node.item.parentId ?? null,
+          orderedListIds: newOrder,
+        });
+      } catch {
+        toast({
+          description: t("common.something_went_wrong", {
+            defaultValue: "Something went wrong",
+          }),
+          variant: "destructive",
+        });
+      }
+    },
+    [node.item.id, node.item.parentId, reorderLists, siblingIds, t],
+  );
+
+  const onDrop = useCallback(
+    async (e: React.DragEvent) => {
+      const pos = dropPosition;
+      dragCounterRef.current = 0;
+      setDropPosition(null);
+
+      if (e.dataTransfer.types.includes(LIST_DRAG_MIME)) {
+        if (pos === "above" || pos === "below") {
+          e.preventDefault();
+          await handleListReorderDrop(e, pos);
+          return;
+        }
+      }
+
+      if (
+        canAcceptBookmark &&
+        e.dataTransfer.types.includes(BOOKMARK_DRAG_MIME)
+      ) {
+        e.preventDefault();
+        await onBookmarkDrop(e);
+      }
+    },
+    [canAcceptBookmark, dropPosition, handleListReorderDrop, onBookmarkDrop],
+  );
+
+  const insertIndicator =
+    dropPosition === "above" || dropPosition === "below" ? dropPosition : null;
+  const dropHighlight = dropPosition === "into" && canAcceptBookmark;
 
   return (
     <SidebarItem
@@ -160,11 +307,15 @@ function DroppableListSidebarItem({
       }
       linkClassName="py-0.5"
       style={{ marginLeft: `${level * 1}rem` }}
-      dropHighlight={canDrop && dropHighlight}
-      onDragOver={canDrop ? onDragOver : undefined}
-      onDragEnter={canDrop ? onDragEnter : undefined}
-      onDragLeave={canDrop ? onDragLeave : undefined}
-      onDrop={canDrop ? onDrop : undefined}
+      draggable={canBeReordered}
+      dropHighlight={dropHighlight}
+      insertIndicator={insertIndicator}
+      onDragStart={canBeReordered ? onDragStart : undefined}
+      onDragEnd={canBeReordered ? onDragEnd : undefined}
+      onDragOver={onDragOver}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
     />
   );
 }
@@ -249,9 +400,10 @@ export default function AllLists({
         listsData={lists}
         filter={(node) => node.item.userRole === "owner"}
         isOpenFunc={isNodeOpen}
-        render={({ node, level, open, numBookmarks }) => (
+        render={({ node, level, open, numBookmarks, siblings }) => (
           <DroppableListSidebarItem
             node={node}
+            siblings={siblings}
             level={level}
             open={open}
             numBookmarks={numBookmarks}
@@ -283,9 +435,10 @@ export default function AllLists({
               filter={(node) => node.item.userRole !== "owner"}
               isOpenFunc={isNodeOpen}
               indentOffset={1}
-              render={({ node, level, open, numBookmarks }) => (
+              render={({ node, level, open, numBookmarks, siblings }) => (
                 <DroppableListSidebarItem
                   node={node}
+                  siblings={siblings}
                   level={level}
                   open={open}
                   numBookmarks={numBookmarks}

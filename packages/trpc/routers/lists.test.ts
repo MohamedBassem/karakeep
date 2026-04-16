@@ -975,4 +975,75 @@ describe("Nested smart lists", () => {
       bookmarksInSmartList.bookmarks.find((b) => b.id === bookmark2.id),
     ).toBeUndefined();
   });
+
+  test<CustomTestContext>("reorder persists sibling positions", async ({
+    apiCallers,
+  }) => {
+    const api = apiCallers[0].lists;
+    const a = await api.create({ name: "A", icon: "A", type: "manual" });
+    const b = await api.create({ name: "B", icon: "B", type: "manual" });
+    const c = await api.create({ name: "C", icon: "C", type: "manual" });
+
+    // New order: C, A, B
+    await api.reorder({
+      parentId: null,
+      orderedListIds: [c.id, a.id, b.id],
+    });
+
+    const { lists } = await api.list();
+    const byId = new Map(lists.map((l) => [l.id, l]));
+    expect(byId.get(c.id)?.position).toBe(0);
+    expect(byId.get(a.id)?.position).toBe(1);
+    expect(byId.get(b.id)?.position).toBe(2);
+  });
+
+  test<CustomTestContext>("reorder rejects lists owned by other users", async ({
+    apiCallers,
+  }) => {
+    const me = apiCallers[0].lists;
+    const other = apiCallers[1].lists;
+
+    const mine = await me.create({
+      name: "Mine",
+      icon: "M",
+      type: "manual",
+    });
+    const theirs = await other.create({
+      name: "Theirs",
+      icon: "T",
+      type: "manual",
+    });
+
+    await expect(
+      me.reorder({
+        parentId: null,
+        orderedListIds: [mine.id, theirs.id],
+      }),
+    ).rejects.toThrow();
+  });
+
+  test<CustomTestContext>("reorder rejects lists with different parents", async ({
+    apiCallers,
+  }) => {
+    const api = apiCallers[0].lists;
+    const parent = await api.create({
+      name: "Parent",
+      icon: "P",
+      type: "manual",
+    });
+    const top = await api.create({ name: "Top", icon: "T", type: "manual" });
+    const child = await api.create({
+      name: "Child",
+      icon: "C",
+      type: "manual",
+      parentId: parent.id,
+    });
+
+    await expect(
+      api.reorder({
+        parentId: null,
+        orderedListIds: [top.id, child.id],
+      }),
+    ).rejects.toThrow();
+  });
 });

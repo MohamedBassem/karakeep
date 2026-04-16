@@ -59,6 +59,7 @@ export const zBookmarkListSchema = z.object({
   public: z.boolean(),
   hasCollaborators: z.boolean(),
   userRole: z.enum(["owner", "editor", "viewer", "public"]),
+  position: z.number().int().default(0),
 });
 
 export type ZBookmarkList = z.infer<typeof zBookmarkListSchema>;
@@ -117,3 +118,10 @@ export const zMergeListSchema = z
   });
 
 export type ZMergeList = z.infer<typeof zMergeListSchema>;
+
+export const zReorderListsSchema = z.object({
+  parentId: z.string().nullable(),
+  orderedListIds: z.array(z.string()).min(1),
+});
+
+export type ZReorderLists = z.infer<typeof zReorderListsSchema>;

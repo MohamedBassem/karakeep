@@ -6,7 +6,10 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useBookmarkLists } from "@karakeep/shared-react/hooks/lists";
 import { useTRPC } from "@karakeep/shared-react/trpc";
 import { ZBookmarkList } from "@karakeep/shared/types/lists";
-import { ZBookmarkListTreeNode } from "@karakeep/shared/utils/listUtils";
+import {
+  compareListNodes,
+  ZBookmarkListTreeNode,
+} from "@karakeep/shared/utils/listUtils";
 
 type RenderFunc = (params: {
   node: ZBookmarkListTreeNode;
@@ -14,12 +17,14 @@ type RenderFunc = (params: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   numBookmarks?: number;
+  siblings: ZBookmarkListTreeNode[];
 }) => React.ReactNode;
 
 type IsOpenFunc = (list: ZBookmarkListTreeNode) => boolean;
 
 function ListItem({
   node,
+  siblings,
   render,
   level,
   className,
@@ -28,6 +33,7 @@ function ListItem({
   indentOffset,
 }: {
   node: ZBookmarkListTreeNode;
+  siblings: ZBookmarkListTreeNode[];
   render: RenderFunc;
   isOpenFunc: IsOpenFunc;
   listStats?: Map<string, number>;
@@ -50,6 +56,10 @@ function ListItem({
     setOpen((curr) => curr || isAnyChildOpen(node, isOpenFunc));
   }, [node, isOpenFunc]);
 
+  const sortedChildren = [...node.children].sort((a, b) =>
+    compareListNodes(a, b),
+  );
+
   return (
     <Collapsible open={open} onOpenChange={setOpen} className={className}>
       {render({
@@ -58,22 +68,22 @@ function ListItem({
         open,
         onOpenChange: setOpen,
         numBookmarks: listStats?.get(node.item.id),
+        siblings,
       })}
       <CollapsibleContent>
-        {node.children
-          .sort((a, b) => a.item.name.localeCompare(b.item.name))
-          .map((l) => (
-            <ListItem
-              isOpenFunc={isOpenFunc}
-              key={l.item.id}
-              node={l}
-              render={render}
-              level={level + 1}
-              indentOffset={indentOffset}
-              listStats={listStats}
-              className={className}
-            />
-          ))}
+        {sortedChildren.map((l) => (
+          <ListItem
+            isOpenFunc={isOpenFunc}
+            key={l.item.id}
+            node={l}
+            siblings={sortedChildren}
+            render={render}
+            level={level + 1}
+            indentOffset={indentOffset}
+            listStats={listStats}
+            className={className}
+          />
+        ))}
       </CollapsibleContent>
     </Collapsible>
   );
@@ -121,23 +131,23 @@ export function CollapsibleBookmarkLists({
 
   const rootNodes = Object.values(data.root);
   const filteredRoots = filter ? rootNodes.filter(filter) : rootNodes;
+  const sortedRoots = [...filteredRoots].sort((a, b) => compareListNodes(a, b));
 
   return (
     <div>
-      {filteredRoots
-        .sort((a, b) => a.item.name.localeCompare(b.item.name))
-        .map((node) => (
-          <ListItem
-            key={node.item.id}
-            node={node}
-            render={render}
-            level={0}
-            indentOffset={indentOffset}
-            className={className}
-            listStats={listStats?.stats}
-            isOpenFunc={isOpenFunc ?? (() => false)}
-          />
-        ))}
+      {sortedRoots.map((node) => (
+        <ListItem
+          key={node.item.id}
+          node={node}
+          siblings={sortedRoots}
+          render={render}
+          level={0}
+          indentOffset={indentOffset}
+          className={className}
+          listStats={listStats?.stats}
+          isOpenFunc={isOpenFunc ?? (() => false)}
+        />
+      ))}
     </div>
   );
 }

@@ -65,6 +65,8 @@ export abstract class List {
       parentId: null,
       // Hide whether the list is public or not.
       public: false,
+      // Shared/public viewers don't manage position; owner-scoped value is hidden.
+      position: 0,
     };
   }
 
@@ -774,6 +776,68 @@ export abstract class List {
           }
         : null,
     };
+  }
+
+  /**
+   * Reorder a set of sibling lists owned by the current user.
+   * All listIds must share the same parentId (null for top-level), and
+   * must be owned by the current user.
+   */
+  static async reorderSiblings(
+    ctx: AuthedContext,
+    parentId: string | null,
+    orderedListIds: string[],
+  ): Promise<void> {
+    if (orderedListIds.length === 0) return;
+
+    const uniqueIds = new Set(orderedListIds);
+    if (uniqueIds.size !== orderedListIds.length) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Duplicate list ids in reorder request",
+      });
+    }
+
+    const owned = await ctx.db.query.bookmarkLists.findMany({
+      columns: {
+        id: true,
+        parentId: true,
+      },
+      where: and(
+        eq(bookmarkLists.userId, ctx.user.id),
+        inArray(bookmarkLists.id, orderedListIds),
+      ),
+    });
+
+    if (owned.length !== orderedListIds.length) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "One or more lists not found or not owned by user",
+      });
+    }
+
+    for (const row of owned) {
+      if ((row.parentId ?? null) !== parentId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "All lists must share the same parent to be reordered",
+        });
+      }
+    }
+
+    await ctx.db.transaction(async (tx) => {
+      for (let i = 0; i < orderedListIds.length; i++) {
+        await tx
+          .update(bookmarkLists)
+          .set({ position: i })
+          .where(
+            and(
+              eq(bookmarkLists.id, orderedListIds[i]),
+              eq(bookmarkLists.userId, ctx.user.id),
+            ),
+          );
+      }
+    });
   }
 
   /**
