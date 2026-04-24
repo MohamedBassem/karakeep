@@ -20,6 +20,10 @@ export function actorFromContext(ctx: AuthedContext): Actor {
   };
 }
 
+export function systemActor(userId: string): Actor {
+  return { type: "system", userId };
+}
+
 // --- Authorization checks ---
 
 export function assertOwnership(

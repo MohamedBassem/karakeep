@@ -15,7 +15,13 @@ import {
   BookmarkTypes,
   MAX_BOOKMARK_TITLE_LENGTH,
 } from "@karakeep/shared/types/bookmarks";
+import {
+  assertOwnership,
+  authorize,
+  systemActor,
+} from "@karakeep/trpc/lib/actor";
 import { ImportSessionsRepo } from "@karakeep/trpc/models/importSessions.repo";
+import { ImportSessionsService } from "@karakeep/trpc/models/importSessions.service";
 
 import { registry } from "../metrics";
 
@@ -93,6 +99,7 @@ export class ImportWorker {
   private running = false;
   private pollIntervalMs = 5000;
   private repo = new ImportSessionsRepo(db);
+  private service = new ImportSessionsService(db);
 
   // Backpressure settings
   private maxInFlight = 50;
@@ -308,9 +315,22 @@ export class ImportWorker {
   ): Promise<string> {
     const session = await this.repo.get(staged.importSessionId);
 
-    if (!session || session.status === "paused") {
-      // Session paused mid-batch, reset item to pending
+    if (!session) {
       await this.repo.resetStagingItemToPending(staged.id);
+      return "reset";
+    }
+
+    const actor = systemActor(session.userId);
+    const authorizedSession = await authorize(session, () =>
+      assertOwnership(actor, session.userId),
+    );
+
+    if (session.status === "paused") {
+      // Session paused mid-batch, reset item to pending
+      await this.service.resetStagingItemToPending(
+        authorizedSession,
+        staged.id,
+      );
       return "reset";
     }
 
@@ -359,11 +379,12 @@ export class ImportWorker {
         };
       } else {
         // asset type - skip for now as it needs special handling
-        await this.repo.markStagingFailed(
+        await this.service.markStagingFailed(
+          authorizedSession,
           staged.id,
           "Asset bookmarks not yet supported",
         );
-        await this.updateSessionLastProcessedAt(staged.importSessionId);
+        await this.service.updateSessionLastProcessedAt(authorizedSession);
         return "unsupported";
       }
 
@@ -380,36 +401,44 @@ export class ImportWorker {
 
       // Handle duplicate case (createBookmark returns alreadyExists: true)
       if (result.alreadyExists) {
-        await this.repo.markStagingDuplicate(staged.id, result.id);
+        await this.service.markStagingDuplicate(
+          authorizedSession,
+          staged.id,
+          result.id,
+        );
 
         importStagingProcessedCounter.inc({ result: "skipped_duplicate" });
         await this.attachBookmarkToLists(caller, session, staged, result.id);
-        await this.updateSessionLastProcessedAt(staged.importSessionId);
+        await this.service.updateSessionLastProcessedAt(authorizedSession);
         return "duplicate";
       }
 
       // Mark as accepted but keep in "processing" until crawl/tag is done
       // The item will be moved to "completed" by checkAndCompleteProcessingItems()
-      await this.repo.markStagingAccepted(staged.id, result.id);
+      await this.service.markStagingAccepted(
+        authorizedSession,
+        staged.id,
+        result.id,
+      );
 
       await this.attachBookmarkToLists(caller, session, staged, result.id);
 
-      await this.updateSessionLastProcessedAt(staged.importSessionId);
+      await this.service.updateSessionLastProcessedAt(authorizedSession);
       return "accepted";
     } catch (error) {
       logger.error(
         `[import] Error processing staged item ${staged.id}: ${error}`,
       );
-      await this.repo.markStagingFailed(staged.id, getSafeErrorMessage(error));
+      await this.service.markStagingFailed(
+        authorizedSession,
+        staged.id,
+        getSafeErrorMessage(error),
+      );
 
       importStagingProcessedCounter.inc({ result: "rejected" });
-      await this.updateSessionLastProcessedAt(staged.importSessionId);
+      await this.service.updateSessionLastProcessedAt(authorizedSession);
       return "failed";
     }
-  }
-
-  private async updateSessionLastProcessedAt(sessionId: string) {
-    await this.repo.updateSessionLastProcessedAt(sessionId);
   }
 
   private async checkAndCompleteEmptySessions(sessionIds: string[]) {
@@ -417,10 +446,16 @@ export class ImportWorker {
       const remaining = await this.repo.countActiveStagingForSession(sessionId);
 
       if (remaining === 0) {
+        const session = await this.repo.get(sessionId);
+        if (!session) continue;
+        const actor = systemActor(session.userId);
+        const authorizedSession = await authorize(session, () =>
+          assertOwnership(actor, session.userId),
+        );
         logger.info(
           `[import] Session ${sessionId} completed, all items processed`,
         );
-        await this.repo.updateStatus(sessionId, "completed");
+        await this.service.markSessionCompleted(authorizedSession);
       }
     }
   }

@@ -71,4 +71,15 @@ export class FeedsService {
       throw new TRPCError({ code: "NOT_FOUND" });
     }
   }
+
+  async updateLastFetched(
+    feed: Authorized<Feed>,
+    status: "success" | "failure",
+  ): Promise<void> {
+    await this.repo.updateLastFetched(feed.id, status);
+  }
+
+  async updateLastSuccessfulFetchAt(feed: Authorized<Feed>): Promise<void> {
+    await this.repo.updateLastSuccessfulFetchAt(feed.id);
+  }
 }

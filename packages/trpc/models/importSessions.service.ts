@@ -167,6 +167,49 @@ export class ImportSessionsService {
     );
   }
 
+  async markStagingFailed(
+    _session: Authorized<ImportSessionRow>,
+    stagingId: string,
+    reason: string,
+  ): Promise<void> {
+    await this.repo.markStagingFailed(stagingId, reason);
+  }
+
+  async markStagingDuplicate(
+    _session: Authorized<ImportSessionRow>,
+    stagingId: string,
+    bookmarkId: string,
+  ): Promise<void> {
+    await this.repo.markStagingDuplicate(stagingId, bookmarkId);
+  }
+
+  async markStagingAccepted(
+    _session: Authorized<ImportSessionRow>,
+    stagingId: string,
+    bookmarkId: string,
+  ): Promise<void> {
+    await this.repo.markStagingAccepted(stagingId, bookmarkId);
+  }
+
+  async resetStagingItemToPending(
+    _session: Authorized<ImportSessionRow>,
+    stagingId: string,
+  ): Promise<void> {
+    await this.repo.resetStagingItemToPending(stagingId);
+  }
+
+  async updateSessionLastProcessedAt(
+    session: Authorized<ImportSessionRow>,
+  ): Promise<void> {
+    await this.repo.updateSessionLastProcessedAt(session.id);
+  }
+
+  async markSessionCompleted(
+    session: Authorized<ImportSessionRow>,
+  ): Promise<void> {
+    await this.repo.updateStatus(session.id, "completed");
+  }
+
   private async buildStats(
     session: ImportSessionRow,
   ): Promise<ZImportSessionWithStats> {

@@ -12,7 +12,13 @@ import { FeedQueue, QuotaService } from "@karakeep/shared-server";
 import logger from "@karakeep/shared/logger";
 import { DequeuedJob, getQueueClient } from "@karakeep/shared/queueing";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
+import {
+  assertOwnership,
+  authorize,
+  systemActor,
+} from "@karakeep/trpc/lib/actor";
 import { FeedsRepo } from "@karakeep/trpc/models/feeds.repo";
+import { FeedsService } from "@karakeep/trpc/models/feeds.service";
 
 import { parseFeedItems } from "./utils/feedParser";
 
@@ -87,10 +93,7 @@ export class FeedWorker {
           workerStatsCounter.labels("feed", "completed").inc();
           const jobId = job.id;
           logger.info(`[feed][${jobId}] Completed successfully`);
-          await new FeedsRepo(db).updateLastFetched(
-            job.data?.feedId,
-            "success",
-          );
+          await markFeedFetchStatus(job.data?.feedId, "success");
         },
         onError: async (job) => {
           workerStatsCounter.labels("feed", "failed").inc();
@@ -102,10 +105,7 @@ export class FeedWorker {
             `[feed][${jobId}] Feed fetch job failed: ${job.error}\n${job.error.stack}`,
           );
           if (job.data) {
-            await new FeedsRepo(db).updateLastFetched(
-              job.data?.feedId,
-              "failure",
-            );
+            await markFeedFetchStatus(job.data?.feedId, "failure");
           }
         },
       },
@@ -120,9 +120,23 @@ export class FeedWorker {
   }
 }
 
+async function markFeedFetchStatus(
+  feedId: string,
+  status: "success" | "failure",
+) {
+  const feed = await new FeedsRepo(db).get(feedId);
+  if (!feed) return;
+  const actor = systemActor(feed.userId);
+  const authorizedFeed = await authorize(feed, () =>
+    assertOwnership(actor, feed.userId),
+  );
+  await new FeedsService(db).updateLastFetched(authorizedFeed, status);
+}
+
 async function run(req: DequeuedJob<ZFeedRequestSchema>) {
   const jobId = req.id;
   const feedsRepo = new FeedsRepo(db);
+  const feedsService = new FeedsService(db);
   const feed = await feedsRepo.get(req.data.feedId);
   if (!feed) {
     throw new Error(
@@ -171,7 +185,11 @@ async function run(req: DequeuedJob<ZFeedRequestSchema>) {
   );
 
   const feedItems = await parseFeedItems(xmlData);
-  await feedsRepo.updateLastSuccessfulFetchAt(feed.id);
+  const actor = systemActor(feed.userId);
+  const authorizedFeed = await authorize(feed, () =>
+    assertOwnership(actor, feed.userId),
+  );
+  await feedsService.updateLastSuccessfulFetchAt(authorizedFeed);
 
   logger.info(
     `[feed][${jobId}] Found ${feedItems.length} entries in feed "${feed.name}" (${feed.id}) ...`,
