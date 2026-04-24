@@ -128,7 +128,7 @@ export class ImportSessionsService {
       });
     }
 
-    await this.repo.updateStatus(session.id, "pending");
+    await this.repo.updateSession(session.id, { status: "pending" });
   }
 
   async pause(session: Authorized<ImportSessionRow>): Promise<void> {
@@ -139,7 +139,7 @@ export class ImportSessionsService {
       });
     }
 
-    await this.repo.updateStatus(session.id, "paused");
+    await this.repo.updateSession(session.id, { status: "paused" });
   }
 
   async resume(session: Authorized<ImportSessionRow>): Promise<void> {
@@ -150,7 +150,7 @@ export class ImportSessionsService {
       });
     }
 
-    await this.repo.updateStatus(session.id, "pending");
+    await this.repo.updateSession(session.id, { status: "pending" });
   }
 
   async getStagingBookmarks(
@@ -172,7 +172,12 @@ export class ImportSessionsService {
     stagingId: string,
     reason: string,
   ): Promise<void> {
-    await this.repo.markStagingFailed(stagingId, reason);
+    await this.repo.updateStaging(stagingId, {
+      status: "failed",
+      result: "rejected",
+      resultReason: reason,
+      completedAt: new Date(),
+    });
   }
 
   async markStagingDuplicate(
@@ -180,7 +185,13 @@ export class ImportSessionsService {
     stagingId: string,
     bookmarkId: string,
   ): Promise<void> {
-    await this.repo.markStagingDuplicate(stagingId, bookmarkId);
+    await this.repo.updateStaging(stagingId, {
+      status: "completed",
+      result: "skipped_duplicate",
+      resultReason: "URL already exists",
+      resultBookmarkId: bookmarkId,
+      completedAt: new Date(),
+    });
   }
 
   async markStagingAccepted(
@@ -188,26 +199,29 @@ export class ImportSessionsService {
     stagingId: string,
     bookmarkId: string,
   ): Promise<void> {
-    await this.repo.markStagingAccepted(stagingId, bookmarkId);
+    await this.repo.updateStaging(stagingId, {
+      result: "accepted",
+      resultBookmarkId: bookmarkId,
+    });
   }
 
   async resetStagingItemToPending(
     _session: Authorized<ImportSessionRow>,
     stagingId: string,
   ): Promise<void> {
-    await this.repo.resetStagingItemToPending(stagingId);
+    await this.repo.updateStaging(stagingId, { status: "pending" });
   }
 
   async updateSessionLastProcessedAt(
     session: Authorized<ImportSessionRow>,
   ): Promise<void> {
-    await this.repo.updateSessionLastProcessedAt(session.id);
+    await this.repo.updateSession(session.id, { lastProcessedAt: new Date() });
   }
 
   async markSessionCompleted(
     session: Authorized<ImportSessionRow>,
   ): Promise<void> {
-    await this.repo.updateStatus(session.id, "completed");
+    await this.repo.updateSession(session.id, { status: "completed" });
   }
 
   private async buildStats(

@@ -3,12 +3,10 @@ import { z } from "zod";
 
 import type { DB } from "@karakeep/db";
 import { rssFeedsTable } from "@karakeep/db/schema";
-import {
-  zNewFeedSchema,
-  zUpdateFeedSchema,
-} from "@karakeep/shared/types/feeds";
+import { zNewFeedSchema } from "@karakeep/shared/types/feeds";
 
 type Feed = typeof rssFeedsTable.$inferSelect;
+type FeedPatch = Partial<typeof rssFeedsTable.$inferInsert>;
 
 export class FeedsRepo {
   constructor(private db: DB) {}
@@ -62,23 +60,6 @@ export class FeedsRepo {
     });
   }
 
-  async updateLastFetched(
-    id: string,
-    status: "success" | "failure",
-  ): Promise<void> {
-    await this.db
-      .update(rssFeedsTable)
-      .set({ lastFetchedStatus: status, lastFetchedAt: new Date() })
-      .where(eq(rssFeedsTable.id, id));
-  }
-
-  async updateLastSuccessfulFetchAt(id: string): Promise<void> {
-    await this.db
-      .update(rssFeedsTable)
-      .set({ lastSuccessfulFetchAt: new Date() })
-      .where(eq(rssFeedsTable.id, id));
-  }
-
   async delete(id: string): Promise<boolean> {
     const res = await this.db
       .delete(rssFeedsTable)
@@ -86,18 +67,10 @@ export class FeedsRepo {
     return res.changes > 0;
   }
 
-  async update(
-    id: string,
-    input: z.infer<typeof zUpdateFeedSchema>,
-  ): Promise<Feed | null> {
+  async update(id: string, patch: FeedPatch): Promise<Feed | null> {
     const result = await this.db
       .update(rssFeedsTable)
-      .set({
-        name: input.name,
-        url: input.url,
-        enabled: input.enabled,
-        importTags: input.importTags,
-      })
+      .set(patch)
       .where(eq(rssFeedsTable.id, id))
       .returning();
 

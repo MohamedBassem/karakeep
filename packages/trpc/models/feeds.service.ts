@@ -54,7 +54,12 @@ export class FeedsService {
     feed: Authorized<Feed>,
     input: z.infer<typeof zUpdateFeedSchema>,
   ): Promise<Feed> {
-    const updated = await this.repo.update(feed.id, input);
+    const updated = await this.repo.update(feed.id, {
+      name: input.name,
+      url: input.url,
+      enabled: input.enabled,
+      importTags: input.importTags,
+    });
     if (!updated) {
       throw new TRPCError({ code: "NOT_FOUND" });
     }
@@ -76,10 +81,13 @@ export class FeedsService {
     feed: Authorized<Feed>,
     status: "success" | "failure",
   ): Promise<void> {
-    await this.repo.updateLastFetched(feed.id, status);
+    await this.repo.update(feed.id, {
+      lastFetchedStatus: status,
+      lastFetchedAt: new Date(),
+    });
   }
 
   async updateLastSuccessfulFetchAt(feed: Authorized<Feed>): Promise<void> {
-    await this.repo.updateLastSuccessfulFetchAt(feed.id);
+    await this.repo.update(feed.id, { lastSuccessfulFetchAt: new Date() });
   }
 }

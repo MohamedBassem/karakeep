@@ -3,13 +3,12 @@ import { z } from "zod";
 
 import type { DB } from "@karakeep/db";
 import { importSessions, importStagingBookmarks } from "@karakeep/db/schema";
-import {
-  zCreateImportSessionRequestSchema,
-  ZImportSession,
-} from "@karakeep/shared/types/importSessions";
+import { zCreateImportSessionRequestSchema } from "@karakeep/shared/types/importSessions";
 
 type ImportSessionRow = typeof importSessions.$inferSelect;
+type ImportSessionPatch = Partial<typeof importSessions.$inferInsert>;
 type StagingBookmarkRow = typeof importStagingBookmarks.$inferSelect;
+type StagingBookmarkPatch = Partial<typeof importStagingBookmarks.$inferInsert>;
 
 export class ImportSessionsRepo {
   constructor(private db: DB) {}
@@ -83,14 +82,18 @@ export class ImportSessionsRepo {
     await this.db.insert(importStagingBookmarks).values(bookmarks);
   }
 
-  async updateStatus(
-    id: string,
-    status: ZImportSession["status"],
-  ): Promise<void> {
+  async updateSession(id: string, patch: ImportSessionPatch): Promise<void> {
     await this.db
       .update(importSessions)
-      .set({ status })
+      .set(patch)
       .where(eq(importSessions.id, id));
+  }
+
+  async updateStaging(id: string, patch: StagingBookmarkPatch): Promise<void> {
+    await this.db
+      .update(importStagingBookmarks)
+      .set(patch)
+      .where(eq(importStagingBookmarks.id, id));
   }
 
   async getActiveSessionIds(): Promise<string[]> {
@@ -132,13 +135,6 @@ export class ImportSessionsRepo {
       );
   }
 
-  async updateSessionLastProcessedAt(sessionId: string): Promise<void> {
-    await this.db
-      .update(importSessions)
-      .set({ lastProcessedAt: new Date() })
-      .where(eq(importSessions.id, sessionId));
-  }
-
   async countActiveStagingForSession(sessionId: string): Promise<number> {
     const [result] = await this.db
       .select({ count: count() })
@@ -166,48 +162,6 @@ export class ImportSessionsRepo {
         ),
       )
       .returning();
-  }
-
-  async resetStagingItemToPending(id: string): Promise<void> {
-    await this.db
-      .update(importStagingBookmarks)
-      .set({ status: "pending" })
-      .where(eq(importStagingBookmarks.id, id));
-  }
-
-  async markStagingFailed(id: string, reason: string): Promise<void> {
-    await this.db
-      .update(importStagingBookmarks)
-      .set({
-        status: "failed",
-        result: "rejected",
-        resultReason: reason,
-        completedAt: new Date(),
-      })
-      .where(eq(importStagingBookmarks.id, id));
-  }
-
-  async markStagingDuplicate(id: string, bookmarkId: string): Promise<void> {
-    await this.db
-      .update(importStagingBookmarks)
-      .set({
-        status: "completed",
-        result: "skipped_duplicate",
-        resultReason: "URL already exists",
-        resultBookmarkId: bookmarkId,
-        completedAt: new Date(),
-      })
-      .where(eq(importStagingBookmarks.id, id));
-  }
-
-  async markStagingAccepted(id: string, bookmarkId: string): Promise<void> {
-    await this.db
-      .update(importStagingBookmarks)
-      .set({
-        result: "accepted",
-        resultBookmarkId: bookmarkId,
-      })
-      .where(eq(importStagingBookmarks.id, id));
   }
 
   async markStagingCompleted(ids: string[]): Promise<void> {

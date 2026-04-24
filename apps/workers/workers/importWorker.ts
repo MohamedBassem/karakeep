@@ -316,7 +316,7 @@ export class ImportWorker {
     const session = await this.repo.get(staged.importSessionId);
 
     if (!session) {
-      await this.repo.resetStagingItemToPending(staged.id);
+      await this.repo.updateStaging(staged.id, { status: "pending" });
       return "reset";
     }
 
@@ -533,7 +533,12 @@ export class ImportWorker {
       for (const item of failedItems) {
         const reason =
           item.crawlStatus === "failure" ? "Crawl failed" : "Tagging failed";
-        await this.repo.markStagingFailed(item.id, reason);
+        await this.repo.updateStaging(item.id, {
+          status: "failed",
+          result: "rejected",
+          resultReason: reason,
+          completedAt: new Date(),
+        });
       }
 
       importStagingProcessedCounter.inc(
