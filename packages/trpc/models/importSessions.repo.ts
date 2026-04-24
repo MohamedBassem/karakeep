@@ -1,4 +1,4 @@
-import { and, count, eq, gt } from "drizzle-orm";
+import { and, count, eq, gt, inArray, isNull, lt } from "drizzle-orm";
 import { z } from "zod";
 
 import type { DB } from "@karakeep/db";
@@ -91,6 +91,169 @@ export class ImportSessionsRepo {
       .update(importSessions)
       .set({ status })
       .where(eq(importSessions.id, id));
+  }
+
+  async getActiveSessionIds(): Promise<string[]> {
+    const sessions = await this.db
+      .select({ id: importSessions.id })
+      .from(importSessions)
+      .where(inArray(importSessions.status, ["pending", "running"]));
+    return sessions.map((s) => s.id);
+  }
+
+  async countActiveByStatus(): Promise<{ status: string; count: number }[]> {
+    return await this.db
+      .select({
+        status: importSessions.status,
+        count: count(),
+      })
+      .from(importSessions)
+      .where(
+        inArray(importSessions.status, [
+          "staging",
+          "pending",
+          "running",
+          "paused",
+        ]),
+      )
+      .groupBy(importSessions.status);
+  }
+
+  async markSessionsRunningIfPending(sessionIds: string[]): Promise<void> {
+    if (sessionIds.length === 0) return;
+    await this.db
+      .update(importSessions)
+      .set({ status: "running" })
+      .where(
+        and(
+          inArray(importSessions.id, sessionIds),
+          eq(importSessions.status, "pending"),
+        ),
+      );
+  }
+
+  async updateSessionLastProcessedAt(sessionId: string): Promise<void> {
+    await this.db
+      .update(importSessions)
+      .set({ lastProcessedAt: new Date() })
+      .where(eq(importSessions.id, sessionId));
+  }
+
+  async countActiveStagingForSession(sessionId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(importStagingBookmarks)
+      .where(
+        and(
+          eq(importStagingBookmarks.importSessionId, sessionId),
+          inArray(importStagingBookmarks.status, ["pending", "processing"]),
+        ),
+      );
+    return result?.count ?? 0;
+  }
+
+  async claimPendingStagingByIds(
+    candidateIds: string[],
+  ): Promise<StagingBookmarkRow[]> {
+    if (candidateIds.length === 0) return [];
+    return await this.db
+      .update(importStagingBookmarks)
+      .set({ status: "processing", processingStartedAt: new Date() })
+      .where(
+        and(
+          eq(importStagingBookmarks.status, "pending"),
+          inArray(importStagingBookmarks.id, candidateIds),
+        ),
+      )
+      .returning();
+  }
+
+  async resetStagingItemToPending(id: string): Promise<void> {
+    await this.db
+      .update(importStagingBookmarks)
+      .set({ status: "pending" })
+      .where(eq(importStagingBookmarks.id, id));
+  }
+
+  async markStagingFailed(id: string, reason: string): Promise<void> {
+    await this.db
+      .update(importStagingBookmarks)
+      .set({
+        status: "failed",
+        result: "rejected",
+        resultReason: reason,
+        completedAt: new Date(),
+      })
+      .where(eq(importStagingBookmarks.id, id));
+  }
+
+  async markStagingDuplicate(id: string, bookmarkId: string): Promise<void> {
+    await this.db
+      .update(importStagingBookmarks)
+      .set({
+        status: "completed",
+        result: "skipped_duplicate",
+        resultReason: "URL already exists",
+        resultBookmarkId: bookmarkId,
+        completedAt: new Date(),
+      })
+      .where(eq(importStagingBookmarks.id, id));
+  }
+
+  async markStagingAccepted(id: string, bookmarkId: string): Promise<void> {
+    await this.db
+      .update(importStagingBookmarks)
+      .set({
+        result: "accepted",
+        resultBookmarkId: bookmarkId,
+      })
+      .where(eq(importStagingBookmarks.id, id));
+  }
+
+  async markStagingCompleted(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    await this.db
+      .update(importStagingBookmarks)
+      .set({
+        status: "completed",
+        completedAt: new Date(),
+      })
+      .where(inArray(importStagingBookmarks.id, ids));
+  }
+
+  async countInFlightProcessing(staleAfter: Date): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(importStagingBookmarks)
+      .where(
+        and(
+          eq(importStagingBookmarks.status, "processing"),
+          gt(importStagingBookmarks.processingStartedAt, staleAfter),
+        ),
+      );
+    return result?.count ?? 0;
+  }
+
+  async getStaleProcessingIds(staleBefore: Date): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: importStagingBookmarks.id })
+      .from(importStagingBookmarks)
+      .where(
+        and(
+          eq(importStagingBookmarks.status, "processing"),
+          lt(importStagingBookmarks.processingStartedAt, staleBefore),
+          isNull(importStagingBookmarks.resultBookmarkId),
+        ),
+      );
+    return rows.map((r) => r.id);
+  }
+
+  async resetStagingItemsToPending(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    await this.db
+      .update(importStagingBookmarks)
+      .set({ status: "pending", processingStartedAt: null })
+      .where(inArray(importStagingBookmarks.id, ids));
   }
 
   async getStagingBookmarks(

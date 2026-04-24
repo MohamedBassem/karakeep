@@ -1,4 +1,4 @@
-import { and, desc, eq, like, lt, lte, or } from "drizzle-orm";
+import { and, count, desc, eq, gte, like, lt, lte, or } from "drizzle-orm";
 import { z } from "zod";
 
 import type { DB } from "@karakeep/db";
@@ -136,6 +136,32 @@ export class HighlightsRepo {
       .returning();
 
     return result[0] ?? null;
+  }
+
+  async countByUser(userId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(highlights)
+      .where(eq(highlights.userId, userId));
+    return result.count;
+  }
+
+  async countByUserInRange(
+    userId: string,
+    startInclusive: Date,
+    endInclusive: Date,
+  ): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(highlights)
+      .where(
+        and(
+          eq(highlights.userId, userId),
+          gte(highlights.createdAt, startInclusive),
+          lte(highlights.createdAt, endInclusive),
+        ),
+      );
+    return result.count;
   }
 
   async update(

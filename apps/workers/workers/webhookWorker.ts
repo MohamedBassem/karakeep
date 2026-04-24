@@ -4,7 +4,7 @@ import { fetchWithProxy } from "network";
 import { withWorkerTracing } from "workerTracing";
 
 import { db } from "@karakeep/db";
-import { bookmarks, webhooksTable } from "@karakeep/db/schema";
+import { bookmarks } from "@karakeep/db/schema";
 import {
   WebhookQueue,
   ZWebhookRequest,
@@ -13,6 +13,7 @@ import {
 import serverConfig from "@karakeep/shared/config";
 import logger from "@karakeep/shared/logger";
 import { DequeuedJob, getQueueClient } from "@karakeep/shared/queueing";
+import { WebhooksRepo } from "@karakeep/trpc/models/webhooks.repo";
 
 export class WebhookWorker {
   static async build() {
@@ -68,9 +69,7 @@ async function fetchBookmark(bookmarkId: string) {
 }
 
 async function fetchUserWebhooks(userId: string) {
-  return await db.query.webhooksTable.findMany({
-    where: eq(webhooksTable.userId, userId),
-  });
+  return await new WebhooksRepo(db).getAll(userId);
 }
 
 function canDeliverWebhookWithoutBookmark(

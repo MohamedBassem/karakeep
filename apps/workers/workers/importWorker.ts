@@ -1,15 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import {
-  and,
-  count,
-  eq,
-  gt,
-  inArray,
-  isNotNull,
-  isNull,
-  lt,
-  or,
-} from "drizzle-orm";
+import { and, count, eq, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { Counter, Gauge, Histogram } from "prom-client";
 import { buildImpersonatingTRPCClient } from "trpc";
 
@@ -25,6 +15,7 @@ import {
   BookmarkTypes,
   MAX_BOOKMARK_TITLE_LENGTH,
 } from "@karakeep/shared/types/bookmarks";
+import { ImportSessionsRepo } from "@karakeep/trpc/models/importSessions.repo";
 
 import { registry } from "../metrics";
 
@@ -101,6 +92,7 @@ function getSafeErrorMessage(error: unknown): string {
 export class ImportWorker {
   private running = false;
   private pollIntervalMs = 5000;
+  private repo = new ImportSessionsRepo(db);
 
   // Backpressure settings
   private maxInFlight = 50;
@@ -177,16 +169,7 @@ export class ImportWorker {
 
     // 3. Atomically claim rows - only rows still pending will be claimed
     // This prevents race conditions where multiple workers select the same rows
-    const batch = await db
-      .update(importStagingBookmarks)
-      .set({ status: "processing", processingStartedAt: new Date() })
-      .where(
-        and(
-          eq(importStagingBookmarks.status, "pending"),
-          inArray(importStagingBookmarks.id, candidateIds),
-        ),
-      )
-      .returning();
+    const batch = await this.repo.claimPendingStagingByIds(candidateIds);
 
     // If no rows were claimed (another worker got them first), skip processing
     if (batch.length === 0) return 0;
@@ -198,15 +181,7 @@ export class ImportWorker {
     logger.info(
       `[import] Claimed batch of ${batch.length} items from ${sessionIds.length} session(s): [${sessionIds.join(", ")}]`,
     );
-    await db
-      .update(importSessions)
-      .set({ status: "running" })
-      .where(
-        and(
-          inArray(importSessions.id, sessionIds),
-          eq(importSessions.status, "pending"),
-        ),
-      );
+    await this.repo.markSessionsRunningIfPending(sessionIds);
 
     // 5. Process in parallel
     const results = await Promise.allSettled(
@@ -234,21 +209,7 @@ export class ImportWorker {
 
   private async updateGauges() {
     // Update active sessions gauge by status
-    const sessions = await db
-      .select({
-        status: importSessions.status,
-        count: count(),
-      })
-      .from(importSessions)
-      .where(
-        inArray(importSessions.status, [
-          "staging",
-          "pending",
-          "running",
-          "paused",
-        ]),
-      )
-      .groupBy(importSessions.status);
+    const sessions = await this.repo.countActiveByStatus();
 
     // Reset all status gauges to 0 first
     for (const status of ["staging", "pending", "running", "paused"]) {
@@ -262,12 +223,7 @@ export class ImportWorker {
   }
 
   private async checkAndCompleteIdleSessions() {
-    const sessions = await db
-      .select({ id: importSessions.id })
-      .from(importSessions)
-      .where(inArray(importSessions.status, ["pending", "running"]));
-
-    const sessionIds = sessions.map((session) => session.id);
+    const sessionIds = await this.repo.getActiveSessionIds();
     if (sessionIds.length === 0) {
       return;
     }
@@ -350,16 +306,11 @@ export class ImportWorker {
   private async processOneBookmark(
     staged: typeof importStagingBookmarks.$inferSelect,
   ): Promise<string> {
-    const session = await db.query.importSessions.findFirst({
-      where: eq(importSessions.id, staged.importSessionId),
-    });
+    const session = await this.repo.get(staged.importSessionId);
 
     if (!session || session.status === "paused") {
       // Session paused mid-batch, reset item to pending
-      await db
-        .update(importStagingBookmarks)
-        .set({ status: "pending" })
-        .where(eq(importStagingBookmarks.id, staged.id));
+      await this.repo.resetStagingItemToPending(staged.id);
       return "reset";
     }
 
@@ -408,15 +359,10 @@ export class ImportWorker {
         };
       } else {
         // asset type - skip for now as it needs special handling
-        await db
-          .update(importStagingBookmarks)
-          .set({
-            status: "failed",
-            result: "rejected",
-            resultReason: "Asset bookmarks not yet supported",
-            completedAt: new Date(),
-          })
-          .where(eq(importStagingBookmarks.id, staged.id));
+        await this.repo.markStagingFailed(
+          staged.id,
+          "Asset bookmarks not yet supported",
+        );
         await this.updateSessionLastProcessedAt(staged.importSessionId);
         return "unsupported";
       }
@@ -434,16 +380,7 @@ export class ImportWorker {
 
       // Handle duplicate case (createBookmark returns alreadyExists: true)
       if (result.alreadyExists) {
-        await db
-          .update(importStagingBookmarks)
-          .set({
-            status: "completed",
-            result: "skipped_duplicate",
-            resultReason: "URL already exists",
-            resultBookmarkId: result.id,
-            completedAt: new Date(),
-          })
-          .where(eq(importStagingBookmarks.id, staged.id));
+        await this.repo.markStagingDuplicate(staged.id, result.id);
 
         importStagingProcessedCounter.inc({ result: "skipped_duplicate" });
         await this.attachBookmarkToLists(caller, session, staged, result.id);
@@ -453,13 +390,7 @@ export class ImportWorker {
 
       // Mark as accepted but keep in "processing" until crawl/tag is done
       // The item will be moved to "completed" by checkAndCompleteProcessingItems()
-      await db
-        .update(importStagingBookmarks)
-        .set({
-          result: "accepted",
-          resultBookmarkId: result.id,
-        })
-        .where(eq(importStagingBookmarks.id, staged.id));
+      await this.repo.markStagingAccepted(staged.id, result.id);
 
       await this.attachBookmarkToLists(caller, session, staged, result.id);
 
@@ -469,15 +400,7 @@ export class ImportWorker {
       logger.error(
         `[import] Error processing staged item ${staged.id}: ${error}`,
       );
-      await db
-        .update(importStagingBookmarks)
-        .set({
-          status: "failed",
-          result: "rejected",
-          resultReason: getSafeErrorMessage(error),
-          completedAt: new Date(),
-        })
-        .where(eq(importStagingBookmarks.id, staged.id));
+      await this.repo.markStagingFailed(staged.id, getSafeErrorMessage(error));
 
       importStagingProcessedCounter.inc({ result: "rejected" });
       await this.updateSessionLastProcessedAt(staged.importSessionId);
@@ -486,32 +409,18 @@ export class ImportWorker {
   }
 
   private async updateSessionLastProcessedAt(sessionId: string) {
-    await db
-      .update(importSessions)
-      .set({ lastProcessedAt: new Date() })
-      .where(eq(importSessions.id, sessionId));
+    await this.repo.updateSessionLastProcessedAt(sessionId);
   }
 
   private async checkAndCompleteEmptySessions(sessionIds: string[]) {
     for (const sessionId of sessionIds) {
-      const remaining = await db
-        .select({ count: count() })
-        .from(importStagingBookmarks)
-        .where(
-          and(
-            eq(importStagingBookmarks.importSessionId, sessionId),
-            inArray(importStagingBookmarks.status, ["pending", "processing"]),
-          ),
-        );
+      const remaining = await this.repo.countActiveStagingForSession(sessionId);
 
-      if (remaining[0]?.count === 0) {
+      if (remaining === 0) {
         logger.info(
           `[import] Session ${sessionId} completed, all items processed`,
         );
-        await db
-          .update(importSessions)
-          .set({ status: "completed" })
-          .where(eq(importSessions.id, sessionId));
+        await this.repo.updateStatus(sessionId, "completed");
       }
     }
   }
@@ -576,18 +485,7 @@ export class ImportWorker {
 
     // Mark succeeded items as completed
     if (succeededItems.length > 0) {
-      await db
-        .update(importStagingBookmarks)
-        .set({
-          status: "completed",
-          completedAt: new Date(),
-        })
-        .where(
-          inArray(
-            importStagingBookmarks.id,
-            succeededItems.map((i) => i.id),
-          ),
-        );
+      await this.repo.markStagingCompleted(succeededItems.map((i) => i.id));
 
       importStagingProcessedCounter.inc(
         { result: "accepted" },
@@ -600,15 +498,7 @@ export class ImportWorker {
       for (const item of failedItems) {
         const reason =
           item.crawlStatus === "failure" ? "Crawl failed" : "Tagging failed";
-        await db
-          .update(importStagingBookmarks)
-          .set({
-            status: "failed",
-            result: "rejected",
-            resultReason: reason,
-            completedAt: new Date(),
-          })
-          .where(eq(importStagingBookmarks.id, item.id));
+        await this.repo.markStagingFailed(item.id, reason);
       }
 
       importStagingProcessedCounter.inc(
@@ -630,20 +520,9 @@ export class ImportWorker {
    * Backpressure: Calculate available capacity based on number of items currently processing.
    */
   private async getAvailableCapacity(): Promise<number> {
-    const processingCount = await db
-      .select({ count: count() })
-      .from(importStagingBookmarks)
-      .where(
-        and(
-          eq(importStagingBookmarks.status, "processing"),
-          gt(
-            importStagingBookmarks.processingStartedAt,
-            new Date(Date.now() - this.staleThresholdMs),
-          ),
-        ),
-      );
-
-    const inFlight = processingCount[0]?.count ?? 0;
+    const inFlight = await this.repo.countInFlightProcessing(
+      new Date(Date.now() - this.staleThresholdMs),
+    );
     importStagingInFlightGauge.set(inFlight);
 
     return this.maxInFlight - inFlight;
@@ -659,36 +538,17 @@ export class ImportWorker {
   private async resetStaleProcessingItems(): Promise<number> {
     const staleThreshold = new Date(Date.now() - this.staleThresholdMs);
 
-    const staleItems = await db
-      .select({ id: importStagingBookmarks.id })
-      .from(importStagingBookmarks)
-      .where(
-        and(
-          eq(importStagingBookmarks.status, "processing"),
-          lt(importStagingBookmarks.processingStartedAt, staleThreshold),
-          // Only reset items that haven't created a bookmark yet
-          // Items with a bookmark are waiting for downstream, not stale
-          isNull(importStagingBookmarks.resultBookmarkId),
-        ),
-      );
+    const staleIds = await this.repo.getStaleProcessingIds(staleThreshold);
 
-    if (staleItems.length > 0) {
+    if (staleIds.length > 0) {
       logger.warn(
-        `[import] Resetting ${staleItems.length} stale processing items`,
+        `[import] Resetting ${staleIds.length} stale processing items`,
       );
 
-      await db
-        .update(importStagingBookmarks)
-        .set({ status: "pending", processingStartedAt: null })
-        .where(
-          inArray(
-            importStagingBookmarks.id,
-            staleItems.map((i) => i.id),
-          ),
-        );
+      await this.repo.resetStagingItemsToPending(staleIds);
 
-      importStagingStaleResetCounter.inc(staleItems.length);
-      return staleItems.length;
+      importStagingStaleResetCounter.inc(staleIds.length);
+      return staleIds.length;
     }
 
     return 0;

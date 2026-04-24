@@ -12,7 +12,6 @@ import {
   bookmarkLists,
   bookmarks,
   bookmarkTags,
-  highlights,
   passwordResetTokens,
   tagsOnBookmarks,
   users,
@@ -33,6 +32,7 @@ import {
 import { AuthedContext, Context } from "..";
 import { generatePasswordSalt, hashPassword, validatePassword } from "../auth";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../email";
+import { HighlightsRepo } from "./highlights.repo";
 
 export class User {
   constructor(
@@ -632,7 +632,7 @@ export class User {
       [{ numArchived }],
       [{ numTags }],
       [{ numLists }],
-      [{ numHighlights }],
+      numHighlights,
       bookmarksByType,
       topDomains,
       [{ totalAssetSize }],
@@ -672,10 +672,7 @@ export class User {
         .select({ numLists: count() })
         .from(bookmarkLists)
         .where(eq(bookmarkLists.userId, this.user.id)),
-      this.ctx.db
-        .select({ numHighlights: count() })
-        .from(highlights)
-        .where(eq(highlights.userId, this.user.id)),
+      new HighlightsRepo(this.ctx.db).countByUser(this.user.id),
 
       // Bookmarks by type
       this.ctx.db
@@ -935,7 +932,7 @@ export class User {
       [{ totalArchived }],
       [{ numTags }],
       [{ numLists }],
-      [{ numHighlights }],
+      numHighlights,
       firstBookmarkResult,
       bookmarksByType,
       topDomains,
@@ -986,16 +983,11 @@ export class User {
         ),
 
       // Total highlights (created in year)
-      this.ctx.db
-        .select({ numHighlights: count() })
-        .from(highlights)
-        .where(
-          and(
-            eq(highlights.userId, this.user.id),
-            gte(highlights.createdAt, yearStart),
-            lte(highlights.createdAt, yearEnd),
-          ),
-        ),
+      new HighlightsRepo(this.ctx.db).countByUserInRange(
+        this.user.id,
+        yearStart,
+        yearEnd,
+      ),
 
       // First bookmark of the year
       this.ctx.db

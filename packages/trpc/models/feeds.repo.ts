@@ -52,6 +52,33 @@ export class FeedsRepo {
     });
   }
 
+  async getAllEnabled(): Promise<Pick<Feed, "id" | "userId">[]> {
+    return await this.db.query.rssFeedsTable.findMany({
+      columns: {
+        id: true,
+        userId: true,
+      },
+      where: eq(rssFeedsTable.enabled, true),
+    });
+  }
+
+  async updateLastFetched(
+    id: string,
+    status: "success" | "failure",
+  ): Promise<void> {
+    await this.db
+      .update(rssFeedsTable)
+      .set({ lastFetchedStatus: status, lastFetchedAt: new Date() })
+      .where(eq(rssFeedsTable.id, id));
+  }
+
+  async updateLastSuccessfulFetchAt(id: string): Promise<void> {
+    await this.db
+      .update(rssFeedsTable)
+      .set({ lastSuccessfulFetchAt: new Date() })
+      .where(eq(rssFeedsTable.id, id));
+  }
+
   async delete(id: string): Promise<boolean> {
     const res = await this.db
       .delete(rssFeedsTable)
