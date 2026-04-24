@@ -9,7 +9,12 @@ import {
 } from "@karakeep/shared/types/importSessions";
 
 import type { Actor, Authorized } from "../lib/actor";
-import { actorUserId, assertOwnership, authorize } from "../lib/actor";
+import {
+  actorUserId,
+  assertOwnership,
+  authorize,
+  systemActor,
+} from "../lib/actor";
 import { ImportSessionsRepo } from "./importSessions.repo";
 
 type ImportSessionRow = typeof importSessions.$inferSelect;
@@ -45,6 +50,21 @@ export class ImportSessionsService {
         notFoundMessage: "Import session not found",
       }),
     );
+  }
+
+  async getForSystem(
+    sessionId: string,
+  ): Promise<Authorized<ImportSessionRow> | null> {
+    const session = await this.repo.get(sessionId);
+    if (!session) return null;
+    const actor = systemActor(session.userId);
+    return await authorize(session, () =>
+      assertOwnership(actor, session.userId),
+    );
+  }
+
+  async resetOrphanedStaging(stagingId: string): Promise<void> {
+    await this.repo.updateStaging(stagingId, { status: "pending" });
   }
 
   async getWithStats(

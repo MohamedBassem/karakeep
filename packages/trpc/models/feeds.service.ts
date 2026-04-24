@@ -10,7 +10,12 @@ import {
 } from "@karakeep/shared/types/feeds";
 
 import type { Actor, Authorized } from "../lib/actor";
-import { actorUserId, assertOwnership, authorize } from "../lib/actor";
+import {
+  actorUserId,
+  assertOwnership,
+  authorize,
+  systemActor,
+} from "../lib/actor";
 import { FeedsRepo } from "./feeds.repo";
 
 type Feed = typeof rssFeedsTable.$inferSelect;
@@ -31,6 +36,13 @@ export class FeedsService {
       });
     }
     return authorize(feed, () => assertOwnership(actor, feed.userId));
+  }
+
+  async getForSystem(id: string): Promise<Authorized<Feed> | null> {
+    const feed = await this.repo.get(id);
+    if (!feed) return null;
+    const actor = systemActor(feed.userId);
+    return await authorize(feed, () => assertOwnership(actor, feed.userId));
   }
 
   async create(
