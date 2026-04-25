@@ -49,10 +49,10 @@ export class AssetPreprocessingWorker {
             return Promise.resolve();
           },
           onError: async (job) => {
-            workerStatsCounter.labels("assetPreProcessing", "failed").inc();
+            workerStatsCounter.labels("assetPreprocessing", "failed").inc();
             if (job.numRetriesLeft == 0) {
               workerStatsCounter
-                .labels("assetPreProcessing", "failed_permanent")
+                .labels("assetPreprocessing", "failed_permanent")
                 .inc();
             }
             const jobId = job.id;
