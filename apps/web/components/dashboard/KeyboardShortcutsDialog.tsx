@@ -9,6 +9,7 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 import { useTranslation } from "@/lib/i18n/client";
 import { useBookmarkLayout } from "@/lib/userLocalSettings/bookmarksLayout";
+import { getOS } from "@/lib/utils";
 
 function ShortcutRow({
   keys,
@@ -65,6 +66,7 @@ export default function KeyboardShortcutsDialog({
   const { t } = useTranslation();
   const layout = useBookmarkLayout();
   const hasHorizontalNavigation = layout !== "list" && layout !== "compact";
+  const searchModifier = getOS() === "macos" ? "⌘" : "Ctrl";
 
   const sections = [
     {
@@ -146,7 +148,7 @@ export default function KeyboardShortcutsDialog({
           description: t("keyboard_shortcuts.show_help"),
         },
         {
-          keys: ["⌘ K"],
+          keys: [`${searchModifier} K`],
           description: t("keyboard_shortcuts.focus_search_alt"),
         },
       ],

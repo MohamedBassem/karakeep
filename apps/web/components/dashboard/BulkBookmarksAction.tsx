@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   ActionButton,
@@ -40,12 +40,16 @@ const MAX_CONCURRENT_BULK_ACTIONS = 50;
 
 export default function BulkBookmarksAction() {
   const { t } = useTranslation();
-  const {
-    selectedBookmarkIds,
-    visibleBookmarks,
-    isBulkEditEnabled,
-    listContext: withinListContext,
-  } = useBulkActionsStore();
+  const selectedBookmarkIds = useBulkActionsStore(
+    (state) => state.selectedBookmarkIds,
+  );
+  const visibleBookmarks = useBulkActionsStore(
+    (state) => state.visibleBookmarks,
+  );
+  const isBulkEditEnabled = useBulkActionsStore(
+    (state) => state.isBulkEditEnabled,
+  );
+  const withinListContext = useBulkActionsStore((state) => state.listContext);
   const selectedBookmarks = React.useMemo(() => {
     const selected = new Set(selectedBookmarkIds);
     return visibleBookmarks.filter((bookmark) => selected.has(bookmark.id));
@@ -66,15 +70,15 @@ export default function BulkBookmarksAction() {
   const [manageListsModal, setManageListsModalOpen] = useState(false);
   const [bulkTagModal, setBulkTagModalOpen] = useState(false);
   const pathname = usePathname();
-  const [currentPathname, setCurrentPathname] = useState("");
+  const currentPathnameRef = useRef(pathname);
 
   // Reset bulk edit state when the route changes
   useEffect(() => {
-    if (pathname !== currentPathname) {
-      setCurrentPathname(pathname);
+    if (pathname !== currentPathnameRef.current) {
+      currentPathnameRef.current = pathname;
       setIsBulkEditEnabled(false);
     }
-  }, [pathname, currentPathname]);
+  }, [pathname, setIsBulkEditEnabled]);
 
   const onError = () => {
     toast({

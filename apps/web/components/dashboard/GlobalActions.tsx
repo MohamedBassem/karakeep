@@ -24,17 +24,15 @@ export default function GlobalActions() {
       {inBookmarkGrid && <BulkBookmarksAction />}
       {inBookmarkGrid && <SortOrderToggle />}
       {inBookmarkGrid && (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShortcutsDialogOpen(true)}
-            title={t("keyboard_shortcuts.title")}
-            aria-label={t("keyboard_shortcuts.title")}
-          >
-            <Keyboard className="size-4" />
-          </Button>
-        </>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShortcutsDialogOpen(true)}
+          title={t("keyboard_shortcuts.title")}
+          aria-label={t("keyboard_shortcuts.title")}
+        >
+          <Keyboard className="size-4" />
+        </Button>
       )}
     </div>
   );

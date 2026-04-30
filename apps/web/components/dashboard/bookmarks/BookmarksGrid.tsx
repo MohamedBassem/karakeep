@@ -76,14 +76,28 @@ function useActiveGridColumns(userColumns: number) {
   const [activeColumns, setActiveColumns] = useState(userColumns);
 
   useEffect(() => {
+    let animationFrame: number | null = null;
     const updateActiveColumns = () => {
+      if (animationFrame !== null) {
+        return;
+      }
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = null;
+        setActiveColumns(getColumnsForViewport(userColumns, window.innerWidth));
+      });
+    };
+
+    const updateActiveColumnsImmediately = () => {
       setActiveColumns(getColumnsForViewport(userColumns, window.innerWidth));
     };
 
-    updateActiveColumns();
+    updateActiveColumnsImmediately();
     window.addEventListener("resize", updateActiveColumns);
     return () => {
       window.removeEventListener("resize", updateActiveColumns);
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+      }
     };
   }, [userColumns]);
 
@@ -107,8 +121,13 @@ export default function BookmarksGrid({
   const layout = useBookmarkLayout();
   const gridColumns = useGridColumns();
   const activeGridColumns = useActiveGridColumns(gridColumns);
-  const bulkActionsStore = useBulkActionsStore();
-  const inBookmarkGrid = useInBookmarkGridStore();
+  const setVisibleBookmarks = useBulkActionsStore(
+    (state) => state.setVisibleBookmarks,
+  );
+  const setListContext = useBulkActionsStore((state) => state.setListContext);
+  const setInBookmarkGrid = useInBookmarkGridStore(
+    (state) => state.setInBookmarkGrid,
+  );
   const withinListContext = useBookmarkListContext();
   const breakpointConfig = useMemo(
     () => getBreakpointConfig(gridColumns),
@@ -139,30 +158,38 @@ export default function BookmarksGrid({
   });
 
   useEffect(() => {
-    bulkActionsStore.setVisibleBookmarks(bookmarks);
-    bulkActionsStore.setListContext(withinListContext);
+    setVisibleBookmarks(bookmarks);
+    setListContext(withinListContext);
 
     return () => {
-      bulkActionsStore.setVisibleBookmarks([]);
-      bulkActionsStore.setListContext(undefined);
+      setVisibleBookmarks([]);
+      setListContext(undefined);
     };
-  }, [bookmarks, withinListContext?.id]);
+  }, [bookmarks, setListContext, setVisibleBookmarks, withinListContext]);
 
   useEffect(() => {
-    inBookmarkGrid.setInBookmarkGrid(true);
+    setInBookmarkGrid(true);
     return () => {
-      inBookmarkGrid.setInBookmarkGrid(false);
+      setInBookmarkGrid(false);
     };
-  }, []);
+  }, [setInBookmarkGrid]);
 
   useEffect(() => {
     if (loadMoreButtonInView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [loadMoreButtonInView]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, loadMoreButtonInView]);
 
   if (bookmarks.length == 0 && !showEditorCard) {
-    return <NoBookmarksBanner />;
+    return (
+      <>
+        <NoBookmarksBanner />
+        <KeyboardShortcutsDialog
+          open={helpDialogOpen}
+          setOpen={setHelpDialogOpen}
+        />
+      </>
+    );
   }
 
   const children = [

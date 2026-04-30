@@ -10,6 +10,7 @@ interface BookmarkState {
   isBulkEditEnabled: boolean;
   setIsBulkEditEnabled: (isEnabled: boolean) => void;
   toggleBookmark: (bookmarkId: string) => void;
+  setSelectedBookmarkIds: (bookmarkIds: string[]) => void;
   setVisibleBookmarks: (visibleBookmarks: ZBookmark[]) => void;
   selectAll: () => void;
   unSelectAll: () => void;
@@ -39,6 +40,10 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
     }
   },
 
+  setSelectedBookmarkIds: (bookmarkIds: string[]) => {
+    set({ selectedBookmarkIds: bookmarkIds });
+  },
+
   selectAll: () => {
     set({ selectedBookmarkIds: get().visibleBookmarks.map((b) => b.id) });
   },
@@ -60,11 +65,28 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
   },
 
   setIsBulkEditEnabled: (isEnabled) => {
-    set({ isBulkEditEnabled: isEnabled });
-    set({ selectedBookmarkIds: [] });
+    const state = get();
+    if (state.isBulkEditEnabled === isEnabled) {
+      return;
+    }
+    set({ isBulkEditEnabled: isEnabled, selectedBookmarkIds: [] });
   },
 
   setVisibleBookmarks: (visibleBookmarks: ZBookmark[]) => {
+    const currentVisibleBookmarks = get().visibleBookmarks;
+    if (
+      currentVisibleBookmarks.length === visibleBookmarks.length &&
+      currentVisibleBookmarks.every((bookmark, index) => {
+        const nextBookmark = visibleBookmarks[index];
+        return (
+          bookmark.id === nextBookmark.id &&
+          bookmark.favourited === nextBookmark.favourited &&
+          bookmark.archived === nextBookmark.archived
+        );
+      })
+    ) {
+      return;
+    }
     set({
       visibleBookmarks,
     });

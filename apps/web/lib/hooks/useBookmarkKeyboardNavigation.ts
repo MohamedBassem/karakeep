@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth/client";
 import useBulkActionsStore from "@/lib/bulkActions";
 import { useKeyboardNavigationStore } from "@/lib/store/useKeyboardNavigationStore";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -35,6 +36,7 @@ export function useBookmarkKeyboardNavigation({
   const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session } = useSession();
   const {
     focusedIndex,
     isNavigating,
@@ -47,6 +49,7 @@ export function useBookmarkKeyboardNavigation({
   const bulkActionsStore = useBulkActionsStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isBulkDeletePending, setIsBulkDeletePending] = useState(false);
 
   // Track which bookmark ID the delete modal is for
   const modalBookmarkIdRef = useRef<string | null>(null);
@@ -62,6 +65,24 @@ export function useBookmarkKeyboardNavigation({
   const anyModalOpen = shortcutsDialogOpen || deleteDialogOpen;
   const hasBookmarks = bookmarks.length > 0;
   const maxIndex = bookmarks.length - 1;
+  const currentUserId = session?.user?.id;
+
+  const canMutateBookmark = useCallback(
+    (bookmark: ZBookmark) => currentUserId === bookmark.userId,
+    [currentUserId],
+  );
+
+  const selectedOwnedBookmarks = useCallback(() => {
+    const selectedBookmarkIds = new Set(bulkActionsStore.selectedBookmarkIds);
+    return bulkActionsStore.visibleBookmarks.filter(
+      (bookmark) =>
+        selectedBookmarkIds.has(bookmark.id) && canMutateBookmark(bookmark),
+    );
+  }, [
+    bulkActionsStore.selectedBookmarkIds,
+    bulkActionsStore.visibleBookmarks,
+    canMutateBookmark,
+  ]);
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) {
@@ -93,7 +114,13 @@ export function useBookmarkKeyboardNavigation({
         setFocusedIndex(bookmarks.length - 1);
       }
     }
-  }, [bookmarks.length]);
+  }, [
+    bookmarks.length,
+    clearFocus,
+    focusedIndex,
+    isNavigating,
+    setFocusedIndex,
+  ]);
 
   // Scroll focused card into view
   useEffect(() => {
@@ -112,7 +139,13 @@ export function useBookmarkKeyboardNavigation({
     if (isNavigating && focusedIndex === bookmarks.length - 1 && hasNextPage) {
       fetchNextPage();
     }
-  }, [focusedIndex, isNavigating, bookmarks.length, hasNextPage]);
+  }, [
+    bookmarks.length,
+    fetchNextPage,
+    focusedIndex,
+    hasNextPage,
+    isNavigating,
+  ]);
 
   // Mutations
   const updateBookmarkMutator = useUpdateBookmark({
@@ -134,11 +167,14 @@ export function useBookmarkKeyboardNavigation({
 
   const setBulkBookmarksToNextState = useCallback(
     async (field: "favourited" | "archived") => {
-      const selectedBookmarkIds = new Set(bulkActionsStore.selectedBookmarkIds);
       const visibleBookmarks = bulkActionsStore.visibleBookmarks;
-      const selected = visibleBookmarks.filter((bookmark) =>
-        selectedBookmarkIds.has(bookmark.id),
+      const selected = selectedOwnedBookmarks();
+      const selectedBookmarkIds = new Set(
+        selected.map((bookmark) => bookmark.id),
       );
+      if (selected.length === 0) {
+        return;
+      }
       const shouldEnable = !selected.every((bookmark) => bookmark[field]);
       const optimisticBookmarks = visibleBookmarks.map((bookmark) =>
         selectedBookmarkIds.has(bookmark.id)
@@ -179,6 +215,7 @@ export function useBookmarkKeyboardNavigation({
       bulkActionsStore,
       bulkActionsStore.selectedBookmarkIds,
       bulkActionsStore.visibleBookmarks,
+      selectedOwnedBookmarks,
       t,
       updateBookmarkMutator,
     ],
@@ -190,7 +227,9 @@ export function useBookmarkKeyboardNavigation({
       // Re-set visible bookmarks since setIsBulkEditEnabled clears selection.
       bulkActionsStore.setVisibleBookmarks(bookmarks);
     }
-    bulkActionsStore.selectAll();
+    bulkActionsStore.setSelectedBookmarkIds(
+      bookmarks.map((bookmark) => bookmark.id),
+    );
   }, [bookmarks, bulkActionsStore]);
 
   useEffect(() => {
@@ -229,6 +268,15 @@ export function useBookmarkKeyboardNavigation({
       }
     },
     [focusedBookmark],
+  );
+
+  const withOwnedFocusedBookmark = useCallback(
+    (action: (bookmark: ZBookmark) => void) => {
+      if (focusedBookmark && canMutateBookmark(focusedBookmark)) {
+        action(focusedBookmark);
+      }
+    },
+    [canMutateBookmark, focusedBookmark],
   );
 
   // --- Navigation: h/j/k/l and arrow keys ---
@@ -333,7 +381,7 @@ export function useBookmarkKeyboardNavigation({
       if (hasBulkSelection) {
         void setBulkBookmarksToNextState("favourited");
       } else {
-        withFocusedBookmark((b) =>
+        withOwnedFocusedBookmark((b) =>
           updateBookmarkMutator.mutate(
             {
               bookmarkId: b.id,
@@ -354,6 +402,7 @@ export function useBookmarkKeyboardNavigation({
       anyModalOpen,
       hasBulkSelection,
       setBulkBookmarksToNextState,
+      withOwnedFocusedBookmark,
     ],
   );
 
@@ -365,7 +414,7 @@ export function useBookmarkKeyboardNavigation({
       if (hasBulkSelection) {
         void setBulkBookmarksToNextState("archived");
       } else {
-        withFocusedBookmark((b) =>
+        withOwnedFocusedBookmark((b) =>
           updateBookmarkMutator.mutate(
             {
               bookmarkId: b.id,
@@ -388,22 +437,26 @@ export function useBookmarkKeyboardNavigation({
       setBulkBookmarksToNextState,
       t,
       updateBookmarkMutator,
+      withOwnedFocusedBookmark,
     ],
   );
 
   // --- Delete ---
   const openDeleteDialog = useCallback(() => {
     if (hasBulkSelection) {
+      if (selectedOwnedBookmarks().length === 0) {
+        return;
+      }
       // Use null to signal bulk delete mode
       modalBookmarkIdRef.current = null;
       setDeleteDialogOpen(true);
     } else {
-      withFocusedBookmark((b) => {
+      withOwnedFocusedBookmark((b) => {
         modalBookmarkIdRef.current = b.id;
         setDeleteDialogOpen(true);
       });
     }
-  }, [hasBulkSelection, withFocusedBookmark]);
+  }, [hasBulkSelection, selectedOwnedBookmarks, withOwnedFocusedBookmark]);
 
   useHotkeys(
     "shift+3",
@@ -426,11 +479,17 @@ export function useBookmarkKeyboardNavigation({
       withFocusedBookmark((b) => {
         if (!bulkActionsStore.isBulkEditEnabled) {
           bulkActionsStore.setIsBulkEditEnabled(true);
+          bulkActionsStore.setVisibleBookmarks(bookmarks);
         }
         bulkActionsStore.toggleBookmark(b.id);
       }),
     { enabled: !anyModalOpen && isNavigating, preventDefault: true },
-    [focusedBookmark, anyModalOpen, bulkActionsStore.isBulkEditEnabled],
+    [
+      bookmarks,
+      focusedBookmark,
+      anyModalOpen,
+      bulkActionsStore.isBulkEditEnabled,
+    ],
   );
 
   // --- Help dialog (?) ---
@@ -466,9 +525,7 @@ export function useBookmarkKeyboardNavigation({
   );
 
   const isBulkDelete = deleteDialogOpen && modalBookmarkIdRef.current === null;
-  const deleteCount = isBulkDelete
-    ? bulkActionsStore.selectedBookmarkIds.length
-    : 1;
+  const deleteCount = isBulkDelete ? selectedOwnedBookmarks().length : 1;
 
   return {
     focusedIndex,
@@ -480,21 +537,34 @@ export function useBookmarkKeyboardNavigation({
     focusedBookmark,
     isBulkDelete,
     deleteCount,
-    confirmDelete: () => {
+    confirmDelete: async () => {
       if (isBulkDelete) {
-        void Promise.all(
+        setIsBulkDeletePending(true);
+        const selected = selectedOwnedBookmarks();
+        const results = await Promise.allSettled(
           limitConcurrency(
-            bulkActionsStore.selectedBookmarkIds.map(
-              (bookmarkId) => () =>
-                deleteBookmarkMutator.mutateAsync({ bookmarkId }),
+            selected.map(
+              (bookmark) => () =>
+                deleteBookmarkMutator.mutateAsync({ bookmarkId: bookmark.id }),
             ),
             MAX_CONCURRENT_BULK_ACTIONS,
           ),
-        ).then(() => {
+        );
+        const deletedCount = results.filter(
+          (result) => result.status === "fulfilled",
+        ).length;
+        const failedCount = results.length - deletedCount;
+        if (deletedCount > 0) {
           toast.success(t("toasts.bookmarks.deleted"));
+        }
+        if (failedCount > 0) {
+          toast.error(t("common.something_went_wrong"));
+        }
+        setIsBulkDeletePending(false);
+        if (failedCount === 0) {
           setDeleteDialogOpen(false);
           bulkActionsStore.setIsBulkEditEnabled(false);
-        });
+        }
       } else if (modalBookmarkIdRef.current) {
         deleteBookmarkMutator.mutate(
           {
@@ -509,6 +579,6 @@ export function useBookmarkKeyboardNavigation({
         );
       }
     },
-    isDeletePending: deleteBookmarkMutator.isPending,
+    isDeletePending: deleteBookmarkMutator.isPending || isBulkDeletePending,
   };
 }
