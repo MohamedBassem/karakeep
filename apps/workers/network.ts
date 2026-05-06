@@ -1,4 +1,5 @@
 import dns from "node:dns/promises";
+import { Readable } from "node:stream";
 import type { HeadersInit, RequestInit, Response } from "node-fetch";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -335,6 +336,22 @@ function isRedirectResponse(response: Response): boolean {
   );
 }
 
+function closeResponseBody(response: Response): void {
+  const body: unknown = response.body;
+  if (!body) {
+    return;
+  }
+
+  if (body instanceof Readable) {
+    body.destroy();
+  } else if (
+    typeof ReadableStream !== "undefined" &&
+    body instanceof ReadableStream
+  ) {
+    void body.cancel();
+  }
+}
+
 export type FetchWithProxyOptions = Omit<
   RequestInit & {
     maxRedirects?: number;
@@ -485,17 +502,12 @@ export async function resolveValidatedRedirectUrl(
   let currentUrl = url;
 
   while (true) {
-    const responseController = new AbortController();
     const signal = options.signal
       ? AbortSignal.any([
           AbortSignal.timeout(5000),
           options.signal as globalThis.AbortSignal,
-          responseController.signal,
         ])
-      : AbortSignal.any([
-          AbortSignal.timeout(5000),
-          responseController.signal,
-        ]);
+      : AbortSignal.timeout(5000);
     const agent = getProxyAgent(currentUrl, runProxy);
     const validation = await validateUrl(currentUrl, !!agent);
     if (!validation.ok) {
@@ -517,11 +529,13 @@ export async function resolveValidatedRedirectUrl(
         },
       }),
     );
-    responseController.abort();
 
     if (!isRedirectResponse(response)) {
+      closeResponseBody(response);
       return requestUrl;
     }
+
+    closeResponseBody(response);
 
     const locationHeader = response.headers.get("location");
     if (!locationHeader) {
