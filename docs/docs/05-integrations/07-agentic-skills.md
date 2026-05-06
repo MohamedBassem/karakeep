@@ -10,7 +10,7 @@ The skill is available on [ClawHub](https://clawhub.ai/karakeep/karakeep-app).
 
 ### skills.sh
 
-You can also install the skill using [skills.sh](https://skills.sh):
+You can also install the skill using [skills.sh](https://skills.sh/karakeep-app/karakeep/karakeep):
 
 ```bash
 npx skills add karakeep-app/karakeep
