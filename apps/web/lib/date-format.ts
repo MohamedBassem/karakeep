@@ -19,17 +19,29 @@ export function formatLocalDate(
 ) {
   const locale = normalizeI18nLanguage(language);
 
+  const formatWithIntl = (options: Intl.DateTimeFormatOptions) => {
+    try {
+      return new Intl.DateTimeFormat(locale, options).format(date);
+    } catch (error) {
+      if (error instanceof RangeError) {
+        return new Intl.DateTimeFormat(undefined, options).format(date);
+      }
+
+      throw error;
+    }
+  };
+
   if (formatStr === "PP, p") {
-    return new Intl.DateTimeFormat(locale, {
+    return formatWithIntl({
       dateStyle: "medium",
       timeStyle: "short",
-    }).format(date);
+    });
   }
 
   if (formatStr === "PPP") {
-    return new Intl.DateTimeFormat(locale, {
+    return formatWithIntl({
       dateStyle: "long",
-    }).format(date);
+    });
   }
 
   return format(date, formatStr);
