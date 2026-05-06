@@ -13,7 +13,7 @@ interface FaviconResolution {
   url: string;
 }
 
-export async function resolveSafeFaviconUrl(
+async function resolveSafeFaviconUrl(
   faviconUrl: string,
 ): Promise<FaviconResolution | undefined> {
   let url: URL;

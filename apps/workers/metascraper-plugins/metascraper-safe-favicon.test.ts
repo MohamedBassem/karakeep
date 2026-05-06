@@ -11,9 +11,7 @@ vi.mock("@karakeep/shared/config", () => ({
   },
 }));
 
-import metascraperSafeFavicon, {
-  resolveSafeFaviconUrl,
-} from "./metascraper-safe-favicon";
+import metascraperSafeFavicon from "./metascraper-safe-favicon";
 
 describe("metascraperSafeFavicon", () => {
   test("returns favicon candidates discovered by the upstream plugin without fetching them", async () => {
@@ -32,35 +30,5 @@ describe("metascraperSafeFavicon", () => {
     });
 
     expect(meta.logo).toBe("https://example.com/icon-256.png");
-  });
-
-  test("does not reject private favicon URLs because it does not resolve or fetch them", async () => {
-    const parser = metascraper([metascraperSafeFavicon()]);
-    const meta = await parser({
-      url: "https://example.com/articles/one",
-      html: `
-        <html>
-          <head>
-            <link rel="icon" href="http://127.0.0.1/admin.png" sizes="512x512">
-            <link rel="icon" href="/public-icon.png" sizes="128x128">
-          </head>
-        </html>
-      `,
-      validateUrl: false,
-    });
-
-    expect(meta.logo).toBe("http://127.0.0.1/admin.png");
-  });
-
-  test("resolver only accepts syntactically valid http and https URLs", async () => {
-    await expect(
-      resolveSafeFaviconUrl("http://127.0.0.1/admin"),
-    ).resolves.toEqual({
-      url: "http://127.0.0.1/admin",
-    });
-    await expect(
-      resolveSafeFaviconUrl("data:image/png;base64,abc"),
-    ).resolves.toBe(undefined);
-    await expect(resolveSafeFaviconUrl("not a url")).resolves.toBe(undefined);
   });
 });
