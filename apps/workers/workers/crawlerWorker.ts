@@ -27,6 +27,7 @@ import {
   Browser,
   BrowserContext,
   BrowserContextOptions,
+  CDPSession,
   Page,
 } from "playwright";
 import { chromium } from "playwright-extra";
@@ -200,6 +201,13 @@ const activeContexts = new Map<
 
 const CONTEXT_CLOSE_TIMEOUT_MS = 10_000;
 const PAGE_CLOSE_TIMEOUT_MS = 5_000;
+
+function getHeaderValue(
+  headers: { name: string; value: string }[] | undefined,
+  name: string,
+): string | undefined {
+  return headers?.find((header) => header.name.toLowerCase() === name)?.value;
+}
 
 /**
  * Reaps browser contexts that have been open longer than the max job timeout.
@@ -612,6 +620,83 @@ async function crawlPage(
           async () => {
             // Create a new page in the context
             const nextPage = await context.newPage();
+            let cdpSession: CDPSession | undefined;
+
+            try {
+              cdpSession = await context.newCDPSession(nextPage);
+              const continuePausedRequest = async (requestId: string) => {
+                await cdpSession
+                  ?.send("Fetch.continueRequest", { requestId })
+                  .catch(() => {
+                    // Ignore errors — the request may have been canceled.
+                  });
+              };
+              const failPausedRequest = async (requestId: string) => {
+                await cdpSession
+                  ?.send("Fetch.failRequest", {
+                    requestId,
+                    errorReason: "BlockedByClient",
+                  })
+                  .catch(() => {
+                    // Ignore errors — the request may have been canceled.
+                  });
+              };
+              cdpSession.on("Fetch.requestPaused", async (event) => {
+                try {
+                  const status = event.responseStatusCode;
+                  if (!status || status < 300 || status >= 400) {
+                    await continuePausedRequest(event.requestId);
+                    return;
+                  }
+
+                  const location = getHeaderValue(
+                    event.responseHeaders,
+                    "location",
+                  );
+                  if (!location) {
+                    await continuePausedRequest(event.requestId);
+                    return;
+                  }
+
+                  const redirectUrl = new URL(
+                    location,
+                    event.request.url,
+                  ).toString();
+                  const redirectIsRunningInProxyContext =
+                    proxyConfig !== undefined &&
+                    !matchesNoProxy(
+                      redirectUrl,
+                      proxyConfig.bypass?.split(",") ?? [],
+                    );
+                  const validation = await validateUrl(
+                    redirectUrl,
+                    redirectIsRunningInProxyContext,
+                  );
+
+                  if (validation.ok) {
+                    await continuePausedRequest(event.requestId);
+                    return;
+                  }
+
+                  logger.warn(
+                    `[Crawler][${jobId}] Blocking redirect to disallowed URL "${redirectUrl}": ${validation.reason}`,
+                  );
+                  await failPausedRequest(event.requestId);
+                } catch (e) {
+                  logger.warn(
+                    `[Crawler][${jobId}] Blocking redirect after redirect guard failed: ${e}`,
+                  );
+                  await failPausedRequest(event.requestId);
+                }
+              });
+              await cdpSession.send("Fetch.enable", {
+                patterns: [{ urlPattern: "*", requestStage: "Response" }],
+              });
+            } catch (e) {
+              logger.warn(
+                `[Crawler][${jobId}] Failed to install redirect guard: ${e}`,
+              );
+            }
 
             // Apply ad blocking
             if (globalBlocker) {
@@ -678,6 +763,9 @@ async function crawlPage(
             abortSignal.addEventListener(
               "abort",
               () => {
+                cdpSession?.detach().catch(() => {
+                  // Ignore errors — the session may already be detached.
+                });
                 nextPage.unrouteAll({ behavior: "ignoreErrors" }).catch(() => {
                   // Ignore errors — the page may already be closed.
                 });
