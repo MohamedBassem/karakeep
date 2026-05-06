@@ -63,8 +63,6 @@ describe("Video Worker Tests", () => {
     bookmark = await getBookmark(bookmark.id);
     assert(bookmark && bookmark.content.type === "link");
     expect(bookmark.content.videoAssetId).toBeDefined();
-    expect(
-      bookmark.assets.find((a) => a.assetType === "linkVideo"),
-    ).toBeDefined();
+    expect(bookmark.assets.find((a) => a.assetType === "video")).toBeDefined();
   });
 });
