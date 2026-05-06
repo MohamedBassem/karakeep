@@ -3,7 +3,7 @@ import * as os from "os";
 import path from "path";
 import { execa } from "execa";
 import { workerStatsCounter } from "metrics";
-import { getProxyAgent, validateUrl } from "network";
+import { getProxyAgent, resolveValidatedRedirectUrl } from "network";
 import { withWorkerEventLog, withWorkerTracing } from "workerTracing";
 
 import { db } from "@karakeep/db";
@@ -111,20 +111,24 @@ async function runWorker(job: DequeuedJob<ZVideoRequest>) {
     return;
   }
 
-  const proxy = getProxyAgent(url);
-  const validation = await validateUrl(url, !!proxy);
-  if (!validation.ok) {
+  let normalizedUrl: string;
+  try {
+    const resolvedUrl = await resolveValidatedRedirectUrl(url);
+    normalizedUrl = resolvedUrl.toString();
+  } catch (error) {
     logger.warn(
-      `[VideoCrawler][${jobId}] Skipping video download to disallowed URL "${url}": ${validation.reason}`,
+      `[VideoCrawler][${jobId}] Skipping video download to disallowed URL "${url}": ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     return;
   }
-  const normalizedUrl = validation.url.toString();
 
   const videoAssetId = newAssetId();
   let assetPath = `${TMP_FOLDER}/${videoAssetId}`;
   await fs.promises.mkdir(TMP_FOLDER, { recursive: true });
 
+  const proxy = getProxyAgent(normalizedUrl);
   const ytDlpArguments = prepareYtDlpArguments(
     normalizedUrl,
     proxy?.proxy.toString(),

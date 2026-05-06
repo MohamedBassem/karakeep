@@ -467,3 +467,57 @@ export const fetchWithProxy = async (
     redirectsRemaining -= 1;
   }
 };
+
+export async function resolveValidatedRedirectUrl(
+  url: string,
+  options: Pick<FetchWithProxyOptions, "headers" | "maxRedirects"> = {},
+  runProxy?: RunProxyConfig,
+): Promise<URL> {
+  const { maxRedirects, baseHeaders, baseOptions } = prepareFetchOptions({
+    ...options,
+    method: "GET",
+  });
+
+  let redirectsRemaining = maxRedirects;
+  let currentUrl = url;
+
+  while (true) {
+    const agent = getProxyAgent(currentUrl, runProxy);
+    const validation = await validateUrl(currentUrl, !!agent);
+    if (!validation.ok) {
+      throw new Error(validation.reason);
+    }
+
+    const requestUrl = validation.url;
+    currentUrl = requestUrl.toString();
+
+    const response = await fetch(
+      currentUrl,
+      buildFetchOptions({
+        method: "GET",
+        headers: baseHeaders,
+        agent,
+        baseOptions,
+      }),
+    );
+
+    if (!isRedirectResponse(response)) {
+      response.body?.destroy();
+      return requestUrl;
+    }
+
+    response.body?.destroy();
+
+    const locationHeader = response.headers.get("location");
+    if (!locationHeader) {
+      return requestUrl;
+    }
+
+    if (redirectsRemaining <= 0) {
+      throw new Error(`Too many redirects while resolving ${url}`);
+    }
+
+    currentUrl = new URL(locationHeader, currentUrl).toString();
+    redirectsRemaining -= 1;
+  }
+}
