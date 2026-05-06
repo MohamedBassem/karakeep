@@ -14,6 +14,14 @@ import { setGlobalOptions } from "@/lib/globals";
 import { Command, Option } from "@commander-js/extra-typings";
 
 function resolveGlobalOptions(opts: RawGlobalOptions) {
+  if (opts.apiKey && opts.serverAddr) {
+    return {
+      apiKey: opts.apiKey,
+      serverAddr: opts.serverAddr,
+      json: opts.json,
+    };
+  }
+
   const config = loadConfig();
   const apiKey = opts.apiKey ?? config.apiKey;
   const serverAddr =
