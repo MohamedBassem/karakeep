@@ -335,6 +335,24 @@ function isRedirectResponse(response: Response): boolean {
   );
 }
 
+type ResponseBody = NonNullable<Response["body"]> & {
+  cancel?: () => Promise<void> | void;
+  destroy?: () => void;
+};
+
+function closeResponseBody(response: Response): void {
+  const body = response.body as ResponseBody | null;
+  if (!body) {
+    return;
+  }
+
+  if (typeof body.cancel === "function") {
+    void body.cancel();
+  } else if (typeof body.destroy === "function") {
+    body.destroy();
+  }
+}
+
 export type FetchWithProxyOptions = Omit<
   RequestInit & {
     maxRedirects?: number;
@@ -486,7 +504,10 @@ export async function resolveValidatedRedirectUrl(
 
   while (true) {
     const signal = options.signal
-      ? AbortSignal.any([AbortSignal.timeout(5000), options.signal])
+      ? AbortSignal.any([
+          AbortSignal.timeout(5000),
+          options.signal as globalThis.AbortSignal,
+        ])
       : AbortSignal.timeout(5000);
     const agent = getProxyAgent(currentUrl, runProxy);
     const validation = await validateUrl(currentUrl, !!agent);
@@ -503,16 +524,19 @@ export async function resolveValidatedRedirectUrl(
         method: "GET",
         headers: baseHeaders,
         agent,
-        baseOptions: { ...baseOptions, signal },
+        baseOptions: {
+          ...baseOptions,
+          signal: signal as RequestInit["signal"],
+        },
       }),
     );
 
     if (!isRedirectResponse(response)) {
-      response.body?.destroy();
+      closeResponseBody(response);
       return requestUrl;
     }
 
-    response.body?.destroy();
+    closeResponseBody(response);
 
     const locationHeader = response.headers.get("location");
     if (!locationHeader) {
