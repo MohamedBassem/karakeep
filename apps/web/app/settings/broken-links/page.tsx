@@ -96,8 +96,12 @@ export default function BrokenLinksPage() {
               {data.bookmarks.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell>{b.url}</TableCell>
-                  <TableCell><FormattedDate date={b.createdAt} /></TableCell>
-                  <TableCell><FormattedDate date={b.crawledAt} /></TableCell>
+                  <TableCell>
+                    <FormattedDate date={b.createdAt} />
+                  </TableCell>
+                  <TableCell>
+                    <FormattedDate date={b.crawledAt} />
+                  </TableCell>
                   <TableCell>
                     {b.isCrawlingFailure ? (
                       <span className="text-red-500">Failed</span>

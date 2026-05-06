@@ -410,7 +410,9 @@ export function FeedRow({ feed }: { feed: ZFeed }) {
       >
         {feed.url}
       </TableCell>
-      <TableCell><FormattedDate date={feed.lastFetchedAt} /></TableCell>
+      <TableCell>
+        <FormattedDate date={feed.lastFetchedAt} />
+      </TableCell>
       <TableCell>
         {feed.lastFetchedStatus === "success" ? (
           <span title="Successful">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { formatLocalDate } from "@/lib/date-format";
+import { useTranslation } from "@/lib/i18n/client";
 
 /**
  * Renders a date formatted on the client side to ensure the user's local
@@ -17,13 +18,12 @@ export default function FormattedDate({
   date: Date | null | undefined;
   formatStr?: string;
 }) {
+  const { i18n } = useTranslation();
   const [formatted, setFormatted] = useState("");
 
   useEffect(() => {
-    if (date) {
-      setFormatted(format(date, formatStr));
-    }
-  }, [date, formatStr]);
+    setFormatted(date ? formatLocalDate(date, formatStr, i18n.language) : "");
+  }, [date, formatStr, i18n.language]);
 
   return <>{formatted}</>;
 }

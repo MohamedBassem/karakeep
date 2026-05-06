@@ -236,7 +236,9 @@ function BackupRow({ backup }: { backup: z.infer<typeof zBackupSchema> }) {
 
   return (
     <TableRow>
-      <TableCell><FormattedDate date={backup.createdAt} /></TableCell>
+      <TableCell>
+        <FormattedDate date={backup.createdAt} />
+      </TableCell>
       <TableCell>
         {backup.status === "pending"
           ? "-"

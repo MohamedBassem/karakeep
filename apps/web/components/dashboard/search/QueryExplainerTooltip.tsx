@@ -60,7 +60,9 @@ export default function QueryExplainerTooltip({
                 ? t("search.not_created_on_or_after")
                 : t("search.created_on_or_after")}
             </TableCell>
-            <TableCell><FormattedDate date={matcher.dateAfter} formatStr="PPP" /></TableCell>
+            <TableCell>
+              <FormattedDate date={matcher.dateAfter} formatStr="PPP" />
+            </TableCell>
           </TableRow>
         );
       case "dateBefore":
@@ -71,7 +73,9 @@ export default function QueryExplainerTooltip({
                 ? t("search.not_created_on_or_before")
                 : t("search.created_on_or_before")}
             </TableCell>
-            <TableCell><FormattedDate date={matcher.dateBefore} formatStr="PPP" /></TableCell>
+            <TableCell>
+              <FormattedDate date={matcher.dateBefore} formatStr="PPP" />
+            </TableCell>
           </TableRow>
         );
       case "age":
