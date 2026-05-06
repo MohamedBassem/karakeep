@@ -16,6 +16,8 @@ services:
       BROWSER_WEB_URL: http://chrome:9222
       CRAWLER_NUM_WORKERS: 6
       CRAWLER_ALLOWED_INTERNAL_HOSTNAMES: nginx
+      CRAWLER_VIDEO_DOWNLOAD: "true"
+      CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE: -1
       OPENAI_API_KEY: aimock-test-key
       OPENAI_BASE_URL: http://aimock:4010/v1
       INFERENCE_ENABLE_AUTO_SUMMARIZATION: "true"
