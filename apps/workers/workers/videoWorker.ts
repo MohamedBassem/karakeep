@@ -3,7 +3,11 @@ import * as os from "os";
 import path from "path";
 import { execa } from "execa";
 import { workerStatsCounter } from "metrics";
-import { getProxyAgent, resolveValidatedRedirectUrl } from "network";
+import {
+  getProxyAgent,
+  resolveValidatedRedirectUrl,
+  selectRunProxies,
+} from "network";
 import { withWorkerEventLog, withWorkerTracing } from "workerTracing";
 
 import { db } from "@karakeep/db";
@@ -76,6 +80,9 @@ function prepareYtDlpArguments(
   proxy: string | undefined,
   assetPath: string,
 ) {
+  // yt-dlp performs its own HTTP requests and can follow redirects that this
+  // process cannot validate. Full SSRF protection depends on an egress proxy or
+  // network policy that blocks internal/private targets.
   const ytDlpArguments = [url];
   if (serverConfig.crawler.maxVideoDownloadSize > 0) {
     ytDlpArguments.push(
@@ -111,13 +118,18 @@ async function runWorker(job: DequeuedJob<ZVideoRequest>) {
     return;
   }
 
+  const runProxy = selectRunProxies();
   let normalizedUrl: string;
   try {
-    const resolvedUrl = await resolveValidatedRedirectUrl(url);
+    const resolvedUrl = await resolveValidatedRedirectUrl(
+      url,
+      { signal: job.abortSignal },
+      runProxy,
+    );
     normalizedUrl = resolvedUrl.toString();
   } catch (error) {
     logger.warn(
-      `[VideoCrawler][${jobId}] Skipping video download to disallowed URL "${url}": ${
+      `[VideoCrawler][${jobId}] Skipping video download for "${url}": ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
@@ -128,7 +140,7 @@ async function runWorker(job: DequeuedJob<ZVideoRequest>) {
   let assetPath = `${TMP_FOLDER}/${videoAssetId}`;
   await fs.promises.mkdir(TMP_FOLDER, { recursive: true });
 
-  const proxy = getProxyAgent(normalizedUrl);
+  const proxy = getProxyAgent(normalizedUrl, runProxy);
   const ytDlpArguments = prepareYtDlpArguments(
     normalizedUrl,
     proxy?.proxy.toString(),

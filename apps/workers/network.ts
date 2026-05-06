@@ -470,7 +470,10 @@ export const fetchWithProxy = async (
 
 export async function resolveValidatedRedirectUrl(
   url: string,
-  options: Pick<FetchWithProxyOptions, "headers" | "maxRedirects"> = {},
+  options: Pick<
+    FetchWithProxyOptions,
+    "headers" | "maxRedirects" | "signal"
+  > = {},
   runProxy?: RunProxyConfig,
 ): Promise<URL> {
   const { maxRedirects, baseHeaders, baseOptions } = prepareFetchOptions({
@@ -482,6 +485,9 @@ export async function resolveValidatedRedirectUrl(
   let currentUrl = url;
 
   while (true) {
+    const signal = options.signal
+      ? AbortSignal.any([AbortSignal.timeout(5000), options.signal])
+      : AbortSignal.timeout(5000);
     const agent = getProxyAgent(currentUrl, runProxy);
     const validation = await validateUrl(currentUrl, !!agent);
     if (!validation.ok) {
@@ -497,7 +503,7 @@ export async function resolveValidatedRedirectUrl(
         method: "GET",
         headers: baseHeaders,
         agent,
-        baseOptions,
+        baseOptions: { ...baseOptions, signal },
       }),
     );
 
