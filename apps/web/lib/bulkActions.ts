@@ -73,20 +73,6 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
   },
 
   setVisibleBookmarks: (visibleBookmarks: ZBookmark[]) => {
-    const currentVisibleBookmarks = get().visibleBookmarks;
-    if (
-      currentVisibleBookmarks.length === visibleBookmarks.length &&
-      currentVisibleBookmarks.every((bookmark, index) => {
-        const nextBookmark = visibleBookmarks[index];
-        return (
-          bookmark.id === nextBookmark.id &&
-          bookmark.favourited === nextBookmark.favourited &&
-          bookmark.archived === nextBookmark.archived
-        );
-      })
-    ) {
-      return;
-    }
     set({
       visibleBookmarks,
     });
