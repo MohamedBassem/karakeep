@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   ActionButton,
@@ -8,7 +8,11 @@ import {
 } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { toast } from "@/components/ui/sonner";
-import useBulkActionsStore from "@/lib/bulkActions";
+import {
+  useBookmarkBulkMutations,
+  useBookmarkBulkSelection,
+} from "@/lib/hooks/useBookmarkBulkActions";
+import type { UpdateBookmarkProps } from "@/lib/hooks/useBookmarkBulkActions";
 import { useTranslation } from "@/lib/i18n/client";
 import {
   CheckCheck,
@@ -23,47 +27,12 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  useDeleteBookmark,
-  useRecrawlBookmark,
-  useUpdateBookmark,
-} from "@karakeep/shared-react/hooks/bookmarks";
-import { useRemoveBookmarkFromList } from "@karakeep/shared-react/hooks/lists";
-import { limitConcurrency } from "@karakeep/shared/concurrency";
-import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
-
 import BulkManageListsModal from "./bookmarks/BulkManageListsModal";
 import BulkTagModal from "./bookmarks/BulkTagModal";
 import { ArchivedActionIcon, FavouritedActionIcon } from "./bookmarks/icons";
 
-const MAX_CONCURRENT_BULK_ACTIONS = 50;
-
 export default function BulkBookmarksAction() {
   const { t } = useTranslation();
-  const selectedBookmarkIds = useBulkActionsStore(
-    (state) => state.selectedBookmarkIds,
-  );
-  const visibleBookmarks = useBulkActionsStore(
-    (state) => state.visibleBookmarks,
-  );
-  const isBulkEditEnabled = useBulkActionsStore(
-    (state) => state.isBulkEditEnabled,
-  );
-  const withinListContext = useBulkActionsStore((state) => state.listContext);
-  const selectedBookmarks = React.useMemo(() => {
-    const selected = new Set(selectedBookmarkIds);
-    return visibleBookmarks.filter((bookmark) => selected.has(bookmark.id));
-  }, [selectedBookmarkIds, visibleBookmarks]);
-  const setIsBulkEditEnabled = useBulkActionsStore(
-    (state) => state.setIsBulkEditEnabled,
-  );
-  const selectAllBookmarks = useBulkActionsStore((state) => state.selectAll);
-  const unSelectAllBookmarks = useBulkActionsStore(
-    (state) => state.unSelectAll,
-  );
-  const isEverythingSelected = useBulkActionsStore(
-    (state) => state.isEverythingSelected,
-  );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRemoveFromListDialogOpen, setIsRemoveFromListDialogOpen] =
     useState(false);
@@ -71,6 +40,41 @@ export default function BulkBookmarksAction() {
   const [bulkTagModal, setBulkTagModalOpen] = useState(false);
   const pathname = usePathname();
   const currentPathnameRef = useRef(pathname);
+
+  const onError = () => {
+    toast({
+      variant: "destructive",
+      title: "Something went wrong",
+      description: "There was a problem with your request.",
+    });
+  };
+  const { bulkActionsStore, selectedBookmarks } = useBookmarkBulkSelection();
+  const {
+    isBulkEditEnabled,
+    listContext: withinListContext,
+    setIsBulkEditEnabled,
+    selectAll: selectAllBookmarks,
+    unSelectAll: unSelectAllBookmarks,
+    isEverythingSelected,
+  } = bulkActionsStore;
+  const {
+    updateBookmarkMutator,
+    deleteBookmarkMutator,
+    recrawlBookmarkMutator,
+    removeBookmarkFromListMutator,
+    updateSelectedBookmarks,
+    deleteSelectedBookmarks,
+    recrawlSelectedLinkBookmarks,
+    removeSelectedBookmarksFromList,
+    selectedBookmarkLinksText,
+  } = useBookmarkBulkMutations({
+    selectedBookmarks,
+    listContext: withinListContext,
+    onError,
+    onBulkEditDone: () => {
+      setIsBulkEditEnabled(false);
+    },
+  });
 
   // Reset bulk edit state when the route changes
   useEffect(() => {
@@ -80,63 +84,8 @@ export default function BulkBookmarksAction() {
     }
   }, [pathname, setIsBulkEditEnabled]);
 
-  const onError = () => {
-    toast({
-      variant: "destructive",
-      title: "Something went wrong",
-      description: "There was a problem with your request.",
-    });
-  };
-
-  const deleteBookmarkMutator = useDeleteBookmark({
-    onSuccess: () => {
-      setIsBulkEditEnabled(false);
-    },
-    onError,
-  });
-
-  const updateBookmarkMutator = useUpdateBookmark({
-    onSuccess: () => {
-      setIsBulkEditEnabled(false);
-    },
-    onError,
-  });
-
-  const recrawlBookmarkMutator = useRecrawlBookmark({
-    onSuccess: () => {
-      setIsBulkEditEnabled(false);
-    },
-    onError,
-  });
-
-  const removeBookmarkFromListMutator = useRemoveBookmarkFromList({
-    onSuccess: () => {
-      setIsBulkEditEnabled(false);
-    },
-    onError,
-  });
-
-  interface UpdateBookmarkProps {
-    favourited?: boolean;
-    archived?: boolean;
-  }
-
   const recrawlBookmarks = async (archiveFullPage: boolean) => {
-    const links = selectedBookmarks.filter(
-      (item) => item.content.type === BookmarkTypes.LINK,
-    );
-    await Promise.all(
-      limitConcurrency(
-        links.map(
-          (item) => () =>
-            recrawlBookmarkMutator.mutateAsync({
-              bookmarkId: item.id,
-              archiveFullPage,
-            }),
-        ),
-        MAX_CONCURRENT_BULK_ACTIONS,
-      ),
-    );
+    const links = await recrawlSelectedLinkBookmarks(archiveFullPage);
     toast({
       description: `${links.length} bookmarks will be ${archiveFullPage ? "re-crawled and archived!" : "refreshed!"}`,
     });
@@ -156,14 +105,7 @@ export default function BulkBookmarksAction() {
       });
       return;
     }
-    const copyString = selectedBookmarks
-      .map((item) => {
-        return item.content.type === BookmarkTypes.LINK && item.content.url;
-      })
-      .filter(Boolean)
-      .join("\n");
-
-    await navigator.clipboard.writeText(copyString);
+    await navigator.clipboard.writeText(selectedBookmarkLinksText());
 
     toast({
       description: `Added ${selectedBookmarks.length} bookmark links into the clipboard!`,
@@ -174,34 +116,15 @@ export default function BulkBookmarksAction() {
     favourited,
     archived,
   }: UpdateBookmarkProps) => {
-    await Promise.all(
-      limitConcurrency(
-        selectedBookmarks.map(
-          (item) => () =>
-            updateBookmarkMutator.mutateAsync({
-              bookmarkId: item.id,
-              favourited,
-              archived,
-            }),
-        ),
-        MAX_CONCURRENT_BULK_ACTIONS,
-      ),
-    );
+    await updateSelectedBookmarks({ favourited, archived });
+    setIsBulkEditEnabled(false);
     toast({
       description: `${selectedBookmarks.length} bookmarks have been updated!`,
     });
   };
 
   const deleteBookmarks = async () => {
-    await Promise.all(
-      limitConcurrency(
-        selectedBookmarks.map(
-          (item) => () =>
-            deleteBookmarkMutator.mutateAsync({ bookmarkId: item.id }),
-        ),
-        MAX_CONCURRENT_BULK_ACTIONS,
-      ),
-    );
+    await deleteSelectedBookmarks();
     toast({
       description: `${selectedBookmarks.length} bookmarks have been deleted!`,
     });
@@ -211,18 +134,7 @@ export default function BulkBookmarksAction() {
   const removeBookmarksFromList = async () => {
     if (!withinListContext) return;
 
-    const results = await Promise.allSettled(
-      limitConcurrency(
-        selectedBookmarks.map(
-          (item) => () =>
-            removeBookmarkFromListMutator.mutateAsync({
-              bookmarkId: item.id,
-              listId: withinListContext.id,
-            }),
-        ),
-        MAX_CONCURRENT_BULK_ACTIONS,
-      ),
-    );
+    const results = await removeSelectedBookmarksFromList();
 
     const successes = results.filter((r) => r.status === "fulfilled").length;
     if (successes > 0) {
