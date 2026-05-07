@@ -4,8 +4,8 @@ import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 
 import useBulkActionsStore from "./bulkActions";
 
-function bookmark(id: string) {
-  return { id } as ZBookmark;
+function bookmark(id: string, userId = "user-1") {
+  return { id, userId } as ZBookmark;
 }
 
 describe("useBulkActionsStore", () => {
@@ -62,5 +62,36 @@ describe("useBulkActionsStore", () => {
 
     useBulkActionsStore.getState().setIsBulkEditEnabled(true);
     expect(useBulkActionsStore.getState().selectedBookmarkIds).toEqual(["a"]);
+  });
+
+  it("derives selected bookmarks from visible bookmarks in visible order", () => {
+    useBulkActionsStore.setState({
+      selectedBookmarkIds: ["c", "a"],
+      visibleBookmarks: [bookmark("a"), bookmark("b"), bookmark("c")],
+    });
+
+    expect(
+      useBulkActionsStore
+        .getState()
+        .getSelectedBookmarks()
+        .map((item) => item.id),
+    ).toEqual(["a", "c"]);
+  });
+
+  it("filters selected actionable bookmarks with the provided predicate", () => {
+    useBulkActionsStore.setState({
+      selectedBookmarkIds: ["owned", "shared"],
+      visibleBookmarks: [
+        bookmark("owned", "user-1"),
+        bookmark("shared", "user-2"),
+      ],
+    });
+
+    expect(
+      useBulkActionsStore
+        .getState()
+        .getSelectedActionableBookmarks((item) => item.userId === "user-1")
+        .map((item) => item.id),
+    ).toEqual(["owned"]);
   });
 });

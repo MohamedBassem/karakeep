@@ -4,10 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth/client";
 import useBulkActionsStore from "@/lib/bulkActions";
-import {
-  useBookmarkBulkMutations,
-  useBookmarkBulkSelection,
-} from "@/lib/hooks/useBookmarkBulkActions";
+import { useBookmarkBulkMutations } from "@/lib/hooks/useBookmarkBulkActions";
 import { useKeyboardNavigationStore } from "@/lib/store/useKeyboardNavigationStore";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -215,7 +212,7 @@ function useBulkBookmarkSelection({
   hasBookmarks,
   disabled,
   withFocusedBookmark,
-  enableBulkEditWithBookmarks,
+  enableBulkEdit,
   selectBookmarks,
   toggleBookmark,
   unSelectAll,
@@ -225,7 +222,7 @@ function useBulkBookmarkSelection({
   hasBookmarks: boolean;
   disabled: boolean;
   withFocusedBookmark: (action: (bookmark: ZBookmark) => void) => void;
-  enableBulkEditWithBookmarks: (bookmarks: ZBookmark[]) => void;
+  enableBulkEdit: () => void;
   selectBookmarks: (bookmarks: ZBookmark[]) => void;
   toggleBookmark: (bookmarkId: string) => void;
   unSelectAll: () => void;
@@ -277,14 +274,14 @@ function useBulkBookmarkSelection({
     "x",
     () =>
       withFocusedBookmark((bookmark) => {
-        enableBulkEditWithBookmarks(bookmarks);
+        enableBulkEdit();
         toggleBookmark(bookmark.id);
       }),
     { enabled: !disabled && isNavigating, preventDefault: true },
     [
       disabled,
       bookmarks,
-      enableBulkEditWithBookmarks,
+      enableBulkEdit,
       isNavigating,
       toggleBookmark,
       withFocusedBookmark,
@@ -613,16 +610,26 @@ export function useBookmarkKeyboardNavigation({
   const disabled = shortcutsDialogOpen || deleteDialogOpen;
   const hasBookmarks = bookmarks.length > 0;
   const canMutateBookmark = useBookmarkOwnership();
-  const {
-    bulkActionsStore,
-    selectedBookmarks,
-    selectedActionableBookmarks,
-    hasBulkSelection,
-    enableBulkEditWithBookmarks,
-    selectBookmarks,
-  } = useBookmarkBulkSelection({
-    canActOnBookmark: canMutateBookmark,
-  });
+  const bulkActionsStore = useBulkActionsStore();
+  const selectedBookmarks = bulkActionsStore.getSelectedBookmarks();
+  const { selectedBookmarkIds, isBulkEditEnabled } = bulkActionsStore;
+  const selectedActionableBookmarks = useCallback(
+    () => bulkActionsStore.getSelectedActionableBookmarks(canMutateBookmark),
+    [bulkActionsStore, canMutateBookmark],
+  );
+  const hasBulkSelection = isBulkEditEnabled && selectedBookmarkIds.length > 0;
+  const enableBulkEdit = useCallback(() => {
+    bulkActionsStore.setIsBulkEditEnabled(true);
+  }, [bulkActionsStore]);
+  const selectBookmarks = useCallback(
+    (bookmarks: ZBookmark[]) => {
+      enableBulkEdit();
+      bulkActionsStore.setSelectedBookmarkIds(
+        bookmarks.map((bookmark) => bookmark.id),
+      );
+    },
+    [bulkActionsStore, enableBulkEdit],
+  );
   const {
     updateBookmarkMutator,
     deleteBookmarkMutator,
@@ -656,7 +663,7 @@ export function useBookmarkKeyboardNavigation({
     hasBookmarks,
     disabled,
     withFocusedBookmark,
-    enableBulkEditWithBookmarks,
+    enableBulkEdit,
     selectBookmarks,
     toggleBookmark: bulkActionsStore.toggleBookmark,
     unSelectAll: bulkActionsStore.unSelectAll,

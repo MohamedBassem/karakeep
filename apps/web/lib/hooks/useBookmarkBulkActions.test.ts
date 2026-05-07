@@ -2,8 +2,6 @@
 
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import useBulkActionsStore from "@/lib/bulkActions";
-
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import type { ZBookmarkList } from "@karakeep/shared/types/lists";
 
@@ -36,10 +34,7 @@ vi.mock("@karakeep/shared-react/hooks/lists", () => ({
   }),
 }));
 
-import {
-  useBookmarkBulkMutations,
-  useBookmarkBulkSelection,
-} from "./useBookmarkBulkActions";
+import { useBookmarkBulkMutations } from "./useBookmarkBulkActions";
 
 function bookmark(id: string, userId = "user-1", type = "link") {
   return {
@@ -53,106 +48,6 @@ function bookmark(id: string, userId = "user-1", type = "link") {
     },
   } as ZBookmark;
 }
-
-function renderBulkSelectionHook(
-  props?: Parameters<typeof useBookmarkBulkSelection>[0],
-) {
-  return renderHook(() => useBookmarkBulkSelection(props)).result;
-}
-
-describe("useBookmarkBulkSelection", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    useBulkActionsStore.setState({
-      selectedBookmarkIds: [],
-      visibleBookmarks: [],
-      isBulkEditEnabled: false,
-      listContext: undefined,
-    });
-  });
-
-  it("derives selected bookmarks from visible bookmarks in visible order", () => {
-    const bookmarks = [bookmark("a"), bookmark("b"), bookmark("c")];
-    useBulkActionsStore.setState({
-      selectedBookmarkIds: ["c", "a"],
-      visibleBookmarks: bookmarks,
-      isBulkEditEnabled: true,
-    });
-
-    const { current } = renderBulkSelectionHook();
-
-    expect(current.selectedBookmarks.map((item) => item.id)).toEqual([
-      "a",
-      "c",
-    ]);
-    expect(current.hasBulkSelection).toBe(true);
-  });
-
-  it("filters selected actionable bookmarks with the provided predicate", () => {
-    const bookmarks = [
-      bookmark("owned", "user-1"),
-      bookmark("shared", "user-2"),
-    ];
-    useBulkActionsStore.setState({
-      selectedBookmarkIds: ["owned", "shared"],
-      visibleBookmarks: bookmarks,
-      isBulkEditEnabled: true,
-    });
-
-    const { current } = renderBulkSelectionHook({
-      canActOnBookmark: (item) => item.userId === "user-1",
-    });
-
-    expect(current.selectedBookmarks.map((item) => item.id)).toEqual([
-      "owned",
-      "shared",
-    ]);
-    expect(
-      current.selectedActionableBookmarks().map((item) => item.id),
-    ).toEqual(["owned"]);
-  });
-
-  it("does not report a bulk selection unless bulk edit is enabled", () => {
-    useBulkActionsStore.setState({
-      selectedBookmarkIds: ["a"],
-      visibleBookmarks: [bookmark("a")],
-      isBulkEditEnabled: false,
-    });
-
-    const { current } = renderBulkSelectionHook();
-
-    expect(current.hasBulkSelection).toBe(false);
-  });
-
-  it("enables bulk edit with the current bookmarks before selecting them", () => {
-    const bookmarks = [bookmark("a"), bookmark("b")];
-    const { current } = renderBulkSelectionHook();
-
-    act(() => {
-      current.selectBookmarks(bookmarks);
-    });
-
-    expect(useBulkActionsStore.getState().isBulkEditEnabled).toBe(true);
-    expect(useBulkActionsStore.getState().visibleBookmarks).toEqual(bookmarks);
-    expect(useBulkActionsStore.getState().selectedBookmarkIds).toEqual([
-      "a",
-      "b",
-    ]);
-  });
-
-  it("refreshes visible bookmarks when enabling bulk edit clears selection", () => {
-    const bookmarks = [bookmark("a")];
-    const { current } = renderBulkSelectionHook();
-
-    act(() => {
-      current.enableBulkEditWithBookmarks(bookmarks);
-    });
-
-    expect(useBulkActionsStore.getState().isBulkEditEnabled).toBe(true);
-    expect(useBulkActionsStore.getState().selectedBookmarkIds).toEqual([]);
-    expect(useBulkActionsStore.getState().visibleBookmarks).toEqual(bookmarks);
-  });
-});
 
 describe("useBookmarkBulkMutations", () => {
   beforeEach(() => {

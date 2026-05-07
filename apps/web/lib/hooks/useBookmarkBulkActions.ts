@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import useBulkActionsStore from "@/lib/bulkActions";
+import { useCallback } from "react";
 
 import { limitConcurrency } from "@karakeep/shared/concurrency";
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
@@ -19,60 +18,6 @@ const MAX_CONCURRENT_BULK_ACTIONS = 50;
 export interface UpdateBookmarkProps {
   favourited?: boolean;
   archived?: boolean;
-}
-
-export function useBookmarkBulkSelection({
-  canActOnBookmark = () => true,
-}: {
-  canActOnBookmark?: (bookmark: ZBookmark) => boolean;
-} = {}) {
-  const bulkActionsStore = useBulkActionsStore();
-
-  const selectedBookmarks = useMemo(() => {
-    const selectedBookmarkIds = new Set(bulkActionsStore.selectedBookmarkIds);
-    return bulkActionsStore.visibleBookmarks.filter((bookmark) =>
-      selectedBookmarkIds.has(bookmark.id),
-    );
-  }, [bulkActionsStore.selectedBookmarkIds, bulkActionsStore.visibleBookmarks]);
-
-  const selectedActionableBookmarks = useCallback(
-    () => selectedBookmarks.filter(canActOnBookmark),
-    [canActOnBookmark, selectedBookmarks],
-  );
-
-  const hasBulkSelection =
-    bulkActionsStore.isBulkEditEnabled &&
-    bulkActionsStore.selectedBookmarkIds.length > 0;
-
-  const enableBulkEditWithBookmarks = useCallback(
-    (bookmarks: ZBookmark[]) => {
-      if (!bulkActionsStore.isBulkEditEnabled) {
-        bulkActionsStore.setIsBulkEditEnabled(true);
-        // Re-set visible bookmarks since setIsBulkEditEnabled clears selection.
-        bulkActionsStore.setVisibleBookmarks(bookmarks);
-      }
-    },
-    [bulkActionsStore],
-  );
-
-  const selectBookmarks = useCallback(
-    (bookmarks: ZBookmark[]) => {
-      enableBulkEditWithBookmarks(bookmarks);
-      bulkActionsStore.setSelectedBookmarkIds(
-        bookmarks.map((bookmark) => bookmark.id),
-      );
-    },
-    [bulkActionsStore, enableBulkEditWithBookmarks],
-  );
-
-  return {
-    bulkActionsStore,
-    selectedBookmarks,
-    selectedActionableBookmarks,
-    hasBulkSelection,
-    enableBulkEditWithBookmarks,
-    selectBookmarks,
-  };
 }
 
 export function useBookmarkBulkMutations({

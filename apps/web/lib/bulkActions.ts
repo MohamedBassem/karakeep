@@ -16,6 +16,10 @@ interface BookmarkState {
   unSelectAll: () => void;
   isBookmarkSelected: (bookmarkId: string) => boolean;
   isEverythingSelected: () => boolean;
+  getSelectedBookmarks: () => ZBookmark[];
+  getSelectedActionableBookmarks: (
+    canActOnBookmark: (bookmark: ZBookmark) => boolean,
+  ) => ZBookmark[];
   setListContext: (listContext: ZBookmarkList | undefined) => void;
   listContext: ZBookmarkList | undefined;
 }
@@ -62,6 +66,16 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
     }
     const selected = new Set(selectedBookmarkIds);
     return visibleBookmarks.every((bookmark) => selected.has(bookmark.id));
+  },
+
+  getSelectedBookmarks: () => {
+    const { selectedBookmarkIds, visibleBookmarks } = get();
+    const selected = new Set(selectedBookmarkIds);
+    return visibleBookmarks.filter((bookmark) => selected.has(bookmark.id));
+  },
+
+  getSelectedActionableBookmarks: (canActOnBookmark) => {
+    return get().getSelectedBookmarks().filter(canActOnBookmark);
   },
 
   setIsBulkEditEnabled: (isEnabled) => {

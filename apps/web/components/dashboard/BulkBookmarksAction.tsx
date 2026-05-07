@@ -8,10 +8,8 @@ import {
 } from "@/components/ui/action-button";
 import ActionConfirmingDialog from "@/components/ui/action-confirming-dialog";
 import { toast } from "@/components/ui/sonner";
-import {
-  useBookmarkBulkMutations,
-  useBookmarkBulkSelection,
-} from "@/lib/hooks/useBookmarkBulkActions";
+import useBulkActionsStore from "@/lib/bulkActions";
+import { useBookmarkBulkMutations } from "@/lib/hooks/useBookmarkBulkActions";
 import type { UpdateBookmarkProps } from "@/lib/hooks/useBookmarkBulkActions";
 import { useTranslation } from "@/lib/i18n/client";
 import {
@@ -48,7 +46,8 @@ export default function BulkBookmarksAction() {
       description: "There was a problem with your request.",
     });
   };
-  const { bulkActionsStore, selectedBookmarks } = useBookmarkBulkSelection();
+  const bulkActionsStore = useBulkActionsStore();
+  const selectedBookmarks = bulkActionsStore.getSelectedBookmarks();
   const {
     isBulkEditEnabled,
     listContext: withinListContext,

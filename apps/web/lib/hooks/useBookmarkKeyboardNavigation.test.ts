@@ -178,7 +178,7 @@ describe("useBookmarkKeyboardNavigation", () => {
     });
 
     expect(useBulkActionsStore.getState().isBulkEditEnabled).toBe(true);
-    expect(useBulkActionsStore.getState().visibleBookmarks).toEqual(bookmarks);
+    expect(useBulkActionsStore.getState().visibleBookmarks).toEqual([]);
     expect(useBulkActionsStore.getState().selectedBookmarkIds).toEqual(["a"]);
   });
 

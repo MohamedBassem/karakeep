@@ -8982,6 +8982,9 @@ packages:
       supports-color:
         optional: true
 
+  decimal.js@10.5.0:
+    resolution: {integrity: sha512-8vDa8Qxvr/+d94hSh5P3IJwI5t8/c0KsMp+g8bNw9cY2icONa5aPfvKeieW1WlG0WQYwwhJ7mjui2xtiePQSXw==}
+
   decimal.js@10.6.0:
     resolution: {integrity: sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==}
 
@@ -9479,6 +9482,10 @@ packages:
 
   entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
+    engines: {node: '>=0.12'}
+
+  entities@6.0.0:
+    resolution: {integrity: sha512-aKstq2TDOndCn4diEyp9Uq/Flu2i1GlLkc6XIDQSDMuaFE3OPW5OphLCyQ5SpSJZTb4reN+kTcYru5yIfXoRPw==}
     engines: {node: '>=0.12'}
 
   entities@6.0.1:
@@ -17031,6 +17038,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.18.2:
+    resolution: {integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   ws@8.18.3:
     resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
     engines: {node: '>=10.0.0'}
@@ -19553,7 +19572,7 @@ snapshots:
       '@babel/preset-env': 7.27.2(@babel/core@7.26.0)
       '@babel/preset-react': 7.27.1(@babel/core@7.26.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.26.0)
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.27.6
       '@babel/runtime-corejs3': 7.27.6
       '@babel/traverse': 7.28.0
       '@docusaurus/logger': 3.8.1
@@ -20527,7 +20546,7 @@ snapshots:
 
   '@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.3)':
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.28.4
       '@emotion/babel-plugin': 11.13.5
       '@emotion/cache': 11.14.0
       '@emotion/serialize': 1.3.3
@@ -26640,6 +26659,8 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
+  decimal.js@10.5.0: {}
+
   decimal.js@10.6.0: {}
 
   decode-named-character-reference@1.1.0:
@@ -27019,6 +27040,8 @@ snapshots:
   entities@2.0.3: {}
 
   entities@4.5.0: {}
+
+  entities@6.0.0: {}
 
   entities@6.0.1: {}
 
@@ -29309,7 +29332,7 @@ snapshots:
     dependencies:
       cssstyle: 4.3.1
       data-urls: 5.0.0
-      decimal.js: 10.6.0
+      decimal.js: 10.5.0
       form-data: 4.0.4
       html-encoding-sniffer: 4.0.0
       http-proxy-agent: 7.0.2
@@ -29326,7 +29349,7 @@ snapshots:
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.2.0
-      ws: 8.18.3
+      ws: 8.18.2
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -30425,12 +30448,12 @@ snapshots:
 
   metro-runtime@0.82.5:
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.28.4
       flow-enums-runtime: 0.0.6
 
   metro-runtime@0.83.3:
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.28.4
       flow-enums-runtime: 0.0.6
 
   metro-source-map@0.82.5:
@@ -31963,7 +31986,7 @@ snapshots:
 
   parse5@7.3.0:
     dependencies:
-      entities: 6.0.1
+      entities: 6.0.0
 
   parse5@8.0.0:
     dependencies:
@@ -32949,7 +32972,7 @@ snapshots:
 
   react-error-boundary@3.1.4(react@19.2.3):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.28.4
       react: 19.2.3
 
   react-error-boundary@5.0.0(react@19.2.3):
@@ -33011,7 +33034,7 @@ snapshots:
 
   react-loadable-ssr-addon-v5-slorber@1.0.1(@docusaurus/react-loadable@6.0.0(react@19.2.3))(webpack@5.99.9):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.27.6
       react-loadable: '@docusaurus/react-loadable@6.0.0(react@19.2.3)'
       webpack: 5.99.9
 
@@ -33411,7 +33434,7 @@ snapshots:
 
   react-redux@7.2.9(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.28.4
       '@types/react-redux': 7.1.34
       hoist-non-react-statics: 3.3.2
       loose-envify: 1.4.0
@@ -33448,13 +33471,13 @@ snapshots:
 
   react-router-config@5.1.1(react-router@5.3.4(react@19.2.3))(react@19.2.3):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.27.6
       react: 19.2.3
       react-router: 5.3.4(react@19.2.3)
 
   react-router-dom@5.3.4(react@19.2.3):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.27.6
       history: 4.10.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
@@ -33472,7 +33495,7 @@ snapshots:
 
   react-router@5.3.4(react@19.2.3):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.27.6
       history: 4.10.1
       hoist-non-react-statics: 3.3.2
       loose-envify: 1.4.0
@@ -33533,7 +33556,7 @@ snapshots:
 
   react-transition-group@4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.28.4
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
@@ -36330,7 +36353,7 @@ snapshots:
       sockjs: 0.3.24
       spdy: 4.0.2
       webpack-dev-middleware: 5.3.4(webpack@5.99.9)
-      ws: 8.18.3
+      ws: 8.18.2
     optionalDependencies:
       webpack: 5.99.9
     transitivePeerDependencies:
@@ -36697,6 +36720,8 @@ snapshots:
       async-limiter: 1.0.1
 
   ws@7.5.10: {}
+
+  ws@8.18.2: {}
 
   ws@8.18.3: {}
 
