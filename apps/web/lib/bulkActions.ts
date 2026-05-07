@@ -51,7 +51,12 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
   },
 
   isEverythingSelected: () => {
-    return get().selectedBookmarkIds.length === get().visibleBookmarks.length;
+    const { selectedBookmarkIds, visibleBookmarks } = get();
+    if (visibleBookmarks.length === 0) {
+      return false;
+    }
+    const selected = new Set(selectedBookmarkIds);
+    return visibleBookmarks.every((bookmark) => selected.has(bookmark.id));
   },
 
   setIsBulkEditEnabled: (isEnabled) => {
@@ -60,8 +65,12 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
   },
 
   setVisibleBookmarks: (visibleBookmarks: ZBookmark[]) => {
+    const visibleBookmarkIds = new Set(visibleBookmarks.map((b) => b.id));
     set({
       visibleBookmarks,
+      selectedBookmarkIds: get().selectedBookmarkIds.filter((id) =>
+        visibleBookmarkIds.has(id),
+      ),
     });
   },
   setListContext: (listContext: ZBookmarkList | undefined) => {
