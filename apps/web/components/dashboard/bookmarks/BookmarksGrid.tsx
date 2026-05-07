@@ -28,9 +28,20 @@ import BookmarkCard from "./BookmarkCard";
 import EditorCard from "./EditorCard";
 import UnknownCard from "./UnknownCard";
 
-function StyledBookmarkCard({ children }: { children: React.ReactNode }) {
+function StyledBookmarkCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <Slot className="mb-4 border border-border bg-card duration-300 ease-in hover:shadow-lg hover:transition-all">
+    <Slot
+      className={cn(
+        "mb-4 border border-border bg-card hover:shadow-lg hover:transition-shadow",
+        className,
+      )}
+    >
       {children}
     </Slot>
   );
@@ -49,15 +60,13 @@ const BookmarkGridItem = memo(function BookmarkGridItem({
 
   return (
     <ErrorBoundary fallback={<UnknownCard bookmark={bookmark} />}>
-      <div
-        data-bookmark-index={index}
-        className={cn(
-          "rounded-lg",
-          isFocused &&
-            "ring-2 ring-primary ring-offset-2 ring-offset-background",
-        )}
-      >
-        <StyledBookmarkCard>
+      <div data-bookmark-index={index}>
+        <StyledBookmarkCard
+          className={cn(
+            isFocused &&
+              "ring-2 ring-primary ring-offset-2 ring-offset-background",
+          )}
+        >
           <BookmarkCard bookmark={bookmark} />
         </StyledBookmarkCard>
       </div>
