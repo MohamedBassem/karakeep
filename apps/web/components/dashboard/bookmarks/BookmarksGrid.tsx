@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import KeyboardShortcutsDialog from "@/components/dashboard/KeyboardShortcutsDialog";
 import NoBookmarksBanner from "@/components/dashboard/bookmarks/NoBookmarksBanner";
 import { ActionButton } from "@/components/ui/action-button";
@@ -7,6 +7,7 @@ import useBulkActionsStore from "@/lib/bulkActions";
 import { useBookmarkKeyboardNavigation } from "@/lib/hooks/useBookmarkKeyboardNavigation";
 import { useTranslation } from "@/lib/i18n/client";
 import { useInBookmarkGridStore } from "@/lib/store/useInBookmarkGridStore";
+import { useKeyboardNavigationStore } from "@/lib/store/useKeyboardNavigationStore";
 import {
   bookmarkLayoutSwitch,
   useBookmarkLayout,
@@ -34,6 +35,35 @@ function StyledBookmarkCard({ children }: { children: React.ReactNode }) {
     </Slot>
   );
 }
+
+const BookmarkGridItem = memo(function BookmarkGridItem({
+  bookmark,
+  index,
+}: {
+  bookmark: ZBookmark;
+  index: number;
+}) {
+  const isFocused = useKeyboardNavigationStore(
+    (state) => state.isNavigating && state.focusedIndex === index,
+  );
+
+  return (
+    <ErrorBoundary fallback={<UnknownCard bookmark={bookmark} />}>
+      <div
+        data-bookmark-index={index}
+        className={cn(
+          "rounded-lg",
+          isFocused &&
+            "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        )}
+      >
+        <StyledBookmarkCard>
+          <BookmarkCard bookmark={bookmark} />
+        </StyledBookmarkCard>
+      </div>
+    </ErrorBoundary>
+  );
+});
 
 function getBreakpointConfig(userColumns: number) {
   const fullConfig = resolveConfig(tailwindConfig);
@@ -140,8 +170,6 @@ export default function BookmarksGrid({
   const navColumns = isListLayout ? 1 : activeGridColumns;
 
   const {
-    focusedIndex,
-    isNavigating,
     helpDialogOpen,
     setHelpDialogOpen,
     deleteDialogOpen,
@@ -198,22 +226,8 @@ export default function BookmarksGrid({
         <EditorCard />
       </StyledBookmarkCard>
     ),
-    ...bookmarks.map((b, i) => (
-      <ErrorBoundary key={b.id} fallback={<UnknownCard bookmark={b} />}>
-        <div
-          data-bookmark-index={i}
-          className={cn(
-            "rounded-lg",
-            isNavigating &&
-              focusedIndex === i &&
-              "ring-2 ring-primary ring-offset-2 ring-offset-background",
-          )}
-        >
-          <StyledBookmarkCard>
-            <BookmarkCard bookmark={b} />
-          </StyledBookmarkCard>
-        </div>
-      </ErrorBoundary>
+    ...bookmarks.map((bookmark, index) => (
+      <BookmarkGridItem key={bookmark.id} bookmark={bookmark} index={index} />
     )),
   ];
   return (
