@@ -19,6 +19,7 @@ interface UseBookmarkKeyboardNavigationOptions {
   bookmarks: ZBookmark[];
   columns: number;
   hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   fetchNextPage: () => void;
 }
 
@@ -87,6 +88,7 @@ function useBookmarkFocusNavigation({
   bookmarks,
   columns,
   hasNextPage,
+  isFetchingNextPage,
   fetchNextPage,
   disabled,
 }: UseBookmarkKeyboardNavigationOptions & { disabled: boolean }) {
@@ -128,7 +130,12 @@ function useBookmarkFocusNavigation({
   }, [focusedIndex, isNavigating]);
 
   useEffect(() => {
-    if (isNavigating && focusedIndex === bookmarks.length - 1 && hasNextPage) {
+    if (
+      isNavigating &&
+      focusedIndex === bookmarks.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
       fetchNextPage();
     }
   }, [
@@ -136,6 +143,7 @@ function useBookmarkFocusNavigation({
     fetchNextPage,
     focusedIndex,
     hasNextPage,
+    isFetchingNextPage,
     isNavigating,
   ]);
 
@@ -600,6 +608,7 @@ export function useBookmarkKeyboardNavigation({
   bookmarks,
   columns,
   hasNextPage,
+  isFetchingNextPage,
   fetchNextPage,
 }: UseBookmarkKeyboardNavigationOptions) {
   const { t } = useTranslation();
@@ -612,12 +621,13 @@ export function useBookmarkKeyboardNavigation({
   const canMutateBookmark = useBookmarkOwnership();
   const bulkActionsStore = useBulkActionsStore();
   const selectedBookmarks = bulkActionsStore.getSelectedBookmarks();
-  const { selectedBookmarkIds, isBulkEditEnabled } = bulkActionsStore;
+  const { isBulkEditEnabled } = bulkActionsStore;
   const selectedActionableBookmarks = useCallback(
     () => bulkActionsStore.getSelectedActionableBookmarks(canMutateBookmark),
     [bulkActionsStore, canMutateBookmark],
   );
-  const hasBulkSelection = isBulkEditEnabled && selectedBookmarkIds.length > 0;
+  const hasBulkSelection =
+    isBulkEditEnabled && selectedActionableBookmarks().length > 0;
   const enableBulkEdit = useCallback(() => {
     bulkActionsStore.setIsBulkEditEnabled(true);
   }, [bulkActionsStore]);
@@ -647,6 +657,7 @@ export function useBookmarkKeyboardNavigation({
     bookmarks,
     columns,
     hasNextPage,
+    isFetchingNextPage,
     fetchNextPage,
     disabled,
   });

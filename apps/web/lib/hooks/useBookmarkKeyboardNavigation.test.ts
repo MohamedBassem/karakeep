@@ -101,13 +101,25 @@ function bookmark(
   } as ZBookmark;
 }
 
-function renderKeyboardHook(bookmarks = [bookmark("a"), bookmark("b")]) {
+function renderKeyboardHook(
+  bookmarks = [bookmark("a"), bookmark("b")],
+  {
+    hasNextPage = false,
+    isFetchingNextPage = false,
+    fetchNextPage = vi.fn(),
+  }: {
+    hasNextPage?: boolean;
+    isFetchingNextPage?: boolean;
+    fetchNextPage?: () => void;
+  } = {},
+) {
   return renderHook(() =>
     useBookmarkKeyboardNavigation({
       bookmarks,
       columns: 2,
-      hasNextPage: false,
-      fetchNextPage: vi.fn(),
+      hasNextPage,
+      isFetchingNextPage,
+      fetchNextPage,
     }),
   );
 }
@@ -162,6 +174,22 @@ describe("useBookmarkKeyboardNavigation", () => {
       hotkey("j").callback();
     });
     expect(useKeyboardNavigationStore.getState().focusedIndex).toBe(2);
+  });
+
+  it("does not fetch the next page while one is already loading", () => {
+    const fetchNextPage = vi.fn();
+    useKeyboardNavigationStore.setState({
+      focusedIndex: 1,
+      isNavigating: true,
+    });
+
+    renderKeyboardHook([bookmark("a"), bookmark("b")], {
+      hasNextPage: true,
+      isFetchingNextPage: true,
+      fetchNextPage,
+    });
+
+    expect(fetchNextPage).not.toHaveBeenCalled();
   });
 
   it("toggles the focused bookmark into bulk selection with x", () => {
@@ -280,5 +308,33 @@ describe("useBookmarkKeyboardNavigation", () => {
       bookmarkId: "owned",
       favourited: true,
     });
+  });
+
+  it("falls back to the focused bookmark when bulk selection is not actionable", () => {
+    const bookmarks = [bookmark("current", { favourited: false })];
+    useBulkActionsStore.setState({
+      isBulkEditEnabled: true,
+      visibleBookmarks: bookmarks,
+      selectedBookmarkIds: ["filtered-out"],
+    });
+    useKeyboardNavigationStore.setState({
+      focusedIndex: 0,
+      isNavigating: true,
+    });
+
+    renderKeyboardHook(bookmarks);
+
+    act(() => {
+      hotkey("f").callback();
+    });
+
+    expect(mocks.updateMutateAsync).not.toHaveBeenCalled();
+    expect(mocks.updateMutate).toHaveBeenCalledWith(
+      {
+        bookmarkId: "current",
+        favourited: true,
+      },
+      expect.any(Object),
+    );
   });
 });

@@ -191,6 +191,7 @@ export default function BookmarksGrid({
     bookmarks,
     columns: navColumns,
     hasNextPage,
+    isFetchingNextPage,
     fetchNextPage,
   });
 
