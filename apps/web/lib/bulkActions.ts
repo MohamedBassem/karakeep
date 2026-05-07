@@ -65,12 +65,8 @@ const useBulkActionsStore = create<BookmarkState>((set, get) => ({
   },
 
   setVisibleBookmarks: (visibleBookmarks: ZBookmark[]) => {
-    const visibleBookmarkIds = new Set(visibleBookmarks.map((b) => b.id));
     set({
       visibleBookmarks,
-      selectedBookmarkIds: get().selectedBookmarkIds.filter((id) =>
-        visibleBookmarkIds.has(id),
-      ),
     });
   },
   setListContext: (listContext: ZBookmarkList | undefined) => {
