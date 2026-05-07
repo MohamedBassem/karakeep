@@ -63,13 +63,12 @@ const BookmarkGridItem = memo(function BookmarkGridItem({
   return (
     <ErrorBoundary fallback={<UnknownCard bookmark={bookmark} />}>
       <StyledBookmarkCard
-        data-bookmark-index={index}
         className={cn(
           isFocused &&
             "ring-2 ring-primary ring-offset-2 ring-offset-background",
         )}
       >
-        <BookmarkCard bookmark={bookmark} />
+        <BookmarkCard bookmark={bookmark} bookmarkIndex={index} />
       </StyledBookmarkCard>
     </ErrorBoundary>
   );

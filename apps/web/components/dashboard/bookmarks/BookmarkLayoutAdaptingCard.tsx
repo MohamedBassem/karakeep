@@ -53,6 +53,7 @@ interface Props {
   className?: string;
   fitHeight?: boolean;
   wrapTags: boolean;
+  bookmarkIndex?: number;
 }
 
 function BottomRow({
@@ -288,6 +289,7 @@ function ListView({
   content,
   footer,
   className,
+  bookmarkIndex,
 }: Props) {
   const { showNotes, showTags, showTitle, imageFit } =
     useBookmarkDisplaySettings();
@@ -303,6 +305,7 @@ function ListView({
         "group relative flex max-h-96 gap-4 overflow-hidden rounded-lg p-2",
         className,
       )}
+      data-bookmark-index={bookmarkIndex}
     >
       <MultiBookmarkSelector bookmark={bookmark} />
       <OwnerIndicator bookmark={bookmark} />
@@ -348,6 +351,7 @@ function GridView({
   wrapTags,
   layout,
   fitHeight = false,
+  bookmarkIndex,
 }: Props & { layout: BookmarksLayoutTypes }) {
   const { showNotes, showTags, showTitle, imageFit } =
     useBookmarkDisplaySettings();
@@ -368,6 +372,7 @@ function GridView({
         className,
         fitHeight && layout != "grid" ? "max-h-96" : "h-96",
       )}
+      data-bookmark-index={bookmarkIndex}
     >
       <MultiBookmarkSelector bookmark={bookmark} />
       <OwnerIndicator bookmark={bookmark} />
@@ -399,7 +404,13 @@ function GridView({
   );
 }
 
-function CompactView({ bookmark, title, footer, className }: Props) {
+function CompactView({
+  bookmark,
+  title,
+  footer,
+  className,
+  bookmarkIndex,
+}: Props) {
   const { showTitle } = useBookmarkDisplaySettings();
   return (
     <div
@@ -408,6 +419,7 @@ function CompactView({ bookmark, title, footer, className }: Props) {
         className,
         "max-h-96",
       )}
+      data-bookmark-index={bookmarkIndex}
     >
       <MultiBookmarkSelector bookmark={bookmark} />
       <OwnerIndicator bookmark={bookmark} />

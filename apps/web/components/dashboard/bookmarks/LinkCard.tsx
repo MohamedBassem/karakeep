@@ -90,9 +90,11 @@ function LinkImage({
 export default function LinkCard({
   bookmark: bookmarkLink,
   className,
+  bookmarkIndex,
 }: {
   bookmark: ZBookmarkTypeLink;
   className?: string;
+  bookmarkIndex?: number;
 }) {
   return (
     <BookmarkLayoutAdaptingCard
@@ -104,6 +106,7 @@ export default function LinkCard({
         <LinkImage className={className} bookmark={bookmarkLink} />
       )}
       className={className}
+      bookmarkIndex={bookmarkIndex}
     />
   );
 }
