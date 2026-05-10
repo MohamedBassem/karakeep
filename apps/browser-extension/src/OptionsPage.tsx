@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +14,11 @@ import {
 import { Switch } from "./components/ui/switch";
 import Logo from "./Logo";
 import Spinner from "./Spinner";
+import {
+  hasHostPermission,
+  removeHostPermission,
+  requestHostPermission,
+} from "./utils/permissions";
 import usePluginSettings, {
   DEFAULT_BADGE_CACHE_EXPIRE_MS,
 } from "./utils/settings";
@@ -26,6 +31,40 @@ export default function OptionsPage() {
   const navigate = useNavigate();
   const { settings, setSettings } = usePluginSettings();
   const { setTheme, theme } = useTheme();
+
+  // `<all_urls>` is an optional host permission that the user grants when they
+  // opt in to client-side crawling. Keep the switch in sync with whether it's
+  // actually granted (it can be revoked from the browser's extension settings).
+  const [hostPermissionGranted, setHostPermissionGranted] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    hasHostPermission().then((granted) => {
+      if (!cancelled) setHostPermissionGranted(granted);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const clientSideCrawlingEnabled =
+    settings.useSingleFile && hostPermissionGranted;
+
+  const onToggleClientSideCrawling = async (checked: boolean) => {
+    if (checked) {
+      // Must run synchronously off the user gesture — don't await anything else
+      // before requesting the permission.
+      const granted = await requestHostPermission();
+      if (!granted) {
+        return;
+      }
+      setHostPermissionGranted(true);
+      await setSettings((s) => ({ ...s, useSingleFile: true }));
+    } else {
+      await setSettings((s) => ({ ...s, useSingleFile: false }));
+      await removeHostPermission();
+      setHostPermissionGranted(false);
+    }
+  };
 
   const { data: whoami, error: whoAmIError } = useQuery(
     api.users.whoami.queryOptions(undefined, {
@@ -131,17 +170,16 @@ export default function OptionsPage() {
           </div>
           <span className="text-xs text-gray-500">
             Captures the page in the browser instead of on the server. Slower,
-            but captures the page more accurately as you see it.
+            but captures the page more accurately as you see it. Enabling this
+            asks for permission to read the content of pages you save.
           </span>
         </div>
         <Switch
-          checked={settings.useSingleFile}
-          onCheckedChange={(checked) =>
-            setSettings((s) => ({ ...s, useSingleFile: checked }))
-          }
+          checked={clientSideCrawlingEnabled}
+          onCheckedChange={onToggleClientSideCrawling}
         />
       </div>
-      {settings.useSingleFile && (
+      {clientSideCrawlingEnabled && (
         <div className="flex items-start justify-between gap-2 pl-4">
           <div className="flex flex-col">
             <span className="text-sm font-medium">Include images</span>

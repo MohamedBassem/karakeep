@@ -13,6 +13,7 @@ import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Textarea } from "./components/ui/textarea";
 import Spinner from "./Spinner";
+import { hasHostPermission } from "./utils/permissions";
 import usePluginSettings from "./utils/settings";
 import {
   capturePageWithSingleFile,
@@ -129,7 +130,10 @@ export default function SavePage() {
       bookmark.type === BookmarkTypes.LINK &&
       !bookmark.precrawledArchiveId &&
       currentTabUrl !== undefined &&
-      bookmark.url === currentTabUrl
+      bookmark.url === currentTabUrl &&
+      // The `<all_urls>` host permission is optional and only granted when the
+      // user opts in to client-side crawling; it may have been revoked since.
+      (await hasHostPermission())
     ) {
       try {
         setIsCapturing(true);
