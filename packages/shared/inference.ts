@@ -60,6 +60,7 @@ export interface OpenAIInferenceConfig {
   imageModel: string;
   contextLength: number;
   maxOutputTokens: number;
+  temperature?: number;
   useMaxCompletionTokens: boolean;
   reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
   outputSchema: "structured" | "json" | "plain";
@@ -108,6 +109,7 @@ export class OpenAIInferenceClient implements InferenceClient {
       imageModel: serverConfig.inference.imageModel,
       contextLength: serverConfig.inference.contextLength,
       maxOutputTokens: serverConfig.inference.maxOutputTokens,
+      temperature: serverConfig.inference.temperature,
       useMaxCompletionTokens: serverConfig.inference.useMaxCompletionTokens,
       outputSchema: serverConfig.inference.outputSchema,
       reasoningEffort: serverConfig.inference.openAIReasoningEffort,
@@ -132,6 +134,9 @@ export class OpenAIInferenceClient implements InferenceClient {
         ...(this.config.useMaxCompletionTokens
           ? { max_completion_tokens: this.config.maxOutputTokens }
           : { max_tokens: this.config.maxOutputTokens }),
+        ...(this.config.temperature !== undefined
+          ? { temperature: this.config.temperature }
+          : {}),
         response_format: mapInferenceOutputSchema(
           {
             structured: optsWithDefaults.schema
@@ -175,6 +180,9 @@ export class OpenAIInferenceClient implements InferenceClient {
         ...(this.config.useMaxCompletionTokens
           ? { max_completion_tokens: this.config.maxOutputTokens }
           : { max_tokens: this.config.maxOutputTokens }),
+        ...(this.config.temperature !== undefined
+          ? { temperature: this.config.temperature }
+          : {}),
         response_format: mapInferenceOutputSchema(
           {
             structured: optsWithDefaults.schema
@@ -234,6 +242,7 @@ export interface OllamaInferenceConfig {
   imageModel: string;
   contextLength: number;
   maxOutputTokens: number;
+  temperature?: number;
   keepAlive?: string;
   outputSchema: "structured" | "json" | "plain";
 }
@@ -257,6 +266,7 @@ class OllamaInferenceClient implements InferenceClient {
       imageModel: serverConfig.inference.imageModel,
       contextLength: serverConfig.inference.contextLength,
       maxOutputTokens: serverConfig.inference.maxOutputTokens,
+      temperature: serverConfig.inference.temperature,
       keepAlive: serverConfig.inference.ollamaKeepAlive,
       outputSchema: serverConfig.inference.outputSchema,
     });
@@ -298,6 +308,9 @@ class OllamaInferenceClient implements InferenceClient {
       options: {
         num_ctx: this.config.contextLength,
         num_predict: this.config.maxOutputTokens,
+        ...(this.config.temperature !== undefined
+          ? { temperature: this.config.temperature }
+          : {}),
       },
       prompt: prompt,
       images: image ? [image] : undefined,
