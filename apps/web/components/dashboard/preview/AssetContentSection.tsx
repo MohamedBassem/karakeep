@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import Link from "next/link";
 import {
   Select,

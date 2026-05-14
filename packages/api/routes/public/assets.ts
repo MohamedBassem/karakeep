@@ -10,6 +10,11 @@ import { zAssetSignedTokenSchema } from "@karakeep/shared/types/assets";
 
 import { unauthedMiddleware } from "../../middlewares/auth";
 import { serveAsset } from "../../utils/assets";
+import {
+  hasOptimizationParams,
+  imageOptimizationQuerySchema,
+  serveOptimizedImage,
+} from "../../utils/imageOptimization";
 
 const app = new Hono()
   // Public assets, they require signed token for auth
@@ -44,6 +49,20 @@ const app = new Hono()
       if (!assetDb) {
         return c.json({ error: "Asset not found" }, { status: 404 });
       }
+
+      const parsed = imageOptimizationQuerySchema.safeParse(c.req.query());
+      if (parsed.success && hasOptimizationParams(parsed.data)) {
+        const optimized = await serveOptimizedImage(
+          c,
+          assetId,
+          userId,
+          parsed.data,
+        );
+        if (optimized) {
+          return optimized;
+        }
+      }
+
       return await serveAsset(c, assetId, userId);
     },
   );

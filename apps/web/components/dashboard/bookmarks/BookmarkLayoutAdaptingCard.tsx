@@ -3,7 +3,7 @@
 import type { BookmarksLayoutTypes } from "@/lib/userLocalSettings/types";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import Link from "next/link";
 import { useSession } from "@/lib/auth/client";
 import { BOOKMARK_DRAG_MIME } from "@/lib/bookmark-drag";
@@ -431,7 +431,6 @@ function CompactView({
                 src={bookmark.content.favicon}
                 alt="favicon"
                 width={5}
-                unoptimized
                 height={5}
                 className="size-5"
               />

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import { BookmarkMarkdownComponent } from "@/components/dashboard/bookmarks/BookmarkMarkdownComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -21,10 +21,8 @@ export function TextContentSection({ bookmark }: { bookmark: ZBookmark }) {
           <Image
             alt="banner"
             src={getAssetUrl(banner.id)}
-            width={0}
-            height={0}
-            layout="fill"
-            objectFit="cover"
+            fill
+            style={{ objectFit: "cover" }}
           />
         </div>
       )}

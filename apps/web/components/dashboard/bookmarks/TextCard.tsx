@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import Link from "next/link";
 import { BookmarkMarkdownComponent } from "@/components/dashboard/bookmarks/BookmarkMarkdownComponent";
 import { bookmarkLayoutSwitch } from "@/lib/userLocalSettings/bookmarksLayout";

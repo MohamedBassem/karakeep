@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
@@ -81,9 +81,6 @@ function ScreenshotSection({ link }: { link: ZBookmarkedLink }) {
       <Image
         alt="screenshot"
         src={`/api/assets/${link.screenshotAssetId}`}
-        width={0}
-        height={0}
-        sizes="100vw"
         style={{ width: "100%", height: "auto" }}
       />
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { FileText } from "lucide-react";

@@ -8,6 +8,11 @@ import { apiKeyScopeMiddleware } from "../middlewares/apiKeyScopes";
 import { authMiddleware } from "../middlewares/auth";
 import { createRateLimitMiddleware } from "../middlewares/rateLimit";
 import { serveAsset } from "../utils/assets";
+import {
+  hasOptimizationParams,
+  imageOptimizationQuerySchema,
+  serveOptimizedImage,
+} from "../utils/imageOptimization";
 import { uploadAsset } from "../utils/upload";
 
 const app = new Hono()
@@ -45,6 +50,19 @@ const app = new Hono()
 
     const asset = await Asset.fromId(c.var.ctx, assetId);
     await asset.ensureCanView();
+
+    const parsed = imageOptimizationQuerySchema.safeParse(c.req.query());
+    if (parsed.success && hasOptimizationParams(parsed.data)) {
+      const optimized = await serveOptimizedImage(
+        c,
+        assetId,
+        asset.asset.userId,
+        parsed.data,
+      );
+      if (optimized) {
+        return optimized;
+      }
+    }
 
     return await serveAsset(c, assetId, asset.asset.userId);
   });

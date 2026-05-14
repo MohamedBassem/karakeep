@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/image";
 import Link from "next/link";
 import { useUserSettings } from "@/lib/userSettings";
 
@@ -49,29 +49,21 @@ function LinkImage({
   const { onClickUrl, urlTarget } = useOnClickUrl(bookmark);
   const link = bookmark.content;
 
-  const imgComponent = (url: string, unoptimized: boolean) => (
-    <Image
-      unoptimized={unoptimized}
-      className={className}
-      alt="card banner"
-      fill={true}
-      src={url}
-    />
+  const imgComponent = (url: string) => (
+    <Image className={className} alt="card banner" fill={true} src={url} />
   );
 
   const imageDetails = getBookmarkLinkImageUrl(link);
 
   let img: React.ReactNode;
   if (isBookmarkStillCrawling(bookmark)) {
-    img = imgComponent("/blur.avif", false);
+    img = imgComponent("/blur.avif");
   } else if (imageDetails) {
-    img = imgComponent(imageDetails.url, !imageDetails.localAsset);
+    img = imgComponent(imageDetails.url);
   } else {
-    // No image found
     // A dummy white pixel for when there's no image.
     img = imgComponent(
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+P///38ACfsD/QVDRcoAAAAASUVORK5CYII=",
-      true,
     );
   }
 
