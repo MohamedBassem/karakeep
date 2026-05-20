@@ -3,17 +3,18 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
+  StyleSheet,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { Redirect, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import Logo from "@/components/Logo";
-import { TailwindResolver } from "@/components/TailwindResolver";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import useAppSettings from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useMutation } from "@tanstack/react-query";
 import { Bug, Edit3 } from "lucide-react-native";
 
@@ -28,6 +29,7 @@ export default function Signin() {
   const { settings, setSettings } = useAppSettings();
   const router = useRouter();
   const api = useTRPC();
+  const { colors } = useColorScheme();
   const [error, setError] = useState<string | undefined>();
   const [loginType, setLoginType] = useState<LoginType>(LoginType.Password);
 
@@ -122,26 +124,20 @@ export default function Signin() {
   return (
     <KeyboardAvoidingView behavior="padding">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex h-full flex-col justify-center gap-2 px-4">
-          <View className="items-center">
-            <TailwindResolver
-              className="color-foreground"
-              comp={(styles) => (
-                <Logo
-                  height={150}
-                  width={250}
-                  fill={styles?.color?.toString()}
-                />
-              )}
-            />
+        <View style={styles.container}>
+          <View style={styles.logoWrapper}>
+            <Logo height={150} width={250} fill={colors.foreground} />
           </View>
-          {error && (
-            <Text className="w-full text-center text-red-500">{error}</Text>
-          )}
-          <View className="gap-2">
-            <Text className="font-bold">Server Address</Text>
-            <View className="flex-row items-center gap-2">
-              <View className="flex-1 rounded-md border border-border bg-card px-3 py-2">
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.boldText}>Server Address</Text>
+            <View style={styles.row}>
+              <View
+                style={[
+                  styles.addressBox,
+                  { borderColor: colors.border, backgroundColor: colors.card },
+                ]}
+              >
                 <Text>{settings.address ?? "https://cloud.karakeep.app"}</Text>
               </View>
               <Button
@@ -149,22 +145,17 @@ export default function Signin() {
                 variant="secondary"
                 onPress={() => router.push("/server-address")}
               >
-                <TailwindResolver
-                  comp={(styles) => (
-                    <Edit3 size={16} color={styles?.color?.toString()} />
-                  )}
-                  className="color-foreground"
-                />
+                <Edit3 size={16} color={colors.foreground} />
               </Button>
             </View>
           </View>
           {loginType === LoginType.Password && (
             <>
-              <View className="gap-2">
-                <Text className="font-bold">Email</Text>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.boldText}>Email</Text>
                 <Input
-                  className="w-full"
-                  inputClasses="bg-card"
+                  style={styles.fullWidth}
+                  inputStyle={{ backgroundColor: colors.card }}
                   placeholder="Email"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -172,11 +163,11 @@ export default function Signin() {
                   onChangeText={(text) => (emailRef.current = text)}
                 />
               </View>
-              <View className="gap-2">
-                <Text className="font-bold">Password</Text>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.boldText}>Password</Text>
                 <Input
-                  className="w-full"
-                  inputClasses="bg-card"
+                  style={styles.fullWidth}
+                  inputStyle={{ backgroundColor: colors.card }}
                   placeholder="Password"
                   secureTextEntry
                   defaultValue={""}
@@ -189,11 +180,11 @@ export default function Signin() {
           )}
 
           {loginType === LoginType.ApiKey && (
-            <View className="gap-2">
-              <Text className="font-bold">API Key</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.boldText}>API Key</Text>
               <Input
-                className="w-full"
-                inputClasses="bg-card"
+                style={styles.fullWidth}
+                inputStyle={{ backgroundColor: colors.card }}
                 placeholder="API Key"
                 secureTextEntry
                 defaultValue={""}
@@ -204,10 +195,10 @@ export default function Signin() {
             </View>
           )}
 
-          <View className="flex flex-row items-center justify-between gap-2">
+          <View style={styles.actionsRow}>
             <Button
               size="lg"
-              androidRootClassName="flex-1"
+              androidRootStyle={{ flex: 1 }}
               onPress={onSignin}
               disabled={
                 userNamePasswordRequestIsPending || apiKeyValueRequestIsPending
@@ -220,25 +211,22 @@ export default function Signin() {
               onPress={() => router.push("/test-connection")}
               disabled={!settings.address}
             >
-              <TailwindResolver
-                comp={(styles) => (
-                  <Bug size={20} color={styles?.color?.toString()} />
-                )}
-                className="text-white"
-              />
+              <Bug size={20} color="#fff" />
             </Button>
           </View>
           <Pressable onPress={toggleLoginType}>
-            <Text className="mt-2 text-center text-gray-500">
+            <Text style={styles.toggleText}>
               {loginType === LoginType.Password
                 ? "Use API key instead?"
                 : "Use password instead?"}
             </Text>
           </Pressable>
           <Pressable onPress={onSignUp}>
-            <Text className="mt-4 text-center text-gray-500">
+            <Text style={styles.signupText}>
               Don&apos;t have an account?{" "}
-              <Text className="text-foreground underline">Sign Up</Text>
+              <Text style={[styles.signupLink, { color: colors.foreground }]}>
+                Sign Up
+              </Text>
             </Text>
           </Pressable>
         </View>
@@ -246,3 +234,61 @@ export default function Signin() {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    height: "100%",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  logoWrapper: {
+    alignItems: "center",
+  },
+  errorText: {
+    width: "100%",
+    textAlign: "center",
+    color: "#ef4444",
+  },
+  fieldGroup: {
+    gap: 8,
+  },
+  boldText: {
+    fontWeight: "700",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  addressBox: {
+    flex: 1,
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  toggleText: {
+    marginTop: 8,
+    textAlign: "center",
+    color: "#6b7280",
+  },
+  signupText: {
+    marginTop: 16,
+    textAlign: "center",
+    color: "#6b7280",
+  },
+  signupLink: {
+    textDecorationLine: "underline",
+  },
+});

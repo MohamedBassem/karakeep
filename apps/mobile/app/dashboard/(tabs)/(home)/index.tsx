@@ -130,7 +130,14 @@ export default function Home() {
           actions={actions}
           shouldOpenOnLongPress={false}
         >
-          <View className="h-full w-full items-center justify-center">
+          <View
+            style={{
+              height: "100%",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Plus
               size={24}
               color={Platform.OS === "ios" ? PlatformColor("label") : "white"}

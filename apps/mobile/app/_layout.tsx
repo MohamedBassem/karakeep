@@ -1,4 +1,3 @@
-import "@/globals.css";
 import "expo-dev-client";
 
 import { useEffect } from "react";
@@ -15,7 +14,6 @@ import SplashScreenController from "@/components/SplashScreenController";
 import { isIOS26 } from "@/lib/ios";
 import { Providers } from "@/lib/providers";
 import { useColorScheme, useInitialAndroidBarSync } from "@/lib/useColorScheme";
-import { cn } from "@/lib/utils";
 import { NAV_THEME } from "@/theme";
 import { ThemeProvider as NavThemeProvider } from "@react-navigation/native";
 import * as Sentry from "@sentry/react-native";
@@ -35,7 +33,7 @@ export default Sentry.wrap(function RootLayout() {
   useInitialAndroidBarSync();
   const router = useRouter();
   const { hasShareIntent } = useShareIntent();
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, isDarkColorScheme, colors } = useColorScheme();
 
   useEffect(() => {
     if (hasShareIntent) {
@@ -63,10 +61,13 @@ export default Sentry.wrap(function RootLayout() {
                 </GestureHandlerRootView>
               );
             }}
-            contentClassName={cn(
-              "w-full flex-1 bg-gray-100 text-foreground dark:bg-background",
-              colorScheme == "dark" ? "dark" : "light",
-            )}
+            contentStyle={{
+              width: "100%",
+              flex: 1,
+              backgroundColor: isDarkColorScheme
+                ? colors.background
+                : "#f3f4f6",
+            }}
             screenOptions={{
               ...Platform.select({
                 ios: {

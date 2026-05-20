@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -109,8 +109,13 @@ export default function SuccessAnimation({
     opacity: checkOpacity.value,
   }));
 
+  const ringBg = isAlreadyExists
+    ? "rgba(234, 179, 8, 0.2)"
+    : "rgba(34, 197, 94, 0.2)";
+  const checkBg = isAlreadyExists ? "#eab308" : "#22c55e";
+
   return (
-    <View className="items-center justify-center">
+    <View style={styles.container}>
       {Array.from({ length: 8 }, (_, i) => (
         <Particle
           key={i}
@@ -121,20 +126,34 @@ export default function SuccessAnimation({
       ))}
 
       <Animated.View
-        style={ringStyle}
-        className={`absolute h-28 w-28 rounded-full ${
-          isAlreadyExists ? "bg-yellow-500/20" : "bg-green-500/20"
-        }`}
+        style={[ringStyle, styles.ring, { backgroundColor: ringBg }]}
       />
 
       <Animated.View
-        style={checkStyle}
-        className={`h-24 w-24 items-center justify-center rounded-full ${
-          isAlreadyExists ? "bg-yellow-500" : "bg-green-500"
-        }`}
+        style={[checkStyle, styles.check, { backgroundColor: checkBg }]}
       >
         <Check size={48} color="white" strokeWidth={3} />
       </Animated.View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ring: {
+    position: "absolute",
+    height: 112,
+    width: 112,
+    borderRadius: 9999,
+  },
+  check: {
+    height: 96,
+    width: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+  },
+});

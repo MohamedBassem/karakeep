@@ -1,20 +1,20 @@
 import React, { useMemo } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import FullPageSpinner from "@/components/ui/FullPageSpinner";
-import { useTagAutocomplete } from "@karakeep/shared-react/hooks/tags";
 import { GroupedSection, RowSeparator } from "@/components/ui/GroupedList";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { Check, Plus } from "lucide-react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { useDebounce } from "@karakeep/shared-react/hooks/use-debounce";
 
 import {
   useAutoRefreshingBookmarkQuery,
   useUpdateBookmarkTags,
 } from "@karakeep/shared-react/hooks/bookmarks";
+import { useTagAutocomplete } from "@karakeep/shared-react/hooks/tags";
+import { useDebounce } from "@karakeep/shared-react/hooks/use-debounce";
 
 const NEW_TAG_ID = "new-tag";
 
@@ -195,9 +195,12 @@ const TagPickerPage = () => {
             <Pressable
               onPress={clearAllTags}
               disabled={optimisticTags.length === 0}
-              className={`px-2 ${optimisticTags.length === 0 ? "opacity-50" : ""}`}
+              style={[
+                styles.headerRight,
+                optimisticTags.length === 0 && { opacity: 0.5 },
+              ]}
             >
-              <Text className="text-primary">Clear</Text>
+              <Text style={{ color: colors.primary }}>Clear</Text>
             </Pressable>
           ),
         }}
@@ -210,7 +213,7 @@ const TagPickerPage = () => {
           gap: 20,
           paddingBottom: 40 + headerHeight,
         }}
-        className="flex-1 bg-background"
+        style={[styles.flex1, { backgroundColor: colors.background }]}
       >
         {optimisticTags.length > 0 && (
           <GroupedSection header="Attached">
@@ -219,9 +222,12 @@ const TagPickerPage = () => {
                 {index > 0 && <RowSeparator />}
                 <Pressable
                   onPress={() => handleTagPress(tag, "detach")}
-                  className="flex-row items-center justify-between px-4 py-3 active:opacity-70"
+                  style={({ pressed }) => [
+                    styles.tagRow,
+                    pressed && { opacity: 0.7 },
+                  ]}
                 >
-                  <Text className="flex-1 pr-3">{tag.name}</Text>
+                  <Text style={styles.tagLabel}>{tag.name}</Text>
                   <Check size={20} color={colors.primary} strokeWidth={2.5} />
                 </Pressable>
               </React.Fragment>
@@ -235,17 +241,22 @@ const TagPickerPage = () => {
                 {index > 0 && <RowSeparator />}
                 <Pressable
                   onPress={() => handleTagPress(tag, "attach")}
-                  className="flex-row items-center justify-between px-4 py-3 active:opacity-70"
+                  style={({ pressed }) => [
+                    styles.tagRow,
+                    pressed && { opacity: 0.7 },
+                  ]}
                 >
                   {tag.id === NEW_TAG_ID ? (
                     <>
-                      <Text className="flex-1 pr-3 text-primary">
+                      <Text
+                        style={[styles.tagLabel, { color: colors.primary }]}
+                      >
                         Create &ldquo;{tag.name}&rdquo;
                       </Text>
                       <Plus size={20} color={colors.primary} strokeWidth={2} />
                     </>
                   ) : (
-                    <Text className="flex-1 pr-3">{tag.name}</Text>
+                    <Text style={styles.tagLabel}>{tag.name}</Text>
                   )}
                 </Pressable>
               </React.Fragment>
@@ -253,7 +264,7 @@ const TagPickerPage = () => {
           </GroupedSection>
         )}
         {optimisticTags.length === 0 && filteredAllTags.length === 0 && (
-          <View className="items-center py-12">
+          <View style={styles.emptyState}>
             <Text color="tertiary">No tags found</Text>
           </View>
         )}
@@ -263,3 +274,27 @@ const TagPickerPage = () => {
 };
 
 export default TagPickerPage;
+
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
+  headerRight: {
+    paddingHorizontal: 8,
+  },
+  tagRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  tagLabel: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+});

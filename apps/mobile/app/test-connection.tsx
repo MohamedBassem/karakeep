@@ -1,14 +1,16 @@
 import React from "react";
-import { Platform, ScrollView, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { Button } from "@/components/ui/Button";
-import { Text } from "@/components/ui/Text";
+import { Text, withOpacity } from "@/components/ui/Text";
 import useAppSettings from "@/lib/settings";
-import { buildApiHeaders, cn } from "@/lib/utils";
+import { useColorScheme } from "@/lib/useColorScheme";
+import { buildApiHeaders } from "@/lib/utils";
 import { z } from "zod";
 
 export default function TestConnection() {
   const { settings, isLoading } = useAppSettings();
+  const { colors } = useColorScheme();
   const [text, setText] = React.useState("");
   const [randomId, setRandomId] = React.useState(Math.random());
   const [status, setStatus] = React.useState<"running" | "success" | "error">(
@@ -77,13 +79,22 @@ export default function TestConnection() {
     runTest();
   }, [settings.address, randomId]);
 
+  const statusBg =
+    status === "running"
+      ? withOpacity(colors.primary, 0.5)
+      : status === "success"
+        ? "#22c55e"
+        : "#ef4444";
+
+  const statusColor = status === "running" ? colors.primaryForeground : "#fff";
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="m-4 flex flex-1 flex-col gap-2"
+      contentContainerStyle={styles.contentContainer}
     >
       <Button
-        className="w-full"
+        style={styles.fullWidth}
         onPress={async () => {
           await Clipboard.setStringAsync(text);
         }}
@@ -91,7 +102,7 @@ export default function TestConnection() {
         <Text>Copy Diagnostics Result</Text>
       </Button>
       <Button
-        className="w-full"
+        style={styles.fullWidth}
         variant="secondary"
         onPress={() => {
           setText("");
@@ -100,28 +111,19 @@ export default function TestConnection() {
       >
         <Text>Retry</Text>
       </Button>
-      <View
-        className={cn(
-          "w-full rounded-md p-2",
-          status === "running" && "bg-primary/50",
-          status === "success" && "bg-green-500",
-          status === "error" && "bg-red-500",
-        )}
-      >
-        <Text
-          className={cn(
-            "w-full text-center",
-            status === "running" && "text-primary-foreground",
-            status === "success" && "text-white",
-            status === "error" && "text-white",
-          )}
-        >
+      <View style={[styles.statusBox, { backgroundColor: statusBg }]}>
+        <Text style={[styles.statusText, { color: statusColor }]}>
           {status === "running" && "Running connection test ..."}
           {status === "success" && "Connection test successful"}
           {status === "error" && "Connection test failed"}
         </Text>
       </View>
-      <ScrollView className="border-1 border-md h-64 flex-1 border-border bg-input p-2 leading-6">
+      <ScrollView
+        style={[
+          styles.logBox,
+          { borderColor: colors.border, backgroundColor: colors.input },
+        ]}
+      >
         <Text
           style={{
             fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
@@ -133,3 +135,31 @@ export default function TestConnection() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    margin: 16,
+    flex: 1,
+    flexDirection: "column",
+    gap: 8,
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  statusBox: {
+    width: "100%",
+    borderRadius: 6,
+    padding: 8,
+  },
+  statusText: {
+    width: "100%",
+    textAlign: "center",
+  },
+  logBox: {
+    height: 256,
+    flex: 1,
+    borderWidth: 1,
+    padding: 8,
+    lineHeight: 24,
+  },
+});

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { Plus, Trash2, X } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
 
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
@@ -21,8 +21,10 @@ export function CustomHeadersModal({
   onClose,
   onSave,
 }: CustomHeadersModalProps) {
-  const { colorScheme } = useColorScheme();
-  const iconColor = colorScheme === "dark" ? "#d1d5db" : "#374151";
+  const { isDarkColorScheme, colors } = useColorScheme();
+  const iconColor = isDarkColorScheme ? "#d1d5db" : "#374151";
+  const secondaryTextColor = isDarkColorScheme ? "#9ca3af" : "#4b5563";
+  const placeholderTextColor = isDarkColorScheme ? "#9ca3af" : "#6b7280";
 
   // Convert headers object to array of entries for easier manipulation
   const [headers, setHeaders] = useState<{ key: string; value: string }[]>(
@@ -89,33 +91,32 @@ export function CustomHeadersModal({
       animationType="slide"
       onRequestClose={handleCancel}
     >
-      <View className="flex-1 justify-end">
-        <Pressable
-          className="absolute inset-0 bg-black/50"
-          onPress={handleCancel}
-        />
-        <View className="max-h-[85%] rounded-t-3xl bg-card">
+      <View style={styles.root}>
+        <Pressable style={styles.backdrop} onPress={handleCancel} />
+        <View style={[styles.sheet, { backgroundColor: colors.card }]}>
           <KeyboardAwareScrollView
-            contentContainerClassName="p-6"
+            contentContainerStyle={styles.scrollContent}
             bottomOffset={20}
             keyboardShouldPersistTaps="handled"
           >
             {/* Header */}
-            <View className="mb-4 flex flex-row items-center justify-between">
-              <Text className="text-lg font-semibold">Custom Headers</Text>
-              <Pressable onPress={handleCancel} className="p-2">
+            <View style={styles.headerRow}>
+              <Text style={styles.title}>Custom Headers</Text>
+              <Pressable onPress={handleCancel} style={styles.iconButton}>
                 <X size={24} color={iconColor} />
               </Pressable>
             </View>
 
-            <Text className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            <Text style={[styles.description, { color: secondaryTextColor }]}>
               Add custom HTTP headers that will be sent with every API request.
             </Text>
 
             {/* Existing Headers List */}
-            <View className="mb-4 max-h-64">
+            <View style={styles.list}>
               {headers.length === 0 ? (
-                <Text className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <Text
+                  style={[styles.emptyText, { color: placeholderTextColor }]}
+                >
                   No custom headers configured
                 </Text>
               ) : (
@@ -123,14 +124,21 @@ export function CustomHeadersModal({
                   {headers.map((header, index) => (
                     <View
                       key={index}
-                      className="mb-2 flex-row items-center gap-2 rounded-lg border border-border bg-background p-3"
+                      style={[
+                        styles.headerItem,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: colors.background,
+                        },
+                      ]}
                     >
-                      <View className="flex-1">
-                        <Text className="text-sm font-semibold">
-                          {header.key}
-                        </Text>
+                      <View style={styles.headerItemContent}>
+                        <Text style={styles.headerKey}>{header.key}</Text>
                         <Text
-                          className="text-xs text-gray-600 dark:text-gray-400"
+                          style={[
+                            styles.headerValue,
+                            { color: secondaryTextColor },
+                          ]}
                           numberOfLines={1}
                         >
                           {header.value}
@@ -138,7 +146,7 @@ export function CustomHeadersModal({
                       </View>
                       <Pressable
                         onPress={() => handleRemoveHeader(index)}
-                        className="p-2"
+                        style={styles.iconButton}
                       >
                         <Trash2 size={18} color="#ef4444" />
                       </Pressable>
@@ -149,21 +157,23 @@ export function CustomHeadersModal({
             </View>
 
             {/* Add New Header */}
-            <View className="gap-2 border-t border-border pt-4">
-              <Text className="text-sm font-semibold">Add New Header</Text>
+            <View
+              style={[styles.addSection, { borderTopColor: colors.border }]}
+            >
+              <Text style={styles.sectionTitle}>Add New Header</Text>
               <Input
                 placeholder="Header Name (e.g., X-Custom-Header)"
                 value={newHeaderKey}
                 onChangeText={setNewHeaderKey}
                 autoCapitalize="none"
-                inputClasses="bg-background"
+                inputStyle={{ backgroundColor: colors.background }}
               />
               <Input
                 placeholder="Header Value"
                 value={newHeaderValue}
                 onChangeText={setNewHeaderValue}
                 autoCapitalize="none"
-                inputClasses="bg-background"
+                inputStyle={{ backgroundColor: colors.background }}
               />
               <Button
                 variant="secondary"
@@ -171,23 +181,25 @@ export function CustomHeadersModal({
                 disabled={!newHeaderKey.trim() || !newHeaderValue.trim()}
               >
                 <Plus size={16} color={iconColor} />
-                <Text className="text-sm">Add Header</Text>
+                <Text style={styles.buttonText}>Add Header</Text>
               </Button>
             </View>
 
             {/* Action Buttons */}
-            <View className="mt-4 flex flex-row gap-2 border-t border-border pt-4">
+            <View
+              style={[styles.actionsRow, { borderTopColor: colors.border }]}
+            >
               <Button
                 variant="secondary"
                 onPress={handleCancel}
-                androidRootClassName="flex-1"
+                androidRootStyle={{ flex: 1 }}
               >
                 <Text>Cancel</Text>
               </Button>
               <Button
                 variant="primary"
                 onPress={handleSave}
-                androidRootClassName="flex-1"
+                androidRootStyle={{ flex: 1 }}
               >
                 <Text>Save</Text>
               </Button>
@@ -198,3 +210,90 @@ export function CustomHeadersModal({
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  sheet: {
+    maxHeight: "85%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  scrollContent: {
+    padding: 24,
+  },
+  headerRow: {
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  iconButton: {
+    padding: 8,
+  },
+  description: {
+    marginBottom: 16,
+    fontSize: 14,
+  },
+  list: {
+    marginBottom: 16,
+    maxHeight: 256,
+  },
+  emptyText: {
+    paddingVertical: 16,
+    textAlign: "center",
+    fontSize: 14,
+  },
+  headerItem: {
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 12,
+  },
+  headerItemContent: {
+    flex: 1,
+  },
+  headerKey: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  headerValue: {
+    fontSize: 12,
+  },
+  addSection: {
+    gap: 8,
+    borderTopWidth: 1,
+    paddingTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  buttonText: {
+    fontSize: 14,
+  },
+  actionsRow: {
+    marginTop: 16,
+    flexDirection: "row",
+    gap: 8,
+    borderTopWidth: 1,
+    paddingTop: 16,
+  },
+});

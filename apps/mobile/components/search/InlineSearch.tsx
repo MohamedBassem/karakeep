@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookmarkSearchResults from "@/components/search/BookmarkSearchResults";
 import { useBookmarkSearchState } from "@/lib/useBookmarkSearchState";
-import { TailwindResolver } from "@/components/TailwindResolver";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { XIcon } from "lucide-react-native";
 
@@ -21,6 +21,7 @@ export default function InlineSearch({
   const inputRef = useRef<TextInput>(null);
   const insets = useSafeAreaInsets();
   const state = useBookmarkSearchState(search);
+  const { colors } = useColorScheme();
 
   const handleSearchSubmit = () => {
     state.commitTerm(search);
@@ -34,12 +35,9 @@ export default function InlineSearch({
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <View
-        className="flex-row items-center gap-2 px-4 pb-2 pt-2"
-        style={{ paddingTop: insets.top + 8 }}
-      >
-        <View className="flex-1">
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.searchWrap}>
           <SearchInput
             ref={inputRef}
             placeholder="Search bookmarks..."
@@ -61,14 +59,9 @@ export default function InlineSearch({
           onPress={onClose}
           accessibilityLabel="Close"
           accessibilityRole="button"
-          className="p-1"
+          style={styles.closeButton}
         >
-          <TailwindResolver
-            className="text-muted-foreground"
-            comp={(styles) => (
-              <XIcon size={22} color={styles?.color?.toString()} />
-            )}
-          />
+          <XIcon size={22} color={colors.mutedForeground} />
         </Pressable>
       </View>
       <BookmarkSearchResults
@@ -80,3 +73,23 @@ export default function InlineSearch({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  searchWrap: {
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+  },
+});

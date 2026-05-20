@@ -1,7 +1,14 @@
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { Text } from "@/components/ui/Text";
+import { Text, withOpacity } from "@/components/ui/Text";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ExternalLink, Trash2 } from "lucide-react-native";
@@ -28,6 +35,7 @@ export default function HighlightCard({
   const { toast } = useToast();
   const router = useRouter();
   const api = useTRPC();
+  const { colors } = useColorScheme();
 
   const onError = () => {
     toast({
@@ -81,50 +89,66 @@ export default function HighlightCard({
 
   return (
     <View
-      className="overflow-hidden rounded-xl bg-card p-4"
-      style={{ borderCurve: "continuous" }}
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderCurve: "continuous" },
+      ]}
     >
-      <View className="flex gap-3">
+      <View style={styles.body}>
         {/* Highlight text with colored border */}
         <View
-          className="rounded-r-lg border-l-4 bg-muted/30 p-3"
-          style={{ borderLeftColor: HIGHLIGHT_COLOR_MAP[highlight.color] }}
+          style={[
+            styles.highlightBlock,
+            {
+              backgroundColor: withOpacity(colors.muted, 0.3),
+              borderLeftColor: HIGHLIGHT_COLOR_MAP[highlight.color],
+            },
+          ]}
         >
-          <Text className="italic text-foreground">
+          <Text style={{ fontStyle: "italic", color: colors.foreground }}>
             {highlight.text || "No text available"}
           </Text>
         </View>
 
         {/* Note if present */}
         {highlight.note && (
-          <View className="rounded-lg bg-muted/50 p-2">
-            <Text className="text-sm text-muted-foreground">
+          <View
+            style={[
+              styles.noteBlock,
+              { backgroundColor: withOpacity(colors.muted, 0.5) },
+            ]}
+          >
+            <Text style={{ fontSize: 14, color: colors.mutedForeground }}>
               Note: {highlight.note}
             </Text>
           </View>
         )}
 
         {/* Footer with timestamp and actions */}
-        <View className="flex flex-row items-center justify-between">
-          <View className="flex flex-row items-center gap-2">
-            <Text className="text-xs text-muted-foreground">
+        <View style={styles.footer}>
+          <View style={styles.footerLeft}>
+            <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
               {formatDistanceToNow(highlight.createdAt, { addSuffix: true })}
             </Text>
             {bookmark && (
               <>
-                <Text className="text-xs text-muted-foreground">•</Text>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                  •
+                </Text>
                 <Pressable
                   onPress={handleBookmarkPress}
-                  className="flex flex-row items-center gap-1"
+                  style={styles.sourceLink}
                 >
                   <ExternalLink size={12} color="gray" />
-                  <Text className="text-xs text-muted-foreground">Source</Text>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                    Source
+                  </Text>
                 </Pressable>
               </>
             )}
           </View>
 
-          <View className="flex flex-row gap-2">
+          <View style={styles.actions}>
             {isDeleting ? (
               <ActivityIndicator size="small" />
             ) : (
@@ -143,3 +167,43 @@ export default function HighlightCard({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    overflow: "hidden",
+    borderRadius: 12,
+    padding: 16,
+  },
+  body: {
+    gap: 12,
+  },
+  highlightBlock: {
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+    borderLeftWidth: 4,
+    padding: 12,
+  },
+  noteBlock: {
+    borderRadius: 8,
+    padding: 8,
+  },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  footerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  sourceLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+});

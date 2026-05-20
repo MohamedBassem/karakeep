@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import FullPageSpinner from "@/components/ui/FullPageSpinner";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 
 import { useEditBookmarkList } from "@karakeep/shared-react/hooks/lists";
@@ -16,6 +17,7 @@ const EditListPage = () => {
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
   const { toast } = useToast();
+  const { colors } = useColorScheme();
   const api = useTRPC();
   const { mutate, isPending: editIsPending } = useEditBookmarkList({
     onSuccess: () => {
@@ -86,12 +88,14 @@ const EditListPage = () => {
       {isPending ? (
         <FullPageSpinner />
       ) : (
-        <View className="gap-3 px-4">
+        <View style={styles.container}>
           {/* List Type Info - not editable */}
-          <View className="gap-2">
-            <Text className="text-sm text-muted-foreground">List Type</Text>
-            <View className="flex flex-row gap-2">
-              <View className="flex-1">
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              List Type
+            </Text>
+            <View style={styles.row}>
+              <View style={styles.flex1}>
                 <Button
                   variant={list?.type === "manual" ? "primary" : "secondary"}
                   disabled
@@ -99,7 +103,7 @@ const EditListPage = () => {
                   <Text>Manual</Text>
                 </Button>
               </View>
-              <View className="flex-1">
+              <View style={styles.flex1}>
                 <Button
                   variant={list?.type === "smart" ? "primary" : "secondary"}
                   disabled
@@ -111,10 +115,11 @@ const EditListPage = () => {
           </View>
 
           {/* List Name */}
-          <View className="flex flex-row items-center gap-1">
-            <Text className="shrink p-2">{list?.icon || "🚀"}</Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.icon}>{list?.icon || "🚀"}</Text>
             <Input
-              className="flex-1 bg-card"
+              style={styles.flex1}
+              inputStyle={{ backgroundColor: colors.card }}
               onChangeText={setText}
               value={text}
               placeholder="List Name"
@@ -125,18 +130,18 @@ const EditListPage = () => {
 
           {/* Smart List Query Input */}
           {list?.type === "smart" && (
-            <View className="gap-2">
-              <Text className="text-sm text-muted-foreground">
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>
                 Search Query
               </Text>
               <Input
-                className="bg-card"
+                inputStyle={{ backgroundColor: colors.card }}
                 onChangeText={setQuery}
                 value={query}
                 placeholder="e.g., #important OR list:work"
                 autoCapitalize={"none"}
               />
-              <Text className="text-xs italic text-muted-foreground">
+              <Text style={[styles.italic, { color: colors.mutedForeground }]}>
                 Smart lists automatically show bookmarks matching your search
                 query
               </Text>
@@ -153,3 +158,36 @@ const EditListPage = () => {
 };
 
 export default EditListPage;
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  fieldGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  flex1: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  icon: {
+    flexShrink: 1,
+    padding: 8,
+  },
+  italic: {
+    fontSize: 12,
+    fontStyle: "italic",
+  },
+});

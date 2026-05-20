@@ -1,5 +1,11 @@
 import { useCallback, useState } from "react";
-import { Linking, Pressable, TouchableOpacity, View } from "react-native";
+import {
+  Linking,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import ImageView from "react-native-image-viewing";
 import WebView from "react-native-webview";
 import {
@@ -86,16 +92,21 @@ export function BookmarkLinkPdfPreview({ bookmark }: { bookmark: ZBookmark }) {
   const assetSource = useAssetUrl(asset?.id ?? "");
 
   if (!asset) {
-    return (
-      <View className="flex-1 bg-background">
-        <Text>Asset has no PDF</Text>
-      </View>
-    );
+    return <PdfMissing message="Asset has no PDF" />;
   }
 
   return (
-    <View className="flex flex-1">
+    <View style={{ flex: 1 }}>
       <PDFViewer source={assetSource.uri ?? ""} headers={assetSource.headers} />
+    </View>
+  );
+}
+
+function PdfMissing({ message }: { message: string }) {
+  const { colors } = useColorScheme();
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Text>{message}</Text>
     </View>
   );
 }
@@ -105,7 +116,7 @@ export function BookmarkLinkReaderPreview({
 }: {
   bookmark: ZBookmark;
 }) {
-  const { isDarkColorScheme: isDark } = useColorScheme();
+  const { isDarkColorScheme: isDark, colors } = useColorScheme();
   const { settings: readerSettings } = useReaderSettings();
   const api = useTRPC();
 
@@ -177,7 +188,7 @@ export function BookmarkLinkReaderPreview({
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ImageView
         visible={!!viewingImage}
         imageIndex={0}
@@ -186,23 +197,46 @@ export function BookmarkLinkReaderPreview({
         images={viewingImage ? [{ uri: viewingImage }] : []}
       />
       {showBanner && (
-        <View className="flex-row items-center gap-2 border-b border-border bg-background px-4 py-2">
-          <BookOpen size={16} className="text-muted-foreground" />
-          <Text className="flex-1 text-sm text-muted-foreground">
+        <View
+          style={[
+            readerStyles.banner,
+            {
+              borderBottomColor: colors.border,
+              backgroundColor: colors.background,
+            },
+          ]}
+        >
+          <BookOpen size={16} color={colors.mutedForeground} />
+          <Text
+            style={{
+              flex: 1,
+              fontSize: 14,
+              color: colors.mutedForeground,
+            }}
+          >
             {bannerPercent && bannerPercent > 0
               ? `Continue where you left off (${bannerPercent}%)`
               : "Continue where you left off"}
           </Text>
           <TouchableOpacity
             onPress={onContinue}
-            className="rounded-md bg-primary px-3 py-1"
+            style={[
+              readerStyles.continueButton,
+              { backgroundColor: colors.primary },
+            ]}
           >
-            <Text className="text-xs font-medium text-primary-foreground">
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "500",
+                color: colors.primaryForeground,
+              }}
+            >
               Continue
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onDismiss} className="p-1">
-            <X size={14} className="text-muted-foreground" />
+          <TouchableOpacity onPress={onDismiss} style={{ padding: 4 }}>
+            <X size={14} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
       )}
@@ -273,11 +307,7 @@ export function BookmarkLinkArchivePreview({
   );
 
   if (!asset) {
-    return (
-      <View className="flex-1 bg-background">
-        <Text>Asset has no offline archive</Text>
-      </View>
-    );
+    return <PdfMissing message="Asset has no offline archive" />;
   }
 
   const webViewUri: WebViewSourceUri = {
@@ -308,15 +338,11 @@ export function BookmarkLinkScreenshotPreview({
   const [imageZoom, setImageZoom] = useState(false);
 
   if (!asset) {
-    return (
-      <View className="flex-1 bg-background">
-        <Text>Asset has no screenshot</Text>
-      </View>
-    );
+    return <PdfMissing message="Asset has no screenshot" />;
   }
 
   return (
-    <View className="flex flex-1 gap-2">
+    <View style={{ flex: 1, gap: 8 }}>
       <ImageView
         visible={imageZoom}
         imageIndex={0}
@@ -327,10 +353,26 @@ export function BookmarkLinkScreenshotPreview({
       <Pressable onPress={() => setImageZoom(true)}>
         <BookmarkAssetImage
           assetId={asset.id}
-          className="h-full w-full"
+          style={{ height: "100%", width: "100%" }}
           contentFit="contain"
         />
       </Pressable>
     </View>
   );
 }
+
+const readerStyles = StyleSheet.create({
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderBottomWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  continueButton: {
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+});

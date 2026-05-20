@@ -14,9 +14,9 @@ import FullPageError from "@/components/FullPageError";
 import FullPageSpinner from "@/components/ui/FullPageSpinner";
 import { shouldUseGlassPill } from "@/lib/ios";
 import useAppSettings from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
 import { Settings } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
@@ -30,8 +30,7 @@ export default function BookmarkView() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { slug } = useLocalSearchParams();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDarkColorScheme: isDark } = useColorScheme();
   const { settings } = useAppSettings();
   const api = useTRPC();
 
@@ -110,7 +109,14 @@ export default function BookmarkView() {
           headerRight: () =>
             bookmark.content.type === BookmarkTypes.LINK ? (
               <View
-                className={`flex-row items-center gap-3${shouldUseGlassPill ? " px-2" : ""}`}
+                style={[
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                  },
+                  shouldUseGlassPill && { paddingHorizontal: 8 },
+                ]}
               >
                 {bookmarkLinkType === "reader" && (
                   <Pressable

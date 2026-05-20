@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,10 +7,12 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useColorScheme } from "@/lib/useColorScheme";
 import * as Haptics from "expo-haptics";
 import { AlertCircle } from "lucide-react-native";
 
 export default function ErrorAnimation() {
+  const { colors } = useColorScheme();
   const scale = useSharedValue(0);
   const shake = useSharedValue(0);
 
@@ -32,10 +34,26 @@ export default function ErrorAnimation() {
   }));
 
   return (
-    <Animated.View style={style} className="items-center gap-4">
-      <View className="h-24 w-24 items-center justify-center rounded-full bg-destructive">
+    <Animated.View style={[style, styles.container]}>
+      <Animated.View
+        style={[styles.icon, { backgroundColor: colors.destructive }]}
+      >
         <AlertCircle size={48} color="white" strokeWidth={2} />
-      </View>
+      </Animated.View>
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    gap: 16,
+  },
+  icon: {
+    height: 96,
+    width: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+  },
+});

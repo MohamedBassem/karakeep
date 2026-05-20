@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -10,10 +10,12 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { Text } from "@/components/ui/Text";
+import { useColorScheme } from "@/lib/useColorScheme";
+import { Text, withOpacity } from "@/components/ui/Text";
 import { Archive } from "lucide-react-native";
 
 export default function LoadingAnimation() {
+  const { colors } = useColorScheme();
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
   const opacity = useSharedValue(0.6);
@@ -89,28 +91,37 @@ export default function LoadingAnimation() {
   const dot3Style = useAnimatedStyle(() => ({ opacity: dotOpacity3.value }));
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(300)}
-      className="items-center gap-6"
-    >
+    <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <Animated.View
-        style={iconStyle}
-        className="h-24 w-24 items-center justify-center rounded-full bg-primary/10"
+        style={[
+          iconStyle,
+          styles.iconWrap,
+          { backgroundColor: withOpacity(colors.primary, 0.1) },
+        ]}
       >
-        <Archive size={48} className="text-primary" strokeWidth={1.5} />
+        <Archive size={48} color={colors.primary} strokeWidth={1.5} />
       </Animated.View>
-      <View className="flex-row items-baseline">
-        <Text variant="title1" className="font-semibold text-foreground">
+      <View style={styles.titleRow}>
+        <Text
+          variant="title1"
+          style={[styles.titleText, { color: colors.foreground }]}
+        >
           Hoarding
         </Text>
-        <View className="w-8 flex-row">
-          <Animated.Text style={dot1Style} className="text-xl text-foreground">
+        <View style={styles.dotsRow}>
+          <Animated.Text
+            style={[dot1Style, styles.dot, { color: colors.foreground }]}
+          >
             .
           </Animated.Text>
-          <Animated.Text style={dot2Style} className="text-xl text-foreground">
+          <Animated.Text
+            style={[dot2Style, styles.dot, { color: colors.foreground }]}
+          >
             .
           </Animated.Text>
-          <Animated.Text style={dot3Style} className="text-xl text-foreground">
+          <Animated.Text
+            style={[dot3Style, styles.dot, { color: colors.foreground }]}
+          >
             .
           </Animated.Text>
         </View>
@@ -118,3 +129,31 @@ export default function LoadingAnimation() {
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    gap: 24,
+  },
+  iconWrap: {
+    height: 96,
+    width: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  titleText: {
+    fontWeight: "600",
+  },
+  dotsRow: {
+    width: 32,
+    flexDirection: "row",
+  },
+  dot: {
+    fontSize: 20,
+  },
+});

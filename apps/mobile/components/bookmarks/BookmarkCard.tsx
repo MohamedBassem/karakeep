@@ -5,12 +5,14 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   View,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router, useRouter } from "expo-router";
 import { Text } from "@/components/ui/Text";
+import { useColorScheme } from "@/lib/useColorScheme";
 import useAppSettings from "@/lib/settings";
 import { shareBookmark } from "@/lib/shareBookmark";
 import { useMenuIconColors } from "@/lib/useMenuIconColors";
@@ -161,7 +163,7 @@ function ActionBar({ bookmark }: { bookmark: ZBookmark }) {
   }
 
   return (
-    <View className="flex flex-row gap-4">
+    <View style={styles.actionBar}>
       {(isArchivePending || isDeletionPending) && <ActivityIndicator />}
       {isOwner && (
         <Pressable
@@ -227,15 +229,15 @@ function TagList({ bookmark }: { bookmark: ZBookmark }) {
   if (isBookmarkStillTagging(bookmark)) {
     return (
       <>
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
+        <Skeleton style={styles.skeletonRow} />
+        <Skeleton style={styles.skeletonRow} />
       </>
     );
   }
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View className="flex flex-row gap-2">
+      <View style={styles.tagRow}>
         {tags.map((t) => (
           <TagPill key={t.id} tag={t} clickable={isOwner} />
         ))}
@@ -268,7 +270,7 @@ function LinkCard({
   let imageComp;
   if (imageUrl) {
     imageComp = (
-      <View className="h-56 min-h-56 w-full">
+      <View style={styles.linkImageWrap}>
         <Image
           source={
             imageUrl.localAsset
@@ -290,7 +292,7 @@ function LinkCard({
     );
   } else {
     imageComp = (
-      <View className="h-56 w-full overflow-hidden rounded-t-lg">
+      <View style={styles.linkImageWrapRounded}>
         <Image
           // oxlint-disable-next-line no-require-imports
           source={require("@/assets/blur.jpeg")}
@@ -302,11 +304,11 @@ function LinkCard({
   }
 
   return (
-    <View className="flex gap-2">
+    <View style={styles.gap2}>
       <Pressable onPress={onOpenBookmark}>{imageComp}</Pressable>
-      <View className="flex gap-2 p-2">
+      <View style={[styles.gap2, styles.p2]}>
         <Text
-          className="text-xl font-bold text-foreground"
+          style={styles.linkTitle}
           numberOfLines={2}
           onPress={onOpenBookmark}
         >
@@ -320,9 +322,9 @@ function LinkCard({
           />
         )}
         <TagList bookmark={bookmark} />
-        <Divider orientation="vertical" className="mt-2 h-0.5 w-full" />
-        <View className="mt-2 flex flex-row justify-between px-2 pb-2">
-          <Text className="my-auto shrink" numberOfLines={1}>
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.linkFooter}>
+          <Text style={styles.linkHost} numberOfLines={1}>
             {parsedUrl.host}
           </Text>
           <ActionBar bookmark={bookmark} />
@@ -349,15 +351,15 @@ function TextCard({
   const note = settings.showNotes ? bookmark.note?.trim() : undefined;
   const content = bookmark.content.text;
   return (
-    <View className="flex max-h-96 gap-2 p-2">
+    <View style={styles.textCard}>
       <Pressable onPress={onOpenBookmark}>
         {bookmark.title && (
-          <Text className="text-xl font-bold" numberOfLines={2}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
             {bookmark.title}
           </Text>
         )}
       </Pressable>
-      <View className="max-h-56 overflow-hidden p-2 text-foreground">
+      <View style={styles.textCardBody}>
         <Pressable onPress={onOpenBookmark}>
           <BookmarkTextMarkdown text={content} />
         </Pressable>
@@ -366,8 +368,8 @@ function TextCard({
         <NotePreview note={note} bookmarkId={bookmark.id} readOnly={!isOwner} />
       )}
       <TagList bookmark={bookmark} />
-      <Divider orientation="vertical" className="mt-2 h-0.5 w-full" />
-      <View className="flex flex-row justify-between p-2">
+      <Divider orientation="horizontal" style={styles.divider} />
+      <View style={styles.textCardFooter}>
         <View />
         <ActionBar bookmark={bookmark} />
       </View>
@@ -397,17 +399,14 @@ function AssetCard({
     bookmark.content.assetId;
 
   return (
-    <View className="flex gap-2">
+    <View style={styles.gap2}>
       <Pressable onPress={onOpenBookmark}>
-        <BookmarkAssetImage
-          assetId={assetImage}
-          className="h-56 min-h-56 w-full"
-        />
+        <BookmarkAssetImage assetId={assetImage} style={styles.assetImage} />
       </Pressable>
-      <View className="flex gap-2 p-2">
+      <View style={[styles.gap2, styles.p2]}>
         <Pressable onPress={onOpenBookmark}>
           {title && (
-            <Text numberOfLines={2} className="text-xl font-bold">
+            <Text numberOfLines={2} style={styles.cardTitle}>
               {title}
             </Text>
           )}
@@ -420,8 +419,8 @@ function AssetCard({
           />
         )}
         <TagList bookmark={bookmark} />
-        <Divider orientation="vertical" className="mt-2 h-0.5 w-full" />
-        <View className="mt-2 flex flex-row justify-between px-2 pb-2">
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.linkFooter}>
           <View />
           <ActionBar bookmark={bookmark} />
         </View>
@@ -506,12 +505,99 @@ export default function BookmarkCard({
       break;
   }
 
+  return <BookmarkCardRoot>{comp}</BookmarkCardRoot>;
+}
+
+function BookmarkCardRoot({ children }: { children: React.ReactNode }) {
+  const { colors } = useColorScheme();
   return (
     <View
-      className="overflow-hidden rounded-xl bg-card"
-      style={{ borderCurve: "continuous" }}
+      style={[
+        styles.cardRoot,
+        { backgroundColor: colors.card, borderCurve: "continuous" },
+      ]}
     >
-      {comp}
+      {children}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cardRoot: {
+    overflow: "hidden",
+    borderRadius: 12,
+  },
+  actionBar: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  skeletonRow: {
+    height: 16,
+    width: "100%",
+  },
+  tagRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  gap2: {
+    gap: 8,
+  },
+  p2: {
+    padding: 8,
+  },
+  linkImageWrap: {
+    height: 224,
+    minHeight: 224,
+    width: "100%",
+  },
+  linkImageWrapRounded: {
+    height: 224,
+    width: "100%",
+    overflow: "hidden",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  linkTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  divider: {
+    marginTop: 8,
+    height: 2,
+    width: "100%",
+  },
+  linkFooter: {
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+  },
+  linkHost: {
+    flexShrink: 1,
+  },
+  textCard: {
+    maxHeight: 384,
+    gap: 8,
+    padding: 8,
+  },
+  textCardBody: {
+    maxHeight: 224,
+    overflow: "hidden",
+    padding: 8,
+  },
+  textCardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 8,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  assetImage: {
+    height: 224,
+    minHeight: 224,
+    width: "100%",
+  },
+});

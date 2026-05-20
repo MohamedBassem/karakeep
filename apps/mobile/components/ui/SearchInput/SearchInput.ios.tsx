@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Pressable, TextInput, View, ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  ViewStyle,
+} from "react-native";
 import Animated, {
   measure,
   useAnimatedRef,
@@ -7,15 +13,13 @@ import Animated, {
   useDerivedValue,
   withTiming,
 } from "react-native-reanimated";
-import { TailwindResolver } from "@/components/TailwindResolver";
 import { Text } from "@/components/ui/Text";
-import { cn } from "@/lib/utils";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useAugmentedRef, useControllableState } from "@rn-primitives/hooks";
 import { SearchIcon } from "lucide-react-native";
 
 import type { SearchInputProps } from "./types";
 
-// Add as class when possible: https://github.com/marklawlor/nativewind/issues/522
 const BORDER_CURVE: ViewStyle = {
   borderCurve: "continuous",
 };
@@ -31,15 +35,16 @@ const SearchInput = React.forwardRef<
       onFocus: onFocusProp,
       placeholder = "Search...",
       cancelText = "Cancel",
-      containerClassName,
-      iconContainerClassName,
-      className,
+      containerStyle,
+      iconContainerStyle,
+      inputStyle,
       iconColor: _iconColor,
       onCancel,
       ...props
     },
     ref,
   ) => {
+    const { colors } = useColorScheme();
     const inputRef = useAugmentedRef({ ref, methods: { focus, blur, clear } });
     const [showCancel, setShowCancel] = React.useState(false);
     const showCancelDerivedValue = useDerivedValue(
@@ -56,7 +61,6 @@ const SearchInput = React.forwardRef<
 
     const rootStyle = useAnimatedStyle(() => {
       if (_WORKLET) {
-        // safely use measure
         const measurement = measure(animatedRef);
         return {
           paddingRight: showCancelDerivedValue.value
@@ -72,7 +76,6 @@ const SearchInput = React.forwardRef<
     });
     const buttonStyle3 = useAnimatedStyle(() => {
       if (_WORKLET) {
-        // safely use measure
         const measurement = measure(animatedRef);
         return {
           position: "absolute",
@@ -121,35 +124,27 @@ const SearchInput = React.forwardRef<
     }
 
     return (
-      <Animated.View className="flex-row items-center" style={rootStyle}>
+      <Animated.View style={[styles.root, rootStyle]}>
         <Animated.View
-          style={BORDER_CURVE}
-          className={cn(
-            "flex-1 flex-row rounded-lg bg-card",
-            containerClassName,
-          )}
+          style={[
+            BORDER_CURVE,
+            styles.fieldWrap,
+            { backgroundColor: colors.card },
+            containerStyle,
+          ]}
         >
-          <View
-            className={cn(
-              "absolute bottom-0 left-0 top-0 z-50 justify-center pl-1.5",
-              iconContainerClassName,
-            )}
-          >
-            <TailwindResolver
-              className="text-muted"
-              comp={(styles) => (
-                <SearchIcon color={styles?.color?.toString()} size={20} />
-              )}
-            />
+          <View style={[styles.iconWrap, iconContainerStyle]}>
+            <SearchIcon color={colors.muted} size={20} />
           </View>
           <TextInput
             ref={inputRef}
             placeholder={placeholder}
-            className={cn(
-              !showCancel && "active:bg-muted/5 dark:active:bg-muted/20",
-              "flex-1 rounded-lg py-2 pl-8 pr-1 text-[17px] text-foreground",
-              className,
-            )}
+            style={[
+              styles.input,
+              { color: colors.foreground },
+              !showCancel && { backgroundColor: undefined },
+              inputStyle,
+            ]}
             value={value}
             onChangeText={onChangeText}
             onFocus={onFocus}
@@ -172,15 +167,56 @@ const SearchInput = React.forwardRef<
             }}
             disabled={!showCancel}
             pointerEvents={!showCancel ? "none" : "auto"}
-            className="flex-1 justify-center active:opacity-50"
+            style={({ pressed }) => [
+              styles.cancelBtn,
+              pressed && { opacity: 0.5 },
+            ]}
           >
-            <Text className="px-2 text-primary">{cancelText}</Text>
+            <Text style={[styles.cancelText, { color: colors.primary }]}>
+              {cancelText}
+            </Text>
           </Pressable>
         </Animated.View>
       </Animated.View>
     );
   },
 );
+
+const styles = StyleSheet.create({
+  root: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  fieldWrap: {
+    flex: 1,
+    flexDirection: "row",
+    borderRadius: 8,
+  },
+  iconWrap: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    top: 0,
+    zIndex: 50,
+    justifyContent: "center",
+    paddingLeft: 6,
+  },
+  input: {
+    flex: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingLeft: 32,
+    paddingRight: 4,
+    fontSize: 17,
+  },
+  cancelBtn: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  cancelText: {
+    paddingHorizontal: 8,
+  },
+});
 
 SearchInput.displayName = "SearchInput";
 

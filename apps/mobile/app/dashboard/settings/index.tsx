@@ -5,6 +5,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Switch,
   TextInput,
   View,
@@ -20,13 +21,15 @@ import { Text } from "@/components/ui/Text";
 import { useServerVersion } from "@/lib/hooks";
 import { useSession } from "@/lib/session";
 import useAppSettings from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
 function SectionHeader({ title }: { title: string }) {
+  const { colors } = useColorScheme();
   return (
-    <Text className="px-4 pb-1 pt-4 text-xs uppercase tracking-wide text-muted-foreground">
+    <Text style={[styles.sectionHeader, { color: colors.mutedForeground }]}>
       {title}
     </Text>
   );
@@ -35,6 +38,7 @@ function SectionHeader({ title }: { title: string }) {
 export default function Settings() {
   const { logout } = useSession();
   const headerHeight = useHeaderHeight();
+  const { colors } = useColorScheme();
   const {
     settings,
     setSettings,
@@ -122,16 +126,21 @@ export default function Settings() {
 
       <SectionHeader title="Appearance" />
       <View
-        className="w-full rounded-xl bg-card py-2"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.cardGroup,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
-        <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
-          <Link asChild href="/dashboard/settings/theme" className="flex-1">
-            <Pressable className="flex flex-row items-center">
-              <Text className="mr-2 flex-1" numberOfLines={1}>
+        <View style={styles.rowOuter}>
+          <Link asChild href="/dashboard/settings/theme" style={styles.flex1}>
+            <Pressable style={styles.pressableRow}>
+              <Text style={styles.rowLabel} numberOfLines={1}>
                 Theme
               </Text>
-              <Text className="mr-1 text-muted-foreground" numberOfLines={1}>
+              <Text
+                style={[styles.rowValue, { color: colors.mutedForeground }]}
+                numberOfLines={1}
+              >
                 {
                   { light: "Light", dark: "Dark", system: "System" }[
                     settings.theme
@@ -142,21 +151,24 @@ export default function Settings() {
             </Pressable>
           </Link>
         </View>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
-        <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.rowOuter}>
           <Link
             asChild
             href="/dashboard/settings/bookmark-default-view"
-            className="flex-1"
+            style={styles.flex1}
           >
-            <Pressable className="flex flex-row items-center">
-              <Text className="mr-2 flex-1" numberOfLines={1}>
+            <Pressable style={styles.pressableRow}>
+              <Text style={styles.rowLabel} numberOfLines={1}>
                 Default Bookmark View
               </Text>
               {isSettingsLoading ? (
                 <ActivityIndicator size="small" />
               ) : (
-                <Text className="mr-1 text-muted-foreground" numberOfLines={1}>
+                <Text
+                  style={[styles.rowValue, { color: colors.mutedForeground }]}
+                  numberOfLines={1}
+                >
                   {
                     {
                       reader: "Reader",
@@ -174,30 +186,32 @@ export default function Settings() {
 
       <SectionHeader title="Reading" />
       <View
-        className="w-full rounded-xl bg-card py-2"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.cardGroup,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
-        <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
+        <View style={styles.rowOuter}>
           <Link
             asChild
             href="/dashboard/settings/reader-settings"
-            className="flex-1"
+            style={styles.flex1}
           >
-            <Pressable className="flex flex-row items-center">
-              <Text className="mr-2 flex-1" numberOfLines={1}>
+            <Pressable style={styles.pressableRow}>
+              <Text style={styles.rowLabel} numberOfLines={1}>
                 Reader Text Settings
               </Text>
               <ChevronRight />
             </Pressable>
           </Link>
         </View>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
-        <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
-          <Text className="flex-1" numberOfLines={1}>
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.rowOuter}>
+          <Text style={styles.flex1} numberOfLines={1}>
             Show notes in bookmark card
           </Text>
           <Switch
-            className="shrink-0"
+            style={styles.shrink0}
             value={settings.showNotes}
             onValueChange={(value) =>
               setSettings({
@@ -207,26 +221,26 @@ export default function Settings() {
             }
           />
         </View>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
-        <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.rowOuter}>
           <Link
             asChild
             href="/dashboard/settings/toolbar-settings"
-            className="flex-1"
+            style={styles.flex1}
           >
-            <Pressable className="flex flex-row justify-between">
+            <Pressable style={styles.pressableRowBetween}>
               <Text>Toolbar Buttons</Text>
               <ChevronRight />
             </Pressable>
           </Link>
         </View>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
-        <View className="flex flex-row items-center justify-between gap-8 px-4 py-1">
-          <Text className="flex-1" numberOfLines={1}>
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.rowOuter}>
+          <Text style={styles.flex1} numberOfLines={1}>
             Keep screen on while reading
           </Text>
           <Switch
-            className="shrink-0"
+            style={styles.shrink0}
             disabled={isSettingsLoading}
             value={settings.keepScreenOnWhileReading}
             onValueChange={(value) => {
@@ -242,13 +256,15 @@ export default function Settings() {
 
       <SectionHeader title="Media" />
       <View
-        className="w-full rounded-xl bg-card py-2"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.cardGroup,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
-        <View className="flex w-full flex-col gap-1 px-4 py-2">
-          <View className="flex flex-row items-center justify-between">
+        <View style={styles.mediaInner}>
+          <View style={styles.mediaTopRow}>
             <Text>Upload Image Quality</Text>
-            <Text className="text-foreground">
+            <Text style={{ color: colors.foreground }}>
               {Math.round(imageQuality ?? 0)}%
             </Text>
           </View>
@@ -274,25 +290,28 @@ export default function Settings() {
 
       <SectionHeader title="Account" />
       <View
-        className="w-full rounded-xl bg-card py-2"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.cardGroup,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
-        <Pressable
-          className="flex flex-row items-center px-4 py-1"
-          onPress={logout}
-        >
-          <Text className="flex-1 text-destructive">Log Out</Text>
+        <Pressable style={styles.accountRow} onPress={logout}>
+          <Text style={[styles.flex1, { color: colors.destructive }]}>
+            Log Out
+          </Text>
         </Pressable>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
+        <Divider orientation="horizontal" style={styles.divider} />
         <Pressable
-          className="flex flex-row items-center px-4 py-1"
+          style={styles.accountRow}
           onPress={handleDeleteAccount}
           disabled={isDeleting}
         >
           {isDeleting ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="flex-1 text-destructive">Delete Account</Text>
+            <Text style={[styles.flex1, { color: colors.destructive }]}>
+              Delete Account
+            </Text>
           )}
         </Pressable>
       </View>
@@ -307,44 +326,63 @@ export default function Settings() {
         }}
       >
         <Pressable
-          className="flex-1 items-center justify-center bg-black/50"
+          style={styles.modalBackdrop}
           onPress={() => {
             setShowPasswordModal(false);
             setPassword("");
           }}
         >
-          <Pressable className="mx-8 w-full max-w-sm rounded-2xl bg-card p-6">
-            <Text className="mb-2 text-lg font-bold">Enter Password</Text>
-            <Text className="mb-4 text-sm text-muted-foreground">
+          <Pressable
+            style={[styles.modalContent, { backgroundColor: colors.card }]}
+          >
+            <Text style={styles.modalTitle}>Enter Password</Text>
+            <Text
+              style={[styles.modalSubtitle, { color: colors.mutedForeground }]}
+            >
               Please enter your password to confirm account deletion.
             </Text>
             <TextInput
-              className="mb-4 rounded-lg border border-input bg-background px-3 py-2 text-foreground"
+              style={[
+                styles.modalInput,
+                {
+                  borderColor: colors.input,
+                  backgroundColor: colors.background,
+                  color: colors.foreground,
+                },
+              ]}
               placeholder="Password"
               secureTextEntry
               value={password}
               onChangeText={setPassword}
               autoFocus
             />
-            <View className="flex flex-row justify-end gap-3">
+            <View style={styles.modalActions}>
               <Pressable
-                className="rounded-lg px-4 py-2"
+                style={styles.modalCancelButton}
                 onPress={() => {
                   setShowPasswordModal(false);
                   setPassword("");
                 }}
               >
-                <Text className="text-muted-foreground">Cancel</Text>
+                <Text style={{ color: colors.mutedForeground }}>Cancel</Text>
               </Pressable>
               <Pressable
-                className="rounded-lg bg-destructive px-4 py-2"
+                style={[
+                  styles.modalDeleteButton,
+                  { backgroundColor: colors.destructive },
+                ]}
                 onPress={() => deleteAccount({ password })}
                 disabled={isDeleting || !password}
               >
                 {isDeleting ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text className="font-medium text-destructive-foreground">
+                  <Text
+                    style={[
+                      styles.modalDeleteText,
+                      { color: colors.destructiveForeground },
+                    ]}
+                  >
                     Delete
                   </Text>
                 )}
@@ -356,39 +394,41 @@ export default function Settings() {
 
       <SectionHeader title="About" />
       <View
-        className="w-full rounded-xl bg-card py-2"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.cardGroup,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
-        <View className="flex flex-row items-center justify-between px-4 py-1">
-          <Text className="text-muted-foreground" numberOfLines={1}>
+        <View style={styles.aboutRow}>
+          <Text style={{ color: colors.mutedForeground }} numberOfLines={1}>
             Server
           </Text>
           <Text
-            className="flex-1 text-right text-sm text-muted-foreground"
+            style={[styles.aboutValue, { color: colors.mutedForeground }]}
             numberOfLines={1}
           >
             {isSettingsLoading ? "Loading..." : settings.address}
           </Text>
         </View>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
-        <View className="flex flex-row items-center justify-between px-4 py-1">
-          <Text className="w-fit text-muted-foreground" numberOfLines={1}>
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.aboutRow}>
+          <Text style={{ color: colors.mutedForeground }} numberOfLines={1}>
             App Version
           </Text>
           <Text
-            className="flex-1 text-right text-sm text-muted-foreground"
+            style={[styles.aboutValue, { color: colors.mutedForeground }]}
             numberOfLines={1}
           >
             {Constants.expoConfig?.version ?? "unknown"}
           </Text>
         </View>
-        <Divider orientation="horizontal" className="mx-6 my-1" />
-        <View className="flex flex-row items-center justify-between px-4 py-1">
-          <Text className="text-muted-foreground" numberOfLines={1}>
+        <Divider orientation="horizontal" style={styles.divider} />
+        <View style={styles.aboutRow}>
+          <Text style={{ color: colors.mutedForeground }} numberOfLines={1}>
             Server Version
           </Text>
           <Text
-            className="flex-1 text-right text-sm text-muted-foreground"
+            style={[styles.aboutValue, { color: colors.mutedForeground }]}
             numberOfLines={1}
           >
             {isServerVersionLoading
@@ -402,3 +442,129 @@ export default function Settings() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    paddingTop: 16,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  cardGroup: {
+    width: "100%",
+    borderRadius: 12,
+    paddingVertical: 8,
+  },
+  rowOuter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  pressableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  pressableRowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  rowLabel: {
+    marginRight: 8,
+    flex: 1,
+  },
+  rowValue: {
+    marginRight: 4,
+  },
+  divider: {
+    marginHorizontal: 24,
+    marginVertical: 4,
+  },
+  flex1: {
+    flex: 1,
+  },
+  shrink0: {
+    flexShrink: 0,
+  },
+  mediaInner: {
+    flexDirection: "column",
+    gap: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    width: "100%",
+  },
+  mediaTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  modalBackdrop: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    marginHorizontal: 32,
+    width: "100%",
+    maxWidth: 384,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  modalSubtitle: {
+    marginBottom: 16,
+    fontSize: 14,
+  },
+  modalInput: {
+    marginBottom: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+  },
+  modalCancelButton: {
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  modalDeleteButton: {
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  modalDeleteText: {
+    fontWeight: "500",
+  },
+  aboutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  aboutValue: {
+    flex: 1,
+    textAlign: "right",
+    fontSize: 14,
+  },
+});

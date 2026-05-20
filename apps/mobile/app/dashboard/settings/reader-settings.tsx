@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import {
   ReaderPreview,
@@ -20,7 +20,7 @@ import {
 import { ZReaderFontFamily } from "@karakeep/shared/types/users";
 
 export default function ReaderSettingsPage() {
-  const { isDarkColorScheme: isDark } = useColorScheme();
+  const { isDarkColorScheme: isDark, colors } = useColorScheme();
 
   const {
     settings,
@@ -122,26 +122,26 @@ export default function ReaderSettingsPage() {
 
   return (
     <ScrollView
-      className="w-full"
-      contentContainerClassName="items-center gap-4 px-4 py-2"
+      style={styles.fullWidth}
+      contentContainerStyle={styles.scrollContent}
       contentInsetAdjustmentBehavior="automatic"
     >
       {/* Font Family Selection */}
-      <View className="w-full">
-        <Text className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+      <View style={styles.fullWidth}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           Font Family
           {localOverrides.fontFamily !== undefined && (
-            <Text className="text-blue-500"> (local)</Text>
+            <Text style={styles.localBadge}> (local)</Text>
           )}
         </Text>
-        <View className="w-full rounded-lg bg-card px-4 py-2">
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           {fontFamilyOptions.map((fontFamily, index) => {
             const isChecked = effectiveFontFamily === fontFamily;
             return (
               <View key={fontFamily}>
                 <Pressable
                   onPress={() => handleFontFamilyChange(fontFamily)}
-                  className="flex flex-row items-center justify-between py-2"
+                  style={styles.optionRow}
                 >
                   <Text
                     style={{
@@ -153,7 +153,7 @@ export default function ReaderSettingsPage() {
                   {isChecked && <Check color="rgb(0, 122, 255)" />}
                 </Pressable>
                 {index < fontFamilyOptions.length - 1 && (
-                  <Divider orientation="horizontal" className="h-0.5" />
+                  <Divider orientation="horizontal" style={{ height: 2 }} />
                 )}
               </View>
             );
@@ -162,15 +162,15 @@ export default function ReaderSettingsPage() {
       </View>
 
       {/* Font Size */}
-      <View className="w-full">
-        <Text className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+      <View style={styles.fullWidth}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           Font Size ({formatFontSize(displayFontSize)})
           {localOverrides.fontSize !== undefined && (
-            <Text className="text-blue-500"> (local)</Text>
+            <Text style={styles.localBadge}> (local)</Text>
           )}
         </Text>
-        <View className="flex w-full flex-row items-center gap-3 rounded-lg bg-card px-4 py-3">
-          <Text className="text-muted-foreground">
+        <View style={[styles.sliderCard, { backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.mutedForeground }}>
             {READER_SETTING_CONSTRAINTS.fontSize.min}
           </Text>
           <Slider
@@ -183,22 +183,22 @@ export default function ReaderSettingsPage() {
               handleFontSizeChange(Math.round(value))
             }
           />
-          <Text className="text-muted-foreground">
+          <Text style={{ color: colors.mutedForeground }}>
             {READER_SETTING_CONSTRAINTS.fontSize.max}
           </Text>
         </View>
       </View>
 
       {/* Line Height */}
-      <View className="w-full">
-        <Text className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+      <View style={styles.fullWidth}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           Line Height ({formatLineHeight(displayLineHeight)})
           {localOverrides.lineHeight !== undefined && (
-            <Text className="text-blue-500"> (local)</Text>
+            <Text style={styles.localBadge}> (local)</Text>
           )}
         </Text>
-        <View className="flex w-full flex-row items-center gap-3 rounded-lg bg-card px-4 py-3">
-          <Text className="text-muted-foreground">
+        <View style={[styles.sliderCard, { backgroundColor: colors.card }]}>
+          <Text style={{ color: colors.mutedForeground }}>
             {READER_SETTING_CONSTRAINTS.lineHeight.min}
           </Text>
           <Slider
@@ -211,15 +211,15 @@ export default function ReaderSettingsPage() {
             }
             onSlidingComplete={handleLineHeightChange}
           />
-          <Text className="text-muted-foreground">
+          <Text style={{ color: colors.mutedForeground }}>
             {READER_SETTING_CONSTRAINTS.lineHeight.max}
           </Text>
         </View>
       </View>
 
       {/* Preview */}
-      <View className="w-full">
-        <Text className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+      <View style={styles.fullWidth}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           Preview
         </Text>
         <ReaderPreview
@@ -230,16 +230,21 @@ export default function ReaderSettingsPage() {
         />
       </View>
 
-      <Divider orientation="horizontal" className="my-2 w-full" />
+      <Divider orientation="horizontal" style={styles.bigDivider} />
 
       {/* Save as Default */}
       <Pressable
         onPress={handleSaveAsDefault}
         disabled={!hasLocalOverrides}
-        className="w-full rounded-lg bg-card px-4 py-3"
+        style={[styles.actionCard, { backgroundColor: colors.card }]}
       >
         <Text
-          className={`text-center ${hasLocalOverrides ? "text-blue-500" : "text-muted-foreground"}`}
+          style={[
+            styles.actionText,
+            {
+              color: hasLocalOverrides ? "#3b82f6" : colors.mutedForeground,
+            },
+          ]}
         >
           Save as Default (All Devices)
         </Text>
@@ -249,10 +254,12 @@ export default function ReaderSettingsPage() {
       {hasLocalOverrides && (
         <Pressable
           onPress={handleClearLocalOverrides}
-          className="flex w-full flex-row items-center justify-center gap-2 rounded-lg bg-card px-4 py-3"
+          style={[styles.clearCard, { backgroundColor: colors.card }]}
         >
           <RotateCcw size={16} color={isDark ? "#9ca3af" : "#6b7280"} />
-          <Text className="text-muted-foreground">Clear Local Overrides</Text>
+          <Text style={{ color: colors.mutedForeground }}>
+            Clear Local Overrides
+          </Text>
         </Pressable>
       )}
 
@@ -260,12 +267,79 @@ export default function ReaderSettingsPage() {
       {hasServerDefaults && (
         <Pressable
           onPress={handleClearServerDefaults}
-          className="flex w-full flex-row items-center justify-center gap-2 rounded-lg bg-card px-4 py-3"
+          style={[styles.clearCard, { backgroundColor: colors.card }]}
         >
           <RotateCcw size={16} color={isDark ? "#9ca3af" : "#6b7280"} />
-          <Text className="text-muted-foreground">Clear Server Defaults</Text>
+          <Text style={{ color: colors.mutedForeground }}>
+            Clear Server Defaults
+          </Text>
         </Pressable>
       )}
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  fullWidth: {
+    width: "100%",
+  },
+  scrollContent: {
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  sectionLabel: {
+    marginBottom: 8,
+    paddingHorizontal: 4,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  localBadge: {
+    color: "#3b82f6",
+  },
+  card: {
+    width: "100%",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+  },
+  sliderCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: "100%",
+  },
+  bigDivider: {
+    marginVertical: 8,
+    width: "100%",
+  },
+  actionCard: {
+    width: "100%",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  actionText: {
+    textAlign: "center",
+  },
+  clearCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    width: "100%",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+});

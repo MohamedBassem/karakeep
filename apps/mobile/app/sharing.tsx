@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useShareIntentContext } from "expo-share-intent";
@@ -9,6 +9,7 @@ import SuccessAnimation from "@/components/sharing/SuccessAnimation";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
 import useAppSettings from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useUploadAsset } from "@/lib/upload";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -96,6 +97,7 @@ function SaveBookmark({ setMode }: { setMode: (mode: Mode) => void }) {
 
 export default function Sharing() {
   const router = useRouter();
+  const { colors } = useColorScheme();
   const [mode, setMode] = useState<Mode>({ type: "idle" });
 
   const autoCloseTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,7 +139,7 @@ export default function Sharing() {
   };
 
   return (
-    <View className="flex-1 items-center justify-center bg-background">
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Hidden component that handles the save logic */}
       {mode.type === "idle" && <SaveBookmark setMode={setMode} />}
 
@@ -148,18 +150,21 @@ export default function Sharing() {
       {(mode.type === "success" || mode.type === "alreadyExists") && (
         <Animated.View
           entering={FadeIn.duration(200)}
-          className="items-center gap-6"
+          style={styles.stateContainer}
         >
           <SuccessAnimation isAlreadyExists={mode.type === "alreadyExists"} />
 
           <Animated.View
             entering={FadeIn.delay(400).duration(300)}
-            className="items-center gap-2"
+            style={styles.textGroup}
           >
-            <Text variant="title1" className="font-semibold text-foreground">
+            <Text
+              variant="title1"
+              style={[styles.titleText, { color: colors.foreground }]}
+            >
               {mode.type === "alreadyExists" ? "Already Hoarded!" : "Hoarded!"}
             </Text>
-            <Text variant="body" className="text-muted-foreground">
+            <Text variant="body" style={{ color: colors.mutedForeground }}>
               {mode.type === "alreadyExists"
                 ? "This item was saved before"
                 : "Saved to your collection"}
@@ -168,18 +173,23 @@ export default function Sharing() {
 
           <Animated.View
             entering={FadeIn.delay(600).duration(300)}
-            className="items-center gap-3 pt-2"
+            style={styles.buttonGroup}
           >
             <Button onPress={handleManage} variant="primary" size="lg">
-              <Text className="font-medium text-primary-foreground">
+              <Text
+                style={[styles.manageText, { color: colors.primaryForeground }]}
+              >
                 Manage
               </Text>
             </Button>
             <Pressable
               onPress={handleDismiss}
-              className="px-4 py-2 active:opacity-60"
+              style={({ pressed }) => [
+                styles.dismissButton,
+                pressed && { opacity: 0.6 },
+              ]}
             >
-              <Text className="text-muted-foreground">Dismiss</Text>
+              <Text style={{ color: colors.mutedForeground }}>Dismiss</Text>
             </Pressable>
           </Animated.View>
         </Animated.View>
@@ -189,31 +199,37 @@ export default function Sharing() {
       {mode.type === "error" && (
         <Animated.View
           entering={FadeIn.duration(200)}
-          className="items-center gap-6"
+          style={styles.stateContainer}
         >
           <ErrorAnimation />
 
           <Animated.View
             entering={FadeIn.delay(300).duration(300)}
-            className="items-center gap-2"
+            style={styles.textGroup}
           >
-            <Text variant="title1" className="font-semibold text-foreground">
+            <Text
+              variant="title1"
+              style={[styles.titleText, { color: colors.foreground }]}
+            >
               Oops!
             </Text>
-            <Text variant="body" className="text-muted-foreground">
+            <Text variant="body" style={{ color: colors.mutedForeground }}>
               Something went wrong
             </Text>
           </Animated.View>
 
           <Animated.View
             entering={FadeIn.delay(500).duration(300)}
-            className="items-center gap-3 pt-2"
+            style={styles.buttonGroup}
           >
             <Pressable
               onPress={handleDismiss}
-              className="px-4 py-2 active:opacity-60"
+              style={({ pressed }) => [
+                styles.dismissButton,
+                pressed && { opacity: 0.6 },
+              ]}
             >
-              <Text className="text-muted-foreground">Dismiss</Text>
+              <Text style={{ color: colors.mutedForeground }}>Dismiss</Text>
             </Pressable>
           </Animated.View>
         </Animated.View>
@@ -221,3 +237,34 @@ export default function Sharing() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stateContainer: {
+    alignItems: "center",
+    gap: 24,
+  },
+  textGroup: {
+    alignItems: "center",
+    gap: 8,
+  },
+  titleText: {
+    fontWeight: "600",
+  },
+  buttonGroup: {
+    alignItems: "center",
+    gap: 12,
+    paddingTop: 8,
+  },
+  manageText: {
+    fontWeight: "500",
+  },
+  dismissButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+});

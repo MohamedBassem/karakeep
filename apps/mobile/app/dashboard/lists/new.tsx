@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 import { useCreateBookmarkList } from "@karakeep/shared-react/hooks/lists";
 
@@ -15,6 +16,7 @@ const NewListPage = () => {
     router.back();
   };
   const { toast } = useToast();
+  const { colors } = useColorScheme();
   const [text, setText] = useState("");
   const [listType, setListType] = useState<ListType>("manual");
   const [query, setQuery] = useState("");
@@ -59,12 +61,14 @@ const NewListPage = () => {
   };
 
   return (
-    <View className="gap-3 px-4">
+    <View style={styles.container}>
       {/* List Type Selector */}
-      <View className="gap-2">
-        <Text className="text-sm text-muted-foreground">List Type</Text>
-        <View className="flex flex-row gap-2">
-          <View className="flex-1">
+      <View style={styles.fieldGroup}>
+        <Text style={[styles.label, { color: colors.mutedForeground }]}>
+          List Type
+        </Text>
+        <View style={styles.row}>
+          <View style={styles.flex1}>
             <Button
               variant={listType === "manual" ? "primary" : "secondary"}
               onPress={() => setListType("manual")}
@@ -72,7 +76,7 @@ const NewListPage = () => {
               <Text>Manual</Text>
             </Button>
           </View>
-          <View className="flex-1">
+          <View style={styles.flex1}>
             <Button
               variant={listType === "smart" ? "primary" : "secondary"}
               onPress={() => setListType("smart")}
@@ -84,10 +88,11 @@ const NewListPage = () => {
       </View>
 
       {/* List Name */}
-      <View className="flex flex-row items-center gap-1">
-        <Text className="shrink p-2">📁</Text>
+      <View style={styles.nameRow}>
+        <Text style={styles.icon}>📁</Text>
         <Input
-          className="flex-1 bg-card"
+          style={styles.flex1}
+          inputStyle={{ backgroundColor: colors.card }}
           onChangeText={setText}
           placeholder="List Name"
           autoFocus
@@ -97,16 +102,18 @@ const NewListPage = () => {
 
       {/* Smart List Query Input */}
       {listType === "smart" && (
-        <View className="gap-2">
-          <Text className="text-sm text-muted-foreground">Search Query</Text>
+        <View style={styles.fieldGroup}>
+          <Text style={[styles.label, { color: colors.mutedForeground }]}>
+            Search Query
+          </Text>
           <Input
-            className="bg-card"
+            inputStyle={{ backgroundColor: colors.card }}
             onChangeText={setQuery}
             value={query}
             placeholder="e.g., #important OR list:work"
             autoCapitalize={"none"}
           />
-          <Text className="text-xs italic text-muted-foreground">
+          <Text style={[styles.italic, { color: colors.mutedForeground }]}>
             Smart lists automatically show bookmarks matching your search query
           </Text>
         </View>
@@ -120,3 +127,36 @@ const NewListPage = () => {
 };
 
 export default NewListPage;
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  fieldGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  flex1: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  icon: {
+    flexShrink: 1,
+    padding: 8,
+  },
+  italic: {
+    fontSize: 12,
+    fontStyle: "italic",
+  },
+});

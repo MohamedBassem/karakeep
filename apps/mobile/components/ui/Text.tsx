@@ -1,52 +1,78 @@
 import * as React from "react";
-import { Text as RNText } from "react-native";
-import { cn } from "@/lib/utils";
-import { cva, VariantProps } from "class-variance-authority";
+import { StyleSheet, Text as RNText, TextStyle } from "react-native";
+import { useColorScheme } from "@/lib/useColorScheme";
 
-const textVariants = cva("text-foreground", {
-  variants: {
-    variant: {
-      largeTitle: "text-4xl",
-      title1: "text-2xl",
-      title2: "text-[22px] leading-7",
-      title3: "text-xl",
-      heading: "text-[17px] font-semibold leading-6",
-      body: "text-[17px] leading-6",
-      callout: "text-base",
-      subhead: "text-[15px] leading-6",
-      footnote: "text-[13px] leading-5",
-      caption1: "text-xs",
-      caption2: "text-[11px] leading-4",
-    },
-    color: {
-      primary: "",
-      secondary: "text-secondary-foreground/90",
-      tertiary: "text-muted-foreground/90",
-      quarternary: "text-muted-foreground/50",
-    },
-  },
-  defaultVariants: {
-    variant: "body",
-    color: "primary",
-  },
+type TextVariant =
+  | "largeTitle"
+  | "title1"
+  | "title2"
+  | "title3"
+  | "heading"
+  | "body"
+  | "callout"
+  | "subhead"
+  | "footnote"
+  | "caption1"
+  | "caption2";
+
+type TextColor = "primary" | "secondary" | "tertiary" | "quarternary";
+
+const variantStyles: Record<TextVariant, TextStyle> = StyleSheet.create({
+  largeTitle: { fontSize: 36 },
+  title1: { fontSize: 24 },
+  title2: { fontSize: 22, lineHeight: 28 },
+  title3: { fontSize: 20 },
+  heading: { fontSize: 17, fontWeight: "600", lineHeight: 24 },
+  body: { fontSize: 17, lineHeight: 24 },
+  callout: { fontSize: 16 },
+  subhead: { fontSize: 15, lineHeight: 24 },
+  footnote: { fontSize: 13, lineHeight: 20 },
+  caption1: { fontSize: 12 },
+  caption2: { fontSize: 11, lineHeight: 16 },
 });
 
-const TextClassContext = React.createContext<string | undefined>(undefined);
+interface TextContextValue {
+  style?: TextStyle | TextStyle[];
+}
+
+const TextStyleContext = React.createContext<TextContextValue>({});
+
+interface TextProps extends React.ComponentPropsWithoutRef<typeof RNText> {
+  variant?: TextVariant;
+  color?: TextColor;
+}
 
 function Text({
-  className,
-  variant,
-  color,
+  style,
+  variant = "body",
+  color = "primary",
   ...props
-}: React.ComponentPropsWithoutRef<typeof RNText> &
-  VariantProps<typeof textVariants>) {
-  const textClassName = React.useContext(TextClassContext);
+}: TextProps) {
+  const { colors } = useColorScheme();
+  const ctx = React.useContext(TextStyleContext);
+
+  const colorValue: TextStyle =
+    color === "primary"
+      ? { color: colors.foreground }
+      : color === "secondary"
+        ? { color: withOpacity(colors.secondaryForeground, 0.9) }
+        : color === "tertiary"
+          ? { color: withOpacity(colors.mutedForeground, 0.9) }
+          : { color: withOpacity(colors.mutedForeground, 0.5) };
+
   return (
     <RNText
-      className={cn(textVariants({ variant, color }), textClassName, className)}
+      style={[variantStyles[variant], colorValue, ctx.style, style]}
       {...props}
     />
   );
 }
 
-export { Text, TextClassContext, textVariants };
+function withOpacity(rgb: string, opacity: number) {
+  const m = rgb.match(/\d+/g);
+  if (!m || m.length < 3) return rgb;
+  return `rgba(${m[0]}, ${m[1]}, ${m[2]}, ${opacity})`;
+}
+
+export { Text, TextStyleContext, withOpacity };
+export type { TextVariant, TextColor };

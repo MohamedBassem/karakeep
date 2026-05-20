@@ -1,17 +1,10 @@
 const { FileStore } = require("metro-cache");
-const { withNativeWind } = require("nativewind/metro");
 const path = require("path");
 const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 
 module.exports = withTurborepoManagedCache(
-  withMonorepoPaths(
-    // eslint-disable-next-line no-undef
-    withNativeWind(getSentryExpoConfig(__dirname), {
-      input: "./globals.css",
-      configPath: "./tailwind.config.js",
-      inlineRem: 16,
-    }),
-  ),
+  // eslint-disable-next-line no-undef
+  withMonorepoPaths(getSentryExpoConfig(__dirname)),
 );
 
 /**

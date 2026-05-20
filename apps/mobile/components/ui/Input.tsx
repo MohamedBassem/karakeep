@@ -1,39 +1,80 @@
-import type { TextInputProps } from "react-native";
+import type {
+  StyleProp,
+  TextInputProps,
+  TextStyle,
+  ViewStyle,
+} from "react-native";
 import { forwardRef } from "react";
-import { ActivityIndicator, TextInput, View } from "react-native";
+import { ActivityIndicator, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "@/components/ui/Text";
-import { cn } from "@/lib/utils";
+import { useColorScheme } from "@/lib/useColorScheme";
+import { withOpacity } from "@/components/ui/Text";
 
 export interface InputProps extends TextInputProps {
   label?: string;
-  labelClasses?: string;
-  inputClasses?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
+  inputStyle?: StyleProp<TextStyle>;
   loading?: boolean;
 }
 
 export const Input = forwardRef<TextInput, InputProps>(
   (
-    { className, label, labelClasses, inputClasses, loading, ...props },
+    { label, containerStyle, labelStyle, inputStyle, loading, style, ...props },
     ref,
   ) => {
+    const { colors } = useColorScheme();
     return (
-      <View className={cn("flex flex-col gap-1.5", className)}>
-        {label && (
-          <Text className={cn("text-base", labelClasses)}>{label}</Text>
-        )}
+      <View style={[styles.container, containerStyle]}>
+        {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
         <TextInput
           ref={ref}
-          className={cn(
-            "flex h-10 w-full min-w-0 flex-row items-center rounded-md border border-input text-base leading-5 text-foreground shadow-sm shadow-black/5 dark:bg-input/30 sm:h-9",
-            "rounded-lg border border-input px-4 py-2.5 placeholder:text-muted-foreground/50",
-            inputClasses,
-          )}
+          placeholderTextColor={withOpacity(colors.mutedForeground, 0.5)}
+          style={[
+            styles.input,
+            {
+              borderColor: colors.input,
+              color: colors.foreground,
+            },
+            inputStyle,
+            style,
+          ]}
           {...props}
         />
-        {loading && (
-          <ActivityIndicator className="absolute bottom-0 right-0 p-2" />
-        )}
+        {loading && <ActivityIndicator style={styles.spinner} />}
       </View>
     );
   },
 );
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "column",
+    gap: 6,
+  },
+  label: {
+    fontSize: 16,
+  },
+  input: {
+    height: 40,
+    width: "100%",
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 16,
+    lineHeight: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  spinner: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    padding: 8,
+  },
+});

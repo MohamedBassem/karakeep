@@ -1,24 +1,35 @@
-import { View } from "react-native";
-import { cn } from "@/lib/utils";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { useColorScheme } from "@/lib/useColorScheme";
+import { withOpacity } from "@/components/ui/Text";
 
 function Divider({
-  className,
+  style,
   orientation,
   ...props
 }: {
   color?: string;
   orientation: "horizontal" | "vertical";
-} & React.ComponentPropsWithoutRef<typeof View>) {
+  style?: StyleProp<ViewStyle>;
+} & Omit<React.ComponentPropsWithoutRef<typeof View>, "style">) {
+  const { colors, isDarkColorScheme } = useColorScheme();
+  const bg = isDarkColorScheme
+    ? withOpacity(colors.border, 0.5)
+    : "rgba(148, 163, 184, 0.2)"; // slate-400/20
   return (
     <View
-      className={cn(
-        "bg-slate-400/20 dark:bg-border/50",
-        orientation === "horizontal" ? "h-0.5" : "w-0.5",
-        className,
-      )}
+      style={[
+        { backgroundColor: bg },
+        orientation === "horizontal" ? styles.horizontal : styles.vertical,
+        style,
+      ]}
       {...props}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  horizontal: { height: 2 },
+  vertical: { width: 2 },
+});
 
 export { Divider };

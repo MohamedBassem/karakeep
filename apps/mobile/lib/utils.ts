@@ -2,6 +2,11 @@ import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+/**
+ * Used by web-targeted components from `@karakeep/shared-react` that resolve
+ * `@/lib/utils` via the mobile tsconfig path alias. The mobile app itself does
+ * not style with className.
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -12,24 +17,9 @@ export function cn(...inputs: ClassValue[]) {
  * @example
  * ```
  * <View {...condProps(
- *     { condition: true, props: { className: "foo" } },
- *     { condition: true, props: { style: { margin: "10px" } } },
+ *     { condition: true, props: { style: { margin: 10 } } },
+ *     { condition: false, props: { style: { padding: 8 } } },
  * )} />
- * ```
- * results in:
- * ```
- * <View className="foo" style={ margin: "10px" } />
- * ```
- * @example
- * ```
- * <View style={condProps(
- *     { condition: true, color: "red" },
- *     { condition: true, fontWeight: "bold" }
- * )} />
- * ```
- * results in:
- * ```
- * <View style={ color: "red", fontWeight: "bold" } />
  * ```
  */
 export function condProps(

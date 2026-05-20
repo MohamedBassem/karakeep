@@ -4,7 +4,7 @@ import ReactNativeBlobUtil from "react-native-blob-util";
 import Pdf from "react-native-pdf";
 import { Text } from "@/components/ui/Text";
 import { useQuery } from "@tanstack/react-query";
-import { useColorScheme } from "nativewind";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 interface PDFViewerProps {
   source: string;
@@ -13,8 +13,7 @@ interface PDFViewerProps {
 
 export function PDFViewer({ source, headers }: PDFViewerProps) {
   const [pdfRenderError, setPdfRenderError] = useState<string | null>(null);
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDarkColorScheme: isDark } = useColorScheme();
   const colors = {
     background: isDark ? "#000" : "#fff",
     foreground: isDark ? "#fff" : "#000",

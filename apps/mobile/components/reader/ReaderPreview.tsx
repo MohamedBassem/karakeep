@@ -96,7 +96,14 @@ export const ReaderPreview = forwardRef<ReaderPreviewRef, ReaderPreviewProps>(
     `;
 
     return (
-      <View className="h-32 w-full overflow-hidden rounded-lg">
+      <View
+        style={{
+          height: 128,
+          width: "100%",
+          overflow: "hidden",
+          borderRadius: 8,
+        }}
+      >
         <WebView
           ref={webViewRef}
           originWhitelist={["*"]}

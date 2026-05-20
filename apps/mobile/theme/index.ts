@@ -7,8 +7,8 @@ const NAV_THEME = {
     ...DefaultTheme,
     colors: {
       background: COLORS.light.background,
-      border: COLORS.light.grey5,
-      card: COLORS.light.card,
+      border: COLORS.light.border,
+      card: COLORS.light.background,
       notification: COLORS.light.destructive,
       primary: COLORS.light.primary,
       text: COLORS.black,
@@ -18,7 +18,7 @@ const NAV_THEME = {
     ...DarkTheme,
     colors: {
       background: COLORS.dark.background,
-      border: COLORS.dark.grey5,
+      border: COLORS.dark.border,
       card: COLORS.dark.grey6,
       notification: COLORS.dark.destructive,
       primary: COLORS.dark.primary,

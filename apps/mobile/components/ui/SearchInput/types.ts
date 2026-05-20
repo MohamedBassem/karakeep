@@ -1,8 +1,15 @@
-import type { TextInput, TextInputProps } from "react-native";
+import type {
+  StyleProp,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  ViewStyle,
+} from "react-native";
 
-interface SearchInputProps extends TextInputProps {
-  containerClassName?: string;
-  iconContainerClassName?: string;
+interface SearchInputProps extends Omit<TextInputProps, "style"> {
+  containerStyle?: StyleProp<ViewStyle>;
+  iconContainerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
   cancelText?: string;
   iconColor?: string;
   onCancel?: () => void;

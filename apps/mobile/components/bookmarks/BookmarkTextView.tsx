@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
+import {
+  Keyboard,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import BookmarkTextMarkdown from "@/components/bookmarks/BookmarkTextMarkdown";
 import { Button } from "@/components/ui/Button";
-import { Text } from "@/components/ui/Text";
+import { Text, withOpacity } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
-import { useColorScheme } from "nativewind";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 import { useUpdateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
 import { BookmarkTypes, ZBookmark } from "@karakeep/shared/types/bookmarks";
@@ -18,7 +25,7 @@ export default function BookmarkTextView({ bookmark }: BookmarkTextViewProps) {
     throw new Error("Wrong content type rendered");
   }
   const { toast } = useToast();
-  const { colorScheme } = useColorScheme();
+  const { isDarkColorScheme, colors } = useColorScheme();
 
   const [isEditing, setIsEditing] = useState(false);
   const initialText = bookmark.content.text;
@@ -55,8 +62,8 @@ export default function BookmarkTextView({ bookmark }: BookmarkTextViewProps) {
 
   if (isEditing) {
     return (
-      <View className="flex-1 p-4">
-        <View className="flex-row justify-end gap-2 px-4 py-2">
+      <View style={styles.editContainer}>
+        <View style={styles.editToolbar}>
           <Button
             size="sm"
             onPress={handleDiscard}
@@ -77,18 +84,18 @@ export default function BookmarkTextView({ bookmark }: BookmarkTextViewProps) {
           autoFocus
           editable={!isPending}
           placeholder="Enter your text here..."
-          placeholderTextColor={colorScheme === "dark" ? "#666" : "#999"}
+          placeholderTextColor={isDarkColorScheme ? "#666" : "#999"}
           style={{
             flex: 1,
             fontSize: 16,
             lineHeight: 24,
-            color: colorScheme === "dark" ? "#fff" : "#000",
+            color: isDarkColorScheme ? "#fff" : "#000",
             textAlignVertical: "top",
             padding: 12,
             borderRadius: 8,
             borderWidth: 1,
-            borderColor: colorScheme === "dark" ? "#333" : "#ddd",
-            backgroundColor: colorScheme === "dark" ? "#111" : "#fff",
+            borderColor: isDarkColorScheme ? "#333" : "#ddd",
+            backgroundColor: isDarkColorScheme ? "#111" : "#fff",
           }}
         />
       </View>
@@ -96,12 +103,22 @@ export default function BookmarkTextView({ bookmark }: BookmarkTextViewProps) {
   }
 
   return (
-    <ScrollView className="m-4 flex-1 rounded-lg border border-border bg-card p-2">
+    <ScrollView
+      style={[
+        styles.viewScroll,
+        { borderColor: colors.border, backgroundColor: colors.card },
+      ]}
+    >
       <Pressable onPress={() => setIsEditing(true)}>
-        <View className="min-h-[200px] rounded-xl p-4">
+        <View style={styles.viewBody}>
           <BookmarkTextMarkdown text={content} />
           {content.trim() === "" && (
-            <Text className="italic text-muted-foreground">
+            <Text
+              style={{
+                fontStyle: "italic",
+                color: withOpacity(colors.mutedForeground, 0.9),
+              }}
+            >
               Tap to add text...
             </Text>
           )}
@@ -110,3 +127,29 @@ export default function BookmarkTextView({ bookmark }: BookmarkTextViewProps) {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  editContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  editToolbar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  viewScroll: {
+    margin: 16,
+    flex: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 8,
+  },
+  viewBody: {
+    minHeight: 200,
+    borderRadius: 12,
+    padding: 16,
+  },
+});

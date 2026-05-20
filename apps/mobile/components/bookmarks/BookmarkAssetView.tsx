@@ -25,7 +25,7 @@ export default function BookmarkAssetView({
   // Check if this is a PDF asset
   if (bookmark.content.assetType === "pdf") {
     return (
-      <View className="flex flex-1">
+      <View style={{ flex: 1 }}>
         <PDFViewer
           source={assetSource.uri ?? ""}
           headers={assetSource.headers}
@@ -36,7 +36,7 @@ export default function BookmarkAssetView({
 
   // Handle image assets as before
   return (
-    <View className="flex flex-1 gap-2">
+    <View style={{ flex: 1, gap: 8 }}>
       <ImageView
         visible={imageZoom}
         imageIndex={0}
@@ -48,7 +48,7 @@ export default function BookmarkAssetView({
       <Pressable onPress={() => setImageZoom(true)}>
         <BookmarkAssetImage
           assetId={bookmark.content.assetId}
-          className="h-56 min-h-56 w-full"
+          style={{ height: 224, minHeight: 224, width: "100%" }}
         />
       </Pressable>
     </View>

@@ -1,20 +1,20 @@
-import { View } from "react-native";
+import { StyleProp, View, ViewStyle } from "react-native";
 import { Image, ImageContentFit } from "expo-image";
 import { useAssetUrl } from "@/lib/hooks";
 
 export default function BookmarkAssetImage({
   assetId,
-  className,
+  style,
   contentFit = "cover",
 }: {
   assetId: string;
-  className: string;
+  style?: StyleProp<ViewStyle>;
   contentFit?: ImageContentFit;
 }) {
   const assetSource = useAssetUrl(assetId);
 
   return (
-    <View className={className}>
+    <View style={style}>
       <Image
         source={assetSource}
         style={{ width: "100%", height: "100%" }}

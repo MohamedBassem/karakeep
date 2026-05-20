@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 import { useCreateBookmark } from "@karakeep/shared-react/hooks/bookmarks";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
@@ -17,6 +18,7 @@ const NoteEditorPage = () => {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | undefined>();
   const { toast } = useToast();
+  const { colors } = useColorScheme();
 
   const { mutate: createBookmark, isPending } = useCreateBookmark({
     onSuccess: (resp) => {
@@ -58,13 +60,11 @@ const NoteEditorPage = () => {
   };
 
   return (
-    <View className="flex-1 gap-2 px-4 pt-4">
-      {error && (
-        <Text className="w-full text-center text-red-500">{error}</Text>
-      )}
+    <View style={styles.container}>
+      {error && <Text style={styles.errorText}>{error}</Text>}
       <Input
         onChangeText={setText}
-        className="bg-card"
+        inputStyle={{ backgroundColor: colors.card }}
         multiline
         placeholder="What's on your mind?"
         autoFocus
@@ -79,3 +79,17 @@ const NoteEditorPage = () => {
 };
 
 export default NoteEditorPage;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  errorText: {
+    width: "100%",
+    textAlign: "center",
+    color: "#ef4444",
+  },
+});

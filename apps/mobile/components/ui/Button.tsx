@@ -1,82 +1,158 @@
-import type { VariantProps } from "class-variance-authority";
 import * as React from "react";
 import {
   Platform,
   Pressable,
   PressableProps,
+  StyleProp,
+  TextStyle,
   View,
   ViewStyle,
 } from "react-native";
-import { TextClassContext } from "@/components/ui/Text";
+import { TextStyleContext, withOpacity } from "@/components/ui/Text";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { cn } from "@/lib/utils";
-import { COLORS } from "@/theme/colors";
+import { COLORS, ThemeColors } from "@/theme/colors";
 import * as Slot from "@rn-primitives/slot";
-import { cva } from "class-variance-authority";
 
-const buttonVariants = cva("flex-row items-center justify-center gap-2", {
-  variants: {
-    variant: {
-      primary: "ios:active:opacity-80 bg-primary",
-      secondary:
-        "ios:border-primary ios:active:bg-primary/5 border border-foreground/40",
-      tonal:
-        "ios:bg-primary/10 dark:ios:bg-primary/10 ios:active:bg-primary/15 bg-primary/15 dark:bg-primary/30",
-      plain: "ios:active:opacity-70",
-      destructive:
-        "ios:bg-destructive border border-destructive/5 bg-destructive/80",
-    },
-    size: {
-      none: "",
-      sm: "rounded-full px-2.5 py-1",
-      md: "ios:rounded-lg ios:py-1.5 ios:px-3.5 rounded-full px-5 py-2",
-      lg: "ios:py-2 gap-2 rounded-xl px-5 py-2.5",
-      icon: "ios:rounded-lg h-10 w-10 rounded-full",
-    },
-  },
-  defaultVariants: {
-    variant: "primary",
-    size: "md",
-  },
-});
+type Variant = "primary" | "secondary" | "tonal" | "plain" | "destructive";
+type Size = "none" | "sm" | "md" | "lg" | "icon";
 
-const androidRootVariants = cva("overflow-hidden", {
-  variants: {
-    size: {
-      none: "",
-      icon: "rounded-full",
-      sm: "rounded-full",
-      md: "rounded-full",
-      lg: "rounded-xl",
-    },
-  },
-  defaultVariants: {
-    size: "md",
-  },
-});
+const BORDER_CURVE: ViewStyle = {
+  borderCurve: "continuous",
+};
 
-const buttonTextVariants = cva("font-medium", {
-  variants: {
-    variant: {
-      primary: "text-white",
-      secondary: "ios:text-primary text-foreground",
-      tonal: "ios:text-primary text-foreground",
-      plain: "text-foreground",
-      destructive: "text-white",
-    },
-    size: {
-      none: "",
-      icon: "",
-      sm: "text-[15px] leading-5",
-      md: "text-[17px] leading-7",
-      lg: "text-[17px] leading-7",
-    },
-  },
-  defaultVariants: {
-    variant: "primary",
-    size: "md",
-  },
-});
+function containerStyle(
+  variant: Variant,
+  size: Size,
+  colors: ThemeColors,
+): ViewStyle {
+  const isIOS = Platform.OS === "ios";
+  const base: ViewStyle = {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  };
+
+  let variantStyle: ViewStyle = {};
+  switch (variant) {
+    case "primary":
+      variantStyle = { backgroundColor: colors.primary };
+      break;
+    case "secondary":
+      variantStyle = {
+        borderWidth: 1,
+        borderColor: isIOS
+          ? colors.primary
+          : withOpacity(colors.foreground, 0.4),
+      };
+      break;
+    case "tonal":
+      variantStyle = {
+        backgroundColor: isIOS
+          ? withOpacity(colors.primary, 0.1)
+          : withOpacity(colors.primary, 0.15),
+      };
+      break;
+    case "plain":
+      variantStyle = {};
+      break;
+    case "destructive":
+      variantStyle = {
+        backgroundColor: isIOS
+          ? colors.destructive
+          : withOpacity(colors.destructive, 0.8),
+        borderWidth: 1,
+        borderColor: withOpacity(colors.destructive, 0.05),
+      };
+      break;
+  }
+
+  let sizeStyle: ViewStyle = {};
+  switch (size) {
+    case "none":
+      sizeStyle = {};
+      break;
+    case "sm":
+      sizeStyle = {
+        borderRadius: 9999,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+      };
+      break;
+    case "md":
+      sizeStyle = isIOS
+        ? { borderRadius: 8, paddingHorizontal: 14, paddingVertical: 6 }
+        : { borderRadius: 9999, paddingHorizontal: 20, paddingVertical: 8 };
+      break;
+    case "lg":
+      sizeStyle = isIOS
+        ? {
+            borderRadius: 12,
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            gap: 8,
+          }
+        : {
+            borderRadius: 12,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            gap: 8,
+          };
+      break;
+    case "icon":
+      sizeStyle = {
+        height: 40,
+        width: 40,
+        borderRadius: isIOS ? 8 : 9999,
+      };
+      break;
+  }
+
+  return { ...base, ...variantStyle, ...sizeStyle };
+}
+
+function androidRootStyle(size: Size): ViewStyle {
+  const base: ViewStyle = { overflow: "hidden" };
+  switch (size) {
+    case "icon":
+    case "sm":
+    case "md":
+      return { ...base, borderRadius: 9999 };
+    case "lg":
+      return { ...base, borderRadius: 12 };
+    default:
+      return base;
+  }
+}
+
+function buttonTextStyle(variant: Variant, size: Size): TextStyle {
+  const base: TextStyle = { fontWeight: "500" };
+  let sizeStyle: TextStyle = {};
+  switch (size) {
+    case "sm":
+      sizeStyle = { fontSize: 15, lineHeight: 20 };
+      break;
+    case "md":
+    case "lg":
+      sizeStyle = { fontSize: 17, lineHeight: 28 };
+      break;
+  }
+  return { ...base, ...sizeStyle };
+}
+
+function buttonTextColor(variant: Variant, colors: ThemeColors): TextStyle {
+  const isIOS = Platform.OS === "ios";
+  switch (variant) {
+    case "primary":
+    case "destructive":
+      return { color: "#fff" };
+    case "secondary":
+    case "tonal":
+      return { color: isIOS ? colors.primary : colors.foreground };
+    case "plain":
+      return { color: colors.foreground };
+  }
+}
 
 function convertToRGBA(rgb: string, opacity: number): string {
   const rgbValues = rgb.match(/\d+/g);
@@ -86,9 +162,6 @@ function convertToRGBA(rgb: string, opacity: number): string {
   const red = parseInt(rgbValues[0], 10);
   const green = parseInt(rgbValues[1], 10);
   const blue = parseInt(rgbValues[2], 10);
-  if (opacity < 0 || opacity > 1) {
-    throw new Error("Opacity must be a number between 0 and 1");
-  }
   return `rgba(${red},${green},${blue},${opacity})`;
 }
 
@@ -127,26 +200,11 @@ const ANDROID_RIPPLE = {
   },
 };
 
-// Add as class when possible: https://github.com/marklawlor/nativewind/issues/522
-const BORDER_CURVE: ViewStyle = {
-  borderCurve: "continuous",
-};
-
-type ButtonVariantProps = Omit<
-  VariantProps<typeof buttonVariants>,
-  "variant"
-> & {
-  variant?: Exclude<VariantProps<typeof buttonVariants>["variant"], null>;
-};
-
-interface AndroidOnlyButtonProps {
-  /**
-   * ANDROID ONLY: The class name of root responsible for hidding the ripple overflow.
-   */
-  androidRootClassName?: string;
+interface ButtonProps extends PressableProps {
+  variant?: Variant;
+  size?: Size;
+  androidRootStyle?: StyleProp<ViewStyle>;
 }
-
-type ButtonProps = PressableProps & ButtonVariantProps & AndroidOnlyButtonProps;
 
 const Root = Platform.OS === "android" ? View : Slot.Pressable;
 
@@ -156,45 +214,44 @@ const Button = React.forwardRef<
 >(
   (
     {
-      className,
       variant = "primary",
-      size,
+      size = "md",
       style = BORDER_CURVE,
-      androidRootClassName,
+      androidRootStyle: androidRootStyleProp,
       ...props
     },
     ref,
   ) => {
-    const { colorScheme } = useColorScheme();
+    const { colorScheme, colors } = useColorScheme();
+    const containerSty = containerStyle(variant, size, colors);
+    const txtSty = buttonTextStyle(variant, size);
+    const txtColor = buttonTextColor(variant, colors);
+
+    const rootSty: StyleProp<ViewStyle> =
+      Platform.OS === "android"
+        ? [androidRootStyle(size), androidRootStyleProp]
+        : androidRootStyleProp;
 
     return (
-      <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-        <Root
-          className={Platform.select({
-            ios: androidRootClassName,
-            default: androidRootVariants({
-              size,
-              className: androidRootClassName,
-            }),
-          })}
-        >
+      <TextStyleContext.Provider value={{ style: [txtSty, txtColor] }}>
+        <Root style={rootSty}>
           <Pressable
-            className={cn(
-              props.disabled && "opacity-50",
-              buttonVariants({ variant, size, className }),
-            )}
             ref={ref}
-            style={style}
+            style={(state) => [
+              containerSty,
+              props.disabled && { opacity: 0.5 },
+              typeof style === "function" ? style(state) : style,
+            ]}
             android_ripple={ANDROID_RIPPLE[colorScheme][variant]}
             {...props}
           />
         </Root>
-      </TextClassContext.Provider>
+      </TextStyleContext.Provider>
     );
   },
 );
 
 Button.displayName = "Button";
 
-export { Button, buttonTextVariants, buttonVariants };
-export type { ButtonProps };
+export { Button };
+export type { ButtonProps, Variant as ButtonVariant, Size as ButtonSize };

@@ -1,12 +1,16 @@
-import type { View } from "react-native";
+import type { StyleProp, View, ViewStyle } from "react-native";
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
-import { cn } from "@/lib/utils";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 function Skeleton({
-  className,
+  style,
   ...props
-}: { className?: string } & React.ComponentPropsWithoutRef<typeof View>) {
+}: { style?: StyleProp<ViewStyle> } & Omit<
+  React.ComponentPropsWithoutRef<typeof View>,
+  "style"
+>) {
+  const { colors } = useColorScheme();
   const fadeAnim = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
@@ -28,8 +32,10 @@ function Skeleton({
 
   return (
     <Animated.View
-      className={cn("rounded-md bg-muted", className)}
-      style={[{ opacity: fadeAnim }]}
+      style={[
+        { borderRadius: 6, backgroundColor: colors.muted, opacity: fadeAnim },
+        style,
+      ]}
       {...props}
     />
   );

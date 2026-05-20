@@ -54,7 +54,7 @@ export default function HighlightList({
       onEndReached={fetchNextPage}
       ListFooterComponent={
         isFetchingNextPage ? (
-          <View className="items-center">
+          <View style={{ alignItems: "center" }}>
             <ActivityIndicator />
           </View>
         ) : (

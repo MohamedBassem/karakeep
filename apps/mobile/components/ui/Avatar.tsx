@@ -1,29 +1,34 @@
 import * as React from "react";
-import { View } from "react-native";
+import {
+  StyleProp,
+  StyleSheet,
+  TextStyle,
+  View,
+  ViewStyle,
+} from "react-native";
 import { Image } from "expo-image";
 import { Text } from "@/components/ui/Text";
 import { useAssetUrl } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
 
 interface AvatarProps {
   image?: string | null;
   name?: string | null;
   size?: number;
-  className?: string;
-  fallbackClassName?: string;
+  style?: StyleProp<ViewStyle>;
+  fallbackStyle?: StyleProp<ViewStyle>;
 }
 
 const AVATAR_COLORS = [
-  "#f87171", // red-400
-  "#fb923c", // orange-400
-  "#fbbf24", // amber-400
-  "#a3e635", // lime-400
-  "#34d399", // emerald-400
-  "#22d3ee", // cyan-400
-  "#60a5fa", // blue-400
-  "#818cf8", // indigo-400
-  "#a78bfa", // violet-400
-  "#e879f9", // fuchsia-400
+  "#f87171",
+  "#fb923c",
+  "#fbbf24",
+  "#a3e635",
+  "#34d399",
+  "#22d3ee",
+  "#60a5fa",
+  "#818cf8",
+  "#a78bfa",
+  "#e879f9",
 ];
 
 function nameToColor(name: string | null | undefined): string {
@@ -43,19 +48,15 @@ export function Avatar({
   image,
   name,
   size = 40,
-  className,
-  fallbackClassName,
+  style,
+  fallbackStyle,
 }: AvatarProps) {
   const [imageError, setImageError] = React.useState(false);
   const assetUrl = useAssetUrl(image ?? "");
 
   const imageUrl = React.useMemo(() => {
     if (!image) return null;
-    return isExternalUrl(image)
-      ? {
-          uri: image,
-        }
-      : assetUrl;
+    return isExternalUrl(image) ? { uri: image } : assetUrl;
   }, [image]);
 
   React.useEffect(() => {
@@ -72,29 +73,33 @@ export function Avatar({
 
   return (
     <View
-      className={cn("overflow-hidden", className)}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: showFallback ? avatarColor : undefined,
-      }}
+      style={[
+        styles.container,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: showFallback ? avatarColor : undefined,
+        },
+        style,
+      ]}
     >
       {showFallback ? (
         <View
-          className={cn(
-            "flex h-full w-full items-center justify-center",
-            fallbackClassName,
-          )}
-          style={{ backgroundColor: avatarColor }}
+          style={[
+            styles.fallback,
+            { backgroundColor: avatarColor },
+            fallbackStyle,
+          ]}
         >
           <Text
-            className="text-white"
-            style={{
-              fontSize: size * 0.4,
-              lineHeight: size * 0.4,
-              textAlign: "center",
-            }}
+            style={[
+              styles.initials,
+              {
+                fontSize: size * 0.4,
+                lineHeight: size * 0.4,
+              } as TextStyle,
+            ]}
           >
             {initials}
           </Text>
@@ -102,7 +107,7 @@ export function Avatar({
       ) : (
         <Image
           source={imageUrl}
-          style={{ width: "100%", height: "100%" }}
+          style={styles.image}
           contentFit="cover"
           onError={() => setImageError(true)}
         />
@@ -110,3 +115,24 @@ export function Avatar({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    overflow: "hidden",
+  },
+  fallback: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  initials: {
+    color: "#fff",
+    textAlign: "center",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+});

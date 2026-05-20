@@ -1,7 +1,7 @@
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TailwindResolver } from "@/components/TailwindResolver";
 import { Text } from "@/components/ui/Text";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { useIsFocused } from "@react-navigation/core";
 import { Search } from "lucide-react-native";
 
@@ -16,30 +16,48 @@ export default function AndroidSearchBar({
 }) {
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+  const { colors } = useColorScheme();
 
   return (
     <View
-      style={{
-        paddingTop: insets.top + 8,
-        marginBottom: 15,
-        opacity: isFocused ? 1 : 0,
-      }}
-      className="bg-background px-4 pb-2 pt-2"
+      style={[
+        styles.outer,
+        {
+          paddingTop: insets.top + 8,
+          opacity: isFocused ? 1 : 0,
+          backgroundColor: colors.background,
+        },
+      ]}
     >
       <Pressable
-        className="flex flex-row items-center gap-4 rounded-full border-input bg-card px-4 py-2"
-        style={{ minHeight: 56 }}
+        style={[styles.pressable, { backgroundColor: colors.card }]}
         onPress={onPress}
       >
-        <TailwindResolver
-          className="text-muted"
-          comp={(styles) => (
-            <Search size={24} color={styles?.color?.toString()} />
-          )}
-        />
-        <Text className="flex-1 text-[17px] text-muted">{label}</Text>
+        <Search size={24} color={colors.muted} />
+        <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
         {rightElement}
       </Pressable>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  outer: {
+    marginBottom: 15,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  pressable: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    borderRadius: 9999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 56,
+  },
+  label: {
+    flex: 1,
+    fontSize: 17,
+  },
+});

@@ -1,21 +1,17 @@
 import Markdown from "react-native-markdown-display";
-import { TailwindResolver } from "@/components/TailwindResolver";
+import { useColorScheme } from "@/lib/useColorScheme";
 
 export default function BookmarkTextMarkdown({ text }: { text: string }) {
+  const { colors } = useColorScheme();
   return (
-    <TailwindResolver
-      className="text-foreground"
-      comp={(styles) => (
-        <Markdown
-          style={{
-            text: {
-              color: styles?.color?.toString(),
-            },
-          }}
-        >
-          {text}
-        </Markdown>
-      )}
-    />
+    <Markdown
+      style={{
+        text: {
+          color: colors.foreground,
+        },
+      }}
+    >
+      {text}
+    </Markdown>
   );
 }

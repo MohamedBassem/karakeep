@@ -1,14 +1,15 @@
-const { hairlineWidth } = require("nativewind/theme");
-
-/** @type {import('tailwindcss').Config} */
+/**
+ * Web-only Tailwind config. Used solely to compile `globals.css` for the
+ * `"use dom"` webview component (BookmarkHtmlHighlighterDom). The native app
+ * itself styles with React Native StyleSheet — no nativewind.
+ *
+ * @type {import('tailwindcss').Config}
+ */
 module.exports = {
-  // NOTE: Update this to include the paths to all of your component files.
   content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
+    "./components/bookmarks/BookmarkHtmlHighlighterDom.tsx",
     "../../packages/shared-react/**/*.{js,jsx,ts,tsx}",
   ],
-  presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
@@ -45,9 +46,6 @@ module.exports = {
           DEFAULT: withOpacity("card"),
           foreground: withOpacity("card-foreground"),
         },
-      },
-      borderWidth: {
-        hairline: hairlineWidth(),
       },
     },
   },

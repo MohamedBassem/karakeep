@@ -1,10 +1,8 @@
 import * as React from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { TailwindResolver } from "@/components/TailwindResolver";
 import { Button } from "@/components/ui/Button";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { cn } from "@/lib/utils";
 import { useAugmentedRef, useControllableState } from "@rn-primitives/hooks";
 import { SearchIcon, XIcon } from "lucide-react-native";
 
@@ -19,9 +17,9 @@ const SearchInput = React.forwardRef<
       value: valueProp,
       onChangeText: onChangeTextProp,
       placeholder = "Search...",
-      containerClassName,
-      iconContainerClassName,
-      className,
+      containerStyle,
+      iconContainerStyle,
+      inputStyle,
       onCancel,
       ...props
     },
@@ -51,32 +49,25 @@ const SearchInput = React.forwardRef<
     return (
       <Button
         variant="plain"
-        className={cn(
-          "android:gap-0 android:h-14 flex-row items-center rounded-full bg-card px-2",
-          containerClassName,
-        )}
+        style={[
+          styles.container,
+          { backgroundColor: colors.card },
+          containerStyle,
+        ]}
         onPress={focus}
       >
         <View
-          className={cn("p-2", iconContainerClassName)}
+          style={[styles.iconWrap, iconContainerStyle]}
           pointerEvents="none"
         >
-          <TailwindResolver
-            className="text-muted"
-            comp={(styles) => (
-              <SearchIcon color={styles?.color?.toString()} size={24} />
-            )}
-          />
+          <SearchIcon color={colors.muted} size={24} />
         </View>
 
-        <View className="flex-1" pointerEvents="none">
+        <View style={{ flex: 1 }} pointerEvents="none">
           <TextInput
             ref={inputRef}
             placeholder={placeholder}
-            className={cn(
-              "flex-1 rounded-r-full p-2 text-[17px] text-foreground placeholder:text-muted",
-              className,
-            )}
+            style={[styles.input, { color: colors.foreground }, inputStyle]}
             placeholderTextColor={colors.foreground}
             value={value}
             onChangeText={onChangeText}
@@ -86,13 +77,8 @@ const SearchInput = React.forwardRef<
         </View>
         {!!value && (
           <Animated.View entering={FadeIn} exiting={FadeOut.duration(150)}>
-            <Pressable className="p-2" onPress={clear}>
-              <TailwindResolver
-                className="text-muted"
-                comp={(styles) => (
-                  <XIcon size={24} color={styles?.color?.toString()} />
-                )}
-              />
+            <Pressable style={{ padding: 8 }} onPress={clear}>
+              <XIcon size={24} color={colors.muted} />
             </Pressable>
           </Animated.View>
         )}
@@ -100,6 +86,27 @@ const SearchInput = React.forwardRef<
     );
   },
 );
+
+const styles = StyleSheet.create({
+  container: {
+    height: 56,
+    gap: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+  },
+  iconWrap: {
+    padding: 8,
+  },
+  input: {
+    flex: 1,
+    borderTopRightRadius: 9999,
+    borderBottomRightRadius: 9999,
+    padding: 8,
+    fontSize: 17,
+  },
+});
 
 SearchInput.displayName = "SearchInput";
 

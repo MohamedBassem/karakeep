@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react-native";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Text } from "@/components/ui/Text";
+import { withOpacity } from "@/components/ui/Text";
 import { useColorScheme } from "@/lib/useColorScheme";
 
 export default function EmptyState({
@@ -16,28 +17,48 @@ export default function EmptyState({
   const { colors } = useColorScheme();
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(400)}
-      style={{
-        width: "100%",
-        paddingHorizontal: 16,
-        paddingVertical: 48,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+    <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
+      <View
+        style={[
+          styles.iconWrap,
+          { backgroundColor: withOpacity(colors.primary, 0.1) },
+        ]}
+      >
         <Icon size={36} color={colors.primary} />
       </View>
-      <Text variant="title3" style={{ textAlign: "center", width: "100%" }}>
+      <Text variant="title3" style={styles.title}>
         {title}
       </Text>
-      <Text
-        style={{ textAlign: "center", width: "100%", marginTop: 4 }}
-        className="text-muted-foreground"
-      >
+      <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         {subtitle}
       </Text>
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingVertical: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconWrap: {
+    marginBottom: 16,
+    height: 80,
+    width: 80,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+  },
+  title: {
+    textAlign: "center",
+    width: "100%",
+  },
+  subtitle: {
+    textAlign: "center",
+    width: "100%",
+    marginTop: 4,
+  },
+});

@@ -1,23 +1,30 @@
 import type { ToolbarActionId } from "@/lib/settings";
 import { useCallback } from "react";
-import { Pressable, ScrollView, TouchableOpacity, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import DraggableFlatList, {
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { TOOLBAR_ACTION_REGISTRY } from "@/components/bookmarks/BottomActions";
-import { TailwindResolver } from "@/components/TailwindResolver";
 import { Divider } from "@/components/ui/Divider";
-import { Text } from "@/components/ui/Text";
+import { Text, withOpacity } from "@/components/ui/Text";
 import useAppSettings, {
   DEFAULT_OVERFLOW_ACTIONS,
   DEFAULT_TOOLBAR_ACTIONS,
 } from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { GripVertical, Minus, Plus } from "lucide-react-native";
 
 const MAX_VISIBLE = 6;
 
 export default function ToolbarSettingsPage() {
   const { settings, setSettings } = useAppSettings();
+  const { colors } = useColorScheme();
 
   const visible = settings.toolbarActions;
   const overflow = settings.overflowActions ?? [];
@@ -75,34 +82,22 @@ export default function ToolbarSettingsPage() {
             activeOpacity={0.7}
             onLongPress={drag}
             disabled={isActive}
-            className="flex flex-row items-center gap-3 bg-card px-4 py-3"
+            style={[styles.itemRow, { backgroundColor: colors.card }]}
           >
-            <TailwindResolver
-              className="text-muted-foreground"
-              comp={(styles) => (
-                <GripVertical size={18} color={styles?.color?.toString()} />
-              )}
-            />
-            <TailwindResolver
-              className="text-foreground"
-              comp={(styles) => (
-                <meta.Icon size={20} color={styles?.color?.toString()} />
-              )}
-            />
-            <Text className="flex-1">{meta.label}</Text>
-            <Pressable onPress={() => demoteToOverflow(item)} className="p-1.5">
-              <TailwindResolver
-                className="text-muted-foreground"
-                comp={(styles) => (
-                  <Minus size={18} color={styles?.color?.toString()} />
-                )}
-              />
+            <GripVertical size={18} color={colors.mutedForeground} />
+            <meta.Icon size={20} color={colors.foreground} />
+            <Text style={styles.flex1}>{meta.label}</Text>
+            <Pressable
+              onPress={() => demoteToOverflow(item)}
+              style={styles.iconButton}
+            >
+              <Minus size={18} color={colors.mutedForeground} />
             </Pressable>
           </TouchableOpacity>
         </ScaleDecorator>
       );
     },
-    [demoteToOverflow],
+    [demoteToOverflow, colors],
   );
 
   const renderOverflowItem = useCallback(
@@ -123,60 +118,52 @@ export default function ToolbarSettingsPage() {
             activeOpacity={0.7}
             onLongPress={drag}
             disabled={isActive}
-            className="flex flex-row items-center gap-3 bg-card px-4 py-3"
+            style={[styles.itemRow, { backgroundColor: colors.card }]}
           >
-            <TailwindResolver
-              className="text-muted-foreground"
-              comp={(styles) => (
-                <GripVertical size={18} color={styles?.color?.toString()} />
-              )}
-            />
-            <TailwindResolver
-              className="text-muted-foreground"
-              comp={(styles) => (
-                <meta.Icon size={20} color={styles?.color?.toString()} />
-              )}
-            />
-            <Text className="flex-1 text-muted-foreground">{meta.label}</Text>
+            <GripVertical size={18} color={colors.mutedForeground} />
+            <meta.Icon size={20} color={colors.mutedForeground} />
+            <Text style={[styles.flex1, { color: colors.mutedForeground }]}>
+              {meta.label}
+            </Text>
             <Pressable
               onPress={() => promoteToVisible(item)}
               disabled={!canPromote}
-              className="p-1.5"
+              style={styles.iconButton}
             >
-              <TailwindResolver
-                className={
+              <Plus
+                size={18}
+                color={
                   canPromote
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground/30"
+                    ? colors.mutedForeground
+                    : withOpacity(colors.mutedForeground, 0.3)
                 }
-                comp={(styles) => (
-                  <Plus size={18} color={styles?.color?.toString()} />
-                )}
               />
             </Pressable>
           </TouchableOpacity>
         </ScaleDecorator>
       );
     },
-    [visible.length, promoteToVisible],
+    [visible.length, promoteToVisible, colors],
   );
 
   return (
     <ScrollView
-      className="w-full"
-      contentContainerClassName="gap-4 px-4 py-2"
+      style={styles.fullWidth}
+      contentContainerStyle={styles.scrollContent}
       contentInsetAdjustmentBehavior="automatic"
     >
-      <Text className="px-1 text-xs uppercase tracking-wide text-muted-foreground">
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
         Visible Actions (max {MAX_VISIBLE})
       </Text>
       <View
-        className="w-full overflow-hidden rounded-xl bg-card"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.listCard,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
         {visible.length === 0 ? (
-          <View className="px-4 py-3">
-            <Text className="text-sm text-muted-foreground">
+          <View style={styles.emptyRow}>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
               No visible actions. Only the overflow menu will show.
             </Text>
           </View>
@@ -188,22 +175,27 @@ export default function ToolbarSettingsPage() {
             onDragEnd={({ data }) => save(data, overflow)}
             scrollEnabled={false}
             ItemSeparatorComponent={() => (
-              <Divider orientation="horizontal" className="mx-6" />
+              <Divider
+                orientation="horizontal"
+                style={{ marginHorizontal: 24 }}
+              />
             )}
           />
         )}
       </View>
 
-      <Text className="px-1 text-xs uppercase tracking-wide text-muted-foreground">
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
         Overflow Actions
       </Text>
       <View
-        className="w-full overflow-hidden rounded-xl bg-card"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.listCard,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
         {overflow.length === 0 ? (
-          <View className="px-4 py-3">
-            <Text className="text-sm text-muted-foreground">
+          <View style={styles.emptyRow}>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
               No overflow actions. All actions are visible on the toolbar.
             </Text>
           </View>
@@ -215,7 +207,10 @@ export default function ToolbarSettingsPage() {
             onDragEnd={({ data }) => save(visible, data)}
             scrollEnabled={false}
             ItemSeparatorComponent={() => (
-              <Divider orientation="horizontal" className="mx-6" />
+              <Divider
+                orientation="horizontal"
+                style={{ marginHorizontal: 24 }}
+              />
             )}
           />
         )}
@@ -223,11 +218,65 @@ export default function ToolbarSettingsPage() {
 
       <Pressable
         onPress={resetToDefaults}
-        className="w-full rounded-xl bg-card px-4 py-3"
-        style={{ borderCurve: "continuous" }}
+        style={[
+          styles.resetButton,
+          { backgroundColor: colors.card, borderCurve: "continuous" },
+        ]}
       >
-        <Text className="text-center text-blue-500">Reset to Defaults</Text>
+        <Text style={styles.resetText}>Reset to Defaults</Text>
       </Pressable>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  fullWidth: {
+    width: "100%",
+  },
+  scrollContent: {
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  sectionLabel: {
+    paddingHorizontal: 4,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  listCard: {
+    width: "100%",
+    overflow: "hidden",
+    borderRadius: 12,
+  },
+  emptyRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  emptyText: {
+    fontSize: 14,
+  },
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  flex1: {
+    flex: 1,
+  },
+  iconButton: {
+    padding: 6,
+  },
+  resetButton: {
+    width: "100%",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  resetText: {
+    textAlign: "center",
+    color: "#3b82f6",
+  },
+});

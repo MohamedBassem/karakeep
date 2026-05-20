@@ -6,8 +6,8 @@ import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { TailwindResolver } from "@/components/TailwindResolver";
 import { useToast } from "@/components/ui/Toast";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { shouldUseGlassPill } from "@/lib/ios";
 import useAppSettings from "@/lib/settings";
 import { shareBookmark } from "@/lib/shareBookmark";
@@ -38,6 +38,11 @@ function triggerHaptic() {
   Haptics.selectionAsync().catch(() => {
     // Ignore — haptics unavailable (e.g. simulator)
   });
+}
+
+function EllipsisIcon() {
+  const { colors } = useColorScheme();
+  return <Ellipsis size={22} color={colors.foreground} />;
 }
 
 interface ToolbarActionMeta {
@@ -109,6 +114,7 @@ function useToolbarActions(bookmark: ZBookmark) {
   const router = useRouter();
   const { settings } = useAppSettings();
   const { data: currentUser } = useWhoAmI();
+  const { colors } = useColorScheme();
 
   const isOwner = currentUser?.id === bookmark.userId;
 
@@ -180,15 +186,10 @@ function useToolbarActions(bookmark: ZBookmark) {
     overrideColor?: string,
     fill?: string,
   ) => (
-    <TailwindResolver
-      className="text-foreground"
-      comp={(styles) => (
-        <IconComp
-          size={22}
-          color={overrideColor ?? styles?.color?.toString()}
-          {...(fill != null && { fill })}
-        />
-      )}
+    <IconComp
+      size={22}
+      color={overrideColor ?? colors.foreground}
+      {...(fill != null && { fill })}
     />
   );
 
@@ -343,9 +344,24 @@ function ToolbarContainer({
     );
   }
 
+  return <AndroidFallback style={fallbackStyle}>{innerRow}</AndroidFallback>;
+}
+
+function AndroidFallback({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style: {
+    paddingHorizontal: number;
+    paddingTop: number;
+    paddingBottom: number;
+  };
+}) {
+  const { colors } = useColorScheme();
   return (
-    <View className="bg-background" style={fallbackStyle}>
-      {innerRow}
+    <View style={[{ backgroundColor: colors.background }, style]}>
+      {children}
     </View>
   );
 }
@@ -424,12 +440,7 @@ export default function BottomActions({ bookmark }: BottomActionsProps) {
         {barActions.map(
           (a) =>
             a.shouldRender && (
-              <Pressable
-                disabled={a.disabled}
-                key={a.id}
-                onPress={a.onClick}
-                className="py-auto"
-              >
+              <Pressable disabled={a.disabled} key={a.id} onPress={a.onClick}>
                 {a.icon}
               </Pressable>
             ),
@@ -443,12 +454,7 @@ export default function BottomActions({ bookmark }: BottomActionsProps) {
           shouldOpenOnLongPress={false}
         >
           <Pressable onPress={() => triggerHaptic()}>
-            <TailwindResolver
-              className="text-foreground"
-              comp={(styles) => (
-                <Ellipsis size={22} color={styles?.color?.toString()} />
-              )}
-            />
+            <EllipsisIcon />
           </Pressable>
         </MenuView>
       </ToolbarContainer>

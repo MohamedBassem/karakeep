@@ -1,6 +1,5 @@
 import { Platform, TextStyle, ViewStyle } from "react-native";
 import { Stack } from "expo-router/stack";
-import { cssInterop } from "nativewind";
 
 interface StackProps extends React.ComponentProps<typeof Stack> {
   contentStyle?: ViewStyle;
@@ -24,7 +23,4 @@ function StackImpl({ contentStyle, headerStyle, ...props }: StackProps) {
 }
 
 // Changing this requires reloading the app
-export const StyledStack = cssInterop(StackImpl, {
-  contentClassName: "contentStyle",
-  headerClassName: "headerStyle",
-});
+export const StyledStack = StackImpl;

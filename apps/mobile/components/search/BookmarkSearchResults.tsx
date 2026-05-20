@@ -1,4 +1,5 @@
-import { FlatList, Pressable, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { useColorScheme } from "@/lib/useColorScheme";
 import BookmarkList from "@/components/bookmarks/BookmarkList";
 import FullPageError from "@/components/FullPageError";
 import FullPageSpinner from "@/components/ui/FullPageSpinner";
@@ -18,6 +19,7 @@ export default function BookmarkSearchResults({
   state,
   onSelectHistory,
 }: BookmarkSearchResultsProps) {
+  const { colors } = useColorScheme();
   const {
     history,
     filteredHistory,
@@ -38,9 +40,9 @@ export default function BookmarkSearchResults({
   const renderHistoryItem = ({ item }: { item: string }) => (
     <Pressable
       onPress={() => onSelectHistory(item)}
-      className="border-b border-border p-3"
+      style={[styles.historyItem, { borderBottomColor: colors.border }]}
     >
-      <Text className="text-foreground">{item}</Text>
+      <Text style={{ color: colors.foreground }}>{item}</Text>
     </Pressable>
   );
 
@@ -52,21 +54,17 @@ export default function BookmarkSearchResults({
         renderItem={renderHistoryItem}
         keyExtractor={(item, index) => `${item}-${index}`}
         ListHeaderComponent={
-          <View className="flex-row items-center justify-between p-3">
-            <Text className="text-sm font-bold text-gray-500">
-              Recent Searches
-            </Text>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Recent Searches</Text>
             {history.length > 0 && (
               <Pressable onPress={clearHistory}>
-                <Text className="text-sm text-blue-500">Clear</Text>
+                <Text style={styles.clearText}>Clear</Text>
               </Pressable>
             )}
           </View>
         }
         ListEmptyComponent={
-          <Text className="p-3 text-center text-gray-500">
-            No recent searches
-          </Text>
+          <Text style={styles.emptyText}>No recent searches</Text>
         }
         keyboardShouldPersistTaps="handled"
       />
@@ -91,3 +89,30 @@ export default function BookmarkSearchResults({
 
   return null;
 }
+
+const styles = StyleSheet.create({
+  historyItem: {
+    borderBottomWidth: 1,
+    padding: 12,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+  },
+  headerTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#6b7280",
+  },
+  clearText: {
+    fontSize: 14,
+    color: "#3b82f6",
+  },
+  emptyText: {
+    padding: 12,
+    textAlign: "center",
+    color: "#6b7280",
+  },
+});

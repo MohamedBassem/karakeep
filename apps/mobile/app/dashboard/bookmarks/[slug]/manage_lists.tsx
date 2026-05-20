@@ -1,5 +1,11 @@
 import React from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { RowSeparator } from "@/components/ui/GroupedList";
 import { Text } from "@/components/ui/Text";
@@ -112,12 +118,14 @@ const ListPickerPage = () => {
           padding: 16,
           paddingBottom: 40 + headerHeight,
         }}
-        className="flex-1 bg-background"
+        style={[styles.flex1, { backgroundColor: colors.background }]}
       >
         {filteredPaths && filteredPaths.length > 0 ? (
           <View
-            className="overflow-hidden rounded-xl bg-card"
-            style={{ borderCurve: "continuous" }}
+            style={[
+              styles.listCard,
+              { backgroundColor: colors.card, borderCurve: "continuous" },
+            ]}
           >
             {filteredPaths.map((path, index) => {
               const listId = path[path.length - 1].id;
@@ -130,9 +138,12 @@ const ListPickerPage = () => {
                   <Pressable
                     onPress={() => !isLoading && toggleList(listId)}
                     disabled={isLoading}
-                    className="flex-row items-center justify-between px-4 py-3 active:opacity-70"
+                    style={({ pressed }) => [
+                      styles.listRow,
+                      pressed && { opacity: 0.7 },
+                    ]}
                   >
-                    <Text className="flex-1 pr-3" numberOfLines={1}>
+                    <Text style={styles.listLabel} numberOfLines={1}>
                       {path
                         .map((item) => `${item.icon} ${item.name}`)
                         .join(" / ")}
@@ -152,7 +163,7 @@ const ListPickerPage = () => {
             })}
           </View>
         ) : (
-          <View className="items-center py-12">
+          <View style={styles.emptyState}>
             <Text color="tertiary">No lists available</Text>
           </View>
         )}
@@ -162,3 +173,28 @@ const ListPickerPage = () => {
 };
 
 export default ListPickerPage;
+
+const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
+  listCard: {
+    overflow: "hidden",
+    borderRadius: 12,
+  },
+  listRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  listLabel: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 48,
+  },
+});

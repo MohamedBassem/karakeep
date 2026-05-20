@@ -1,14 +1,16 @@
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Divider } from "@/components/ui/Divider";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
 import useAppSettings from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { Check } from "lucide-react-native";
 
 export default function BookmarkDefaultViewSettings() {
   const router = useRouter();
   const { toast } = useToast();
+  const { colors } = useColorScheme();
   const { settings, setSettings } = useAppSettings();
 
   const handleUpdate = async (
@@ -40,10 +42,10 @@ export default function BookmarkDefaultViewSettings() {
       return [
         <Pressable
           onPress={() => handleUpdate(mode)}
-          className="flex flex-row items-center justify-between"
+          style={styles.row}
           key={mode}
         >
-          <Text className="mr-2 flex-1" numberOfLines={1}>
+          <Text style={styles.label} numberOfLines={1}>
             {
               {
                 browser: "Browser",
@@ -57,7 +59,7 @@ export default function BookmarkDefaultViewSettings() {
         <Divider
           key={mode + "-divider"}
           orientation="horizontal"
-          className="my-3 h-0.5 w-full"
+          style={styles.divider}
         />,
       ];
     })
@@ -67,9 +69,40 @@ export default function BookmarkDefaultViewSettings() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="flex w-full items-center px-4 py-2"
+      contentContainerStyle={styles.scrollContent}
     >
-      <View className="w-full rounded-lg bg-card px-4 py-2">{options}</View>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        {options}
+      </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  label: {
+    marginRight: 8,
+    flex: 1,
+  },
+  divider: {
+    marginVertical: 12,
+    height: 2,
+    width: "100%",
+  },
+  scrollContent: {
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  card: {
+    width: "100%",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+});

@@ -4,6 +4,7 @@ import {
   Platform,
   PlatformColor,
   Pressable,
+  StyleSheet,
   View,
 } from "react-native";
 import * as Haptics from "expo-haptics";
@@ -179,7 +180,7 @@ export default function Lists() {
   return (
     <>
       <FlatList
-        className="h-full"
+        style={styles.fullHeight}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           gap: 6,
@@ -189,20 +190,23 @@ export default function Lists() {
         }}
         renderItem={(l) => (
           <View
-            className="flex flex-row items-center rounded-xl bg-card px-4 py-2"
-            style={{
-              borderCurve: "continuous",
-              ...condProps({
-                condition: l.item.level > 0,
-                props: { marginLeft: l.item.level * 20 },
-              }),
-            }}
+            style={[
+              styles.itemRow,
+              { backgroundColor: colors.card },
+              {
+                borderCurve: "continuous",
+                ...condProps({
+                  condition: l.item.level > 0,
+                  props: { marginLeft: l.item.level * 20 },
+                }),
+              },
+            ]}
           >
             {hasAnyListsWithChildren && (
               <View style={{ width: 32 }}>
                 {l.item.numChildren > 0 && (
                   <Pressable
-                    className="pr-2"
+                    style={styles.chevronToggle}
                     onPress={() => {
                       setShowChildrenOf((prev) => ({
                         ...prev,
@@ -225,7 +229,7 @@ export default function Lists() {
 
             {l.item.isSharedSection ? (
               <Pressable
-                className="flex flex-1 flex-row items-center justify-between"
+                style={styles.sharedPressable}
                 onPress={() => {
                   setShowChildrenOf((prev) => ({
                     ...prev,
@@ -233,7 +237,7 @@ export default function Lists() {
                   }));
                 }}
               >
-                <Text className="mr-2 flex-1" numberOfLines={1}>
+                <Text style={styles.itemLabel} numberOfLines={1}>
                   {l.item.logo} {l.item.name}
                 </Text>
               </Pressable>
@@ -242,15 +246,20 @@ export default function Lists() {
                 asChild
                 key={l.item.id}
                 href={l.item.href}
-                className="flex-1"
+                style={styles.flex1}
               >
-                <Pressable className="flex flex-row items-center justify-between">
-                  <Text className="mr-2 flex-1" numberOfLines={1}>
+                <Pressable style={styles.linkPressable}>
+                  <Text style={styles.itemLabel} numberOfLines={1}>
                     {l.item.logo} {l.item.name}
                   </Text>
-                  <View className="flex flex-row items-center">
+                  <View style={styles.metaRow}>
                     {l.item.numBookmarks !== undefined && (
-                      <Text className="mr-2 text-xs text-muted-foreground">
+                      <Text
+                        style={[
+                          styles.bookmarkCount,
+                          { color: colors.mutedForeground },
+                        ]}
+                      >
                         {l.item.numBookmarks}
                       </Text>
                     )}
@@ -267,7 +276,7 @@ export default function Lists() {
       />
       <FAB>
         <Pressable
-          className="h-full w-full items-center justify-center"
+          style={styles.fabPressable}
           onPress={() => {
             Haptics.selectionAsync();
             router.push("/dashboard/lists/new");
@@ -282,3 +291,51 @@ export default function Lists() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  fullHeight: {
+    height: "100%",
+  },
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  chevronToggle: {
+    paddingRight: 8,
+  },
+  sharedPressable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  linkPressable: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  itemLabel: {
+    marginRight: 8,
+    flex: 1,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  bookmarkCount: {
+    marginRight: 8,
+    fontSize: 12,
+  },
+  flex1: {
+    flex: 1,
+  },
+  fabPressable: {
+    height: "100%",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

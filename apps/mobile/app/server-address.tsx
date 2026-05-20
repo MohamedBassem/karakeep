@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Text } from "@/components/ui/Text";
 import useAppSettings from "@/lib/settings";
+import { useColorScheme } from "@/lib/useColorScheme";
 import { Plus, Trash2 } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
 
 export default function ServerAddress() {
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, isDarkColorScheme, colors } = useColorScheme();
   const iconColor = colorScheme === "dark" ? "#d1d5db" : "#374151";
   const { settings, setSettings } = useAppSettings();
   const [address, setAddress] = useState(
@@ -89,27 +89,37 @@ export default function ServerAddress() {
 
   return (
     <KeyboardAwareScrollView
-      contentContainerClassName="items-center gap-4 px-4 py-4"
+      contentContainerStyle={styles.scrollContent}
       bottomOffset={20}
       keyboardShouldPersistTaps="handled"
       contentInsetAdjustmentBehavior="automatic"
     >
       {/* Error Message */}
       {error && (
-        <View className="w-full rounded-lg bg-red-50 p-3 dark:bg-red-950">
-          <Text className="text-center text-sm text-red-600 dark:text-red-400">
+        <View
+          style={[
+            styles.errorBox,
+            { backgroundColor: isDarkColorScheme ? "#450a0a" : "#fef2f2" },
+          ]}
+        >
+          <Text
+            style={[
+              styles.errorText,
+              { color: isDarkColorScheme ? "#f87171" : "#dc2626" },
+            ]}
+          >
             {error}
           </Text>
         </View>
       )}
 
       {/* Server Address Section */}
-      <View className="w-full">
-        <Text className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+      <View style={styles.fullWidth}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           Server URL
         </Text>
-        <View className="w-full gap-3 rounded-lg bg-card px-4 py-4">
-          <Text className="text-sm text-muted-foreground">
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.helpText, { color: colors.mutedForeground }]}>
             Enter the URL of your Karakeep server
           </Text>
           <Input
@@ -122,45 +132,62 @@ export default function ServerAddress() {
             autoCapitalize="none"
             keyboardType="url"
             autoFocus
-            inputClasses="bg-background"
+            inputStyle={{ backgroundColor: colors.background }}
           />
-          <Text className="text-xs text-muted-foreground">
+          <Text style={[styles.hintText, { color: colors.mutedForeground }]}>
             Must start with http:// or https://
           </Text>
         </View>
       </View>
 
       {/* Custom Headers Section */}
-      <View className="w-full">
-        <Text className="mb-2 px-1 text-sm font-medium text-muted-foreground">
+      <View style={styles.fullWidth}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           Custom Headers
           {headers.length > 0 && (
-            <Text className="text-muted-foreground"> ({headers.length})</Text>
+            <Text style={{ color: colors.mutedForeground }}>
+              {" "}
+              ({headers.length})
+            </Text>
           )}
         </Text>
-        <View className="w-full gap-3 rounded-lg bg-card px-4 py-4">
-          <Text className="text-sm text-muted-foreground">
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.helpText, { color: colors.mutedForeground }]}>
             Add custom HTTP headers for API requests
           </Text>
 
           {/* Existing Headers List */}
           {headers.length === 0 ? (
-            <View className="py-4">
-              <Text className="text-center text-sm text-muted-foreground">
+            <View style={styles.emptyHeaders}>
+              <Text
+                style={[
+                  styles.emptyHeadersText,
+                  { color: colors.mutedForeground },
+                ]}
+              >
                 No custom headers configured
               </Text>
             </View>
           ) : (
-            <View className="gap-2">
+            <View style={styles.headersList}>
               {headers.map((header, index) => (
                 <View
                   key={index}
-                  className="flex-row items-center gap-3 rounded-lg border border-border bg-background p-3"
+                  style={[
+                    styles.headerItem,
+                    {
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                    },
+                  ]}
                 >
-                  <View className="flex-1 gap-1">
-                    <Text className="text-sm font-semibold">{header.key}</Text>
+                  <View style={styles.headerInfo}>
+                    <Text style={styles.headerKey}>{header.key}</Text>
                     <Text
-                      className="text-xs text-muted-foreground"
+                      style={[
+                        styles.headerValue,
+                        { color: colors.mutedForeground },
+                      ]}
                       numberOfLines={1}
                     >
                       {header.value}
@@ -168,7 +195,7 @@ export default function ServerAddress() {
                   </View>
                   <Pressable
                     onPress={() => handleRemoveHeader(index)}
-                    className="rounded-md p-2"
+                    style={styles.removeButton}
                     hitSlop={8}
                   >
                     <Trash2 size={18} color="#ef4444" />
@@ -179,21 +206,21 @@ export default function ServerAddress() {
           )}
 
           {/* Add New Header Form */}
-          <View className="gap-2 border-t border-border pt-4">
-            <Text className="text-sm font-medium">Add New Header</Text>
+          <View style={[styles.addHeaderForm, { borderColor: colors.border }]}>
+            <Text style={styles.addHeaderLabel}>Add New Header</Text>
             <Input
               placeholder="Header Name (e.g., X-Custom-Header)"
               value={newHeaderKey}
               onChangeText={setNewHeaderKey}
               autoCapitalize="none"
-              inputClasses="bg-background"
+              inputStyle={{ backgroundColor: colors.background }}
             />
             <Input
               placeholder="Header Value"
               value={newHeaderValue}
               onChangeText={setNewHeaderValue}
               autoCapitalize="none"
-              inputClasses="bg-background"
+              inputStyle={{ backgroundColor: colors.background }}
             />
             <Button
               variant="secondary"
@@ -201,14 +228,106 @@ export default function ServerAddress() {
               disabled={!newHeaderKey.trim() || !newHeaderValue.trim()}
             >
               <Plus size={16} color={iconColor} />
-              <Text className="text-sm">Add Header</Text>
+              <Text style={styles.addHeaderButtonText}>Add Header</Text>
             </Button>
           </View>
         </View>
       </View>
-      <Pressable onPress={handleSave} className="w-full items-center">
-        <Text className="font-semibold text-primary">Save</Text>
+      <Pressable onPress={handleSave} style={styles.saveButton}>
+        <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
       </Pressable>
     </KeyboardAwareScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  errorBox: {
+    width: "100%",
+    borderRadius: 8,
+    padding: 12,
+  },
+  errorText: {
+    textAlign: "center",
+    fontSize: 14,
+  },
+  sectionLabel: {
+    marginBottom: 8,
+    paddingHorizontal: 4,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  card: {
+    width: "100%",
+    gap: 12,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  helpText: {
+    fontSize: 14,
+  },
+  hintText: {
+    fontSize: 12,
+  },
+  emptyHeaders: {
+    paddingVertical: 16,
+  },
+  emptyHeadersText: {
+    textAlign: "center",
+    fontSize: 14,
+  },
+  headersList: {
+    gap: 8,
+  },
+  headerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 12,
+  },
+  headerInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  headerKey: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  headerValue: {
+    fontSize: 12,
+  },
+  removeButton: {
+    borderRadius: 6,
+    padding: 8,
+  },
+  addHeaderForm: {
+    gap: 8,
+    borderTopWidth: 1,
+    paddingTop: 16,
+  },
+  addHeaderLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  addHeaderButtonText: {
+    fontSize: 14,
+  },
+  saveButton: {
+    width: "100%",
+    alignItems: "center",
+  },
+  saveText: {
+    fontWeight: "600",
+  },
+});

@@ -169,7 +169,7 @@ function ListActionsMenu({
       }}
       shouldOpenOnLongPress={false}
     >
-      <View className="my-auto">
+      <View style={{ marginVertical: "auto" }}>
         <Ellipsis
           onPress={() => Haptics.selectionAsync()}
           color={colors.foreground}

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  StyleSheet,
   TextInput,
   View,
 } from "react-native";
@@ -60,7 +61,7 @@ function TitleEditor({
         placeholderTextColor={colors.grey}
         onChangeText={(text) => setTitle(text)}
         defaultValue={title ?? ""}
-        className="px-4 py-3 text-[17px] leading-6 text-foreground"
+        style={[styles.titleInput, { color: colors.foreground }]}
       />
     </GroupedSection>
   );
@@ -88,7 +89,7 @@ function NotesEditor({
         onChangeText={(text) => setNotes(text)}
         textAlignVertical="top"
         defaultValue={notes ?? ""}
-        className="min-h-[100px] px-4 py-3 text-[17px] leading-6 text-foreground"
+        style={[styles.notesInput, { color: colors.foreground }]}
       />
     </GroupedSection>
   );
@@ -111,14 +112,14 @@ function TagList({
   return (
     <GroupedSection header="Tags">
       {isTagging ? (
-        <View className="gap-3 p-4">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
+        <View style={styles.taggingSkeletons}>
+          <Skeleton style={styles.skeletonFull} />
+          <Skeleton style={styles.skeletonPartial} />
         </View>
       ) : (
         hasTags && (
           <>
-            <View className="flex-row flex-wrap gap-2 px-4 py-3">
+            <View style={styles.tagsWrap}>
               {bookmark.tags.map((t) => (
                 <TagPill key={t.id} tag={t} clickable={!readOnly} />
               ))}
@@ -210,13 +211,16 @@ function AISummarySection({
       <GroupedSection header="AI Summary">
         <Pressable
           onPress={() => setIsExpanded(!isExpanded)}
-          className="px-4 py-3"
+          style={styles.summaryWrapper}
         >
-          <View className={isExpanded ? "" : "max-h-16 overflow-hidden"}>
+          <View style={isExpanded ? undefined : styles.summaryCollapsed}>
             <BookmarkTextMarkdown text={bookmark.summary} />
           </View>
           {!isExpanded && (
-            <Text variant="footnote" className="mt-1.5 text-primary">
+            <Text
+              variant="footnote"
+              style={[styles.showMore, { color: colors.primary }]}
+            >
               Show more
             </Text>
           )}
@@ -224,11 +228,14 @@ function AISummarySection({
         {isExpanded && !readOnly && (
           <>
             <RowSeparator />
-            <View className="flex-row justify-end gap-1 px-2 py-2">
+            <View style={styles.summaryActions}>
               <Pressable
                 onPress={() => resummarize({ bookmarkId: bookmark.id })}
                 disabled={isResummarizing}
-                className="rounded-full p-2.5 active:opacity-70"
+                style={({ pressed }) => [
+                  styles.summaryActionButton,
+                  pressed && { opacity: 0.7 },
+                ]}
               >
                 {isResummarizing ? (
                   <ActivityIndicator size="small" />
@@ -241,7 +248,10 @@ function AISummarySection({
                   updateBookmark({ bookmarkId: bookmark.id, summary: null })
                 }
                 disabled={isDeletingSummary}
-                className="rounded-full p-2.5 active:opacity-70"
+                style={({ pressed }) => [
+                  styles.summaryActionButton,
+                  pressed && { opacity: 0.7 },
+                ]}
               >
                 {isDeletingSummary ? (
                   <ActivityIndicator size="small" />
@@ -251,7 +261,10 @@ function AISummarySection({
               </Pressable>
               <Pressable
                 onPress={() => setIsExpanded(false)}
-                className="rounded-full p-2.5 active:opacity-70"
+                style={({ pressed }) => [
+                  styles.summaryActionButton,
+                  pressed && { opacity: 0.7 },
+                ]}
               >
                 <ChevronUp size={18} color={colors.grey} />
               </Pressable>
@@ -271,17 +284,20 @@ function AISummarySection({
       <Pressable
         onPress={() => summarize({ bookmarkId: bookmark.id })}
         disabled={isSummarizing}
-        className="flex-row items-center justify-center gap-2 px-4 py-3 active:opacity-70"
+        style={({ pressed }) => [
+          styles.summarizeButton,
+          pressed && { opacity: 0.7 },
+        ]}
       >
         {isSummarizing ? (
           <>
             <ActivityIndicator size="small" color={colors.primary} />
-            <Text className="text-primary">Generating...</Text>
+            <Text style={{ color: colors.primary }}>Generating...</Text>
           </>
         ) : (
           <>
             <Sparkles size={16} color={colors.primary} />
-            <Text className="text-primary">Summarize with AI</Text>
+            <Text style={{ color: colors.primary }}>Summarize with AI</Text>
           </>
         )}
       </Pressable>
@@ -295,6 +311,7 @@ const ViewBookmarkPage = () => {
   const headerHeight = useHeaderHeight();
   const { slug } = useLocalSearchParams();
   const { toast } = useToast();
+  const { colors } = useColorScheme();
   const { data: currentUser } = useWhoAmI();
   if (typeof slug !== "string") {
     throw new Error("Unexpected param type");
@@ -405,15 +422,16 @@ const ViewBookmarkPage = () => {
             <Pressable
               onPress={onDone}
               disabled={isEditPending}
-              className="px-2"
+              style={styles.headerRightButton}
             >
               {isEditPending ? (
                 <ActivityIndicator size="small" />
               ) : (
                 <Text
-                  className={
-                    hasChanges ? "font-semibold text-primary" : "text-primary"
-                  }
+                  style={[
+                    { color: colors.primary },
+                    hasChanges && styles.boldText,
+                  ]}
                 >
                   {hasChanges ? "Save" : "Done"}
                 </Text>
@@ -430,7 +448,7 @@ const ViewBookmarkPage = () => {
           gap: 20,
           paddingBottom: 40 + headerHeight,
         }}
-        className="bg-background"
+        style={{ backgroundColor: colors.background }}
       >
         <TitleEditor
           title={title}
@@ -454,15 +472,18 @@ const ViewBookmarkPage = () => {
             <Pressable
               onPress={handleDeleteBookmark}
               disabled={isDeletionPending}
-              className="items-center px-4 py-3 active:opacity-70"
+              style={({ pressed }) => [
+                styles.deleteButton,
+                pressed && { opacity: 0.7 },
+              ]}
             >
-              <Text className="text-destructive" numberOfLines={1}>
+              <Text style={{ color: colors.destructive }} numberOfLines={1}>
                 {isDeletionPending ? "Deleting..." : "Delete Bookmark"}
               </Text>
             </Pressable>
           </GroupedSection>
         )}
-        <View className="items-center gap-1 pt-2">
+        <View style={styles.timestampGroup}>
           <Text variant="caption1" color="tertiary" selectable>
             Created {bookmark.createdAt.toLocaleString()}
           </Text>
@@ -479,3 +500,84 @@ const ViewBookmarkPage = () => {
 };
 
 export default ViewBookmarkPage;
+
+const styles = StyleSheet.create({
+  titleInput: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 17,
+    lineHeight: 24,
+  },
+  notesInput: {
+    minHeight: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 17,
+    lineHeight: 24,
+  },
+  taggingSkeletons: {
+    gap: 12,
+    padding: 16,
+  },
+  skeletonFull: {
+    height: 16,
+    width: "100%",
+  },
+  skeletonPartial: {
+    height: 16,
+    width: "75%",
+  },
+  tagsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  summaryWrapper: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  summaryCollapsed: {
+    maxHeight: 64,
+    overflow: "hidden",
+  },
+  showMore: {
+    marginTop: 6,
+  },
+  summaryActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  summaryActionButton: {
+    borderRadius: 9999,
+    padding: 10,
+  },
+  summarizeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerRightButton: {
+    paddingHorizontal: 8,
+  },
+  boldText: {
+    fontWeight: "600",
+  },
+  deleteButton: {
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  timestampGroup: {
+    alignItems: "center",
+    gap: 4,
+    paddingTop: 8,
+  },
+});
