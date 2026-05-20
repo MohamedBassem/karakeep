@@ -18,6 +18,7 @@ import TagPill from "@/components/bookmarks/TagPill";
 import FullPageError from "@/components/FullPageError";
 import FullPageSpinner from "@/components/ui/FullPageSpinner";
 import {
+  GroupedButtonRow,
   GroupedSection,
   NavigationRow,
   RowSeparator,
@@ -281,26 +282,13 @@ function AISummarySection({
 
   return (
     <GroupedSection>
-      <Pressable
+      <GroupedButtonRow
+        label={isSummarizing ? "Generating..." : "Summarize with AI"}
+        icon={Sparkles}
+        tone="primary"
         onPress={() => summarize({ bookmarkId: bookmark.id })}
-        disabled={isSummarizing}
-        style={({ pressed }) => [
-          styles.summarizeButton,
-          pressed && { opacity: 0.7 },
-        ]}
-      >
-        {isSummarizing ? (
-          <>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={{ color: colors.primary }}>Generating...</Text>
-          </>
-        ) : (
-          <>
-            <Sparkles size={16} color={colors.primary} />
-            <Text style={{ color: colors.primary }}>Summarize with AI</Text>
-          </>
-        )}
-      </Pressable>
+        loading={isSummarizing}
+      />
     </GroupedSection>
   );
 }
@@ -469,18 +457,12 @@ const ViewBookmarkPage = () => {
         />
         {isOwner && (
           <GroupedSection>
-            <Pressable
+            <GroupedButtonRow
+              label={isDeletionPending ? "Deleting..." : "Delete Bookmark"}
+              tone="destructive"
               onPress={handleDeleteBookmark}
-              disabled={isDeletionPending}
-              style={({ pressed }) => [
-                styles.deleteButton,
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <Text style={{ color: colors.destructive }} numberOfLines={1}>
-                {isDeletionPending ? "Deleting..." : "Delete Bookmark"}
-              </Text>
-            </Pressable>
+              loading={isDeletionPending}
+            />
           </GroupedSection>
         )}
         <View style={styles.timestampGroup}>
@@ -556,24 +538,11 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     padding: 10,
   },
-  summarizeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
   headerRightButton: {
     paddingHorizontal: 8,
   },
   boldText: {
     fontWeight: "600",
-  },
-  deleteButton: {
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
   },
   timestampGroup: {
     alignItems: "center",

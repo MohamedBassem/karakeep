@@ -12,11 +12,14 @@ import {
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import Constants from "expo-constants";
-import { Link } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { UserProfileHeader } from "@/components/settings/UserProfileHeader";
-import ChevronRight from "@/components/ui/ChevronRight";
-import { Divider } from "@/components/ui/Divider";
+import {
+  GroupedButtonRow,
+  GroupedSection,
+  RowSeparator,
+  SettingRow,
+} from "@/components/ui/GroupedList";
 import { Text } from "@/components/ui/Text";
 import { useServerVersion } from "@/lib/hooks";
 import { useSession } from "@/lib/session";
@@ -26,14 +29,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@karakeep/shared-react/trpc";
 
-function SectionHeader({ title }: { title: string }) {
-  const { colors } = useColorScheme();
-  return (
-    <Text style={[styles.sectionHeader, { color: colors.mutedForeground }]}>
-      {title}
-    </Text>
-  );
-}
+const THEME_LABELS = { light: "Light", dark: "Dark", system: "System" };
+const VIEW_LABELS = {
+  reader: "Reader",
+  browser: "Browser",
+  externalBrowser: "External Browser",
+};
 
 export default function Settings() {
   const { logout } = useSession();
@@ -113,10 +114,10 @@ export default function Settings() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingBottom: 40 + headerHeight,
-      }}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: 40 + headerHeight },
+      ]}
     >
       <UserProfileHeader
         image={data?.image}
@@ -124,155 +125,70 @@ export default function Settings() {
         email={data?.email}
       />
 
-      <SectionHeader title="Appearance" />
-      <View
-        style={[
-          styles.cardGroup,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
-        <View style={styles.rowOuter}>
-          <Link asChild href="/dashboard/settings/theme" style={styles.flex1}>
-            <Pressable style={styles.pressableRow}>
-              <Text style={styles.rowLabel} numberOfLines={1}>
-                Theme
-              </Text>
-              <Text
-                style={[styles.rowValue, { color: colors.mutedForeground }]}
-                numberOfLines={1}
-              >
-                {
-                  { light: "Light", dark: "Dark", system: "System" }[
-                    settings.theme
-                  ]
-                }
-              </Text>
-              <ChevronRight />
-            </Pressable>
-          </Link>
-        </View>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <View style={styles.rowOuter}>
-          <Link
-            asChild
-            href="/dashboard/settings/bookmark-default-view"
-            style={styles.flex1}
-          >
-            <Pressable style={styles.pressableRow}>
-              <Text style={styles.rowLabel} numberOfLines={1}>
-                Default Bookmark View
-              </Text>
-              {isSettingsLoading ? (
-                <ActivityIndicator size="small" />
-              ) : (
-                <Text
-                  style={[styles.rowValue, { color: colors.mutedForeground }]}
-                  numberOfLines={1}
-                >
-                  {
-                    {
-                      reader: "Reader",
-                      browser: "Browser",
-                      externalBrowser: "External Browser",
-                    }[settings.defaultBookmarkView]
-                  }
-                </Text>
-              )}
-              <ChevronRight />
-            </Pressable>
-          </Link>
-        </View>
-      </View>
+      <GroupedSection header="Appearance">
+        <SettingRow
+          label="Theme"
+          value={THEME_LABELS[settings.theme]}
+          href="/dashboard/settings/theme"
+        />
+        <RowSeparator />
+        <SettingRow
+          label="Default Bookmark View"
+          value={VIEW_LABELS[settings.defaultBookmarkView]}
+          loading={isSettingsLoading}
+          href="/dashboard/settings/bookmark-default-view"
+        />
+      </GroupedSection>
 
-      <SectionHeader title="Reading" />
-      <View
-        style={[
-          styles.cardGroup,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
-        <View style={styles.rowOuter}>
-          <Link
-            asChild
-            href="/dashboard/settings/reader-settings"
-            style={styles.flex1}
-          >
-            <Pressable style={styles.pressableRow}>
-              <Text style={styles.rowLabel} numberOfLines={1}>
-                Reader Text Settings
-              </Text>
-              <ChevronRight />
-            </Pressable>
-          </Link>
-        </View>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <View style={styles.rowOuter}>
-          <Text style={styles.flex1} numberOfLines={1}>
-            Show notes in bookmark card
-          </Text>
-          <Switch
-            style={styles.shrink0}
-            value={settings.showNotes}
-            onValueChange={(value) =>
-              setSettings({
-                ...settings,
-                showNotes: value,
-              })
-            }
-          />
-        </View>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <View style={styles.rowOuter}>
-          <Link
-            asChild
-            href="/dashboard/settings/toolbar-settings"
-            style={styles.flex1}
-          >
-            <Pressable style={styles.pressableRowBetween}>
-              <Text>Toolbar Buttons</Text>
-              <ChevronRight />
-            </Pressable>
-          </Link>
-        </View>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <View style={styles.rowOuter}>
-          <Text style={styles.flex1} numberOfLines={1}>
-            Keep screen on while reading
-          </Text>
-          <Switch
-            style={styles.shrink0}
-            disabled={isSettingsLoading}
-            value={settings.keepScreenOnWhileReading}
-            onValueChange={(value) => {
-              if (isSettingsLoading) return;
-              setSettings({
-                ...settings,
-                keepScreenOnWhileReading: value,
-              });
-            }}
-          />
-        </View>
-      </View>
+      <GroupedSection header="Reading">
+        <SettingRow
+          label="Reader Text Settings"
+          href="/dashboard/settings/reader-settings"
+        />
+        <RowSeparator />
+        <SettingRow
+          label="Show notes in bookmark card"
+          trailing={
+            <Switch
+              value={settings.showNotes}
+              onValueChange={(value) =>
+                setSettings({ ...settings, showNotes: value })
+              }
+            />
+          }
+        />
+        <RowSeparator />
+        <SettingRow
+          label="Toolbar Buttons"
+          href="/dashboard/settings/toolbar-settings"
+        />
+        <RowSeparator />
+        <SettingRow
+          label="Keep screen on while reading"
+          trailing={
+            <Switch
+              disabled={isSettingsLoading}
+              value={settings.keepScreenOnWhileReading}
+              onValueChange={(value) => {
+                if (isSettingsLoading) return;
+                setSettings({ ...settings, keepScreenOnWhileReading: value });
+              }}
+            />
+          }
+        />
+      </GroupedSection>
 
-      <SectionHeader title="Media" />
-      <View
-        style={[
-          styles.cardGroup,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
+      <GroupedSection header="Media">
         <View style={styles.mediaInner}>
           <View style={styles.mediaTopRow}>
             <Text>Upload Image Quality</Text>
-            <Text style={{ color: colors.foreground }}>
-              {Math.round(imageQuality ?? 0)}%
-            </Text>
+            <Text>{Math.round(imageQuality ?? 0)}%</Text>
           </View>
           {imageQuality === null ? (
             <ActivityIndicator size="small" />
           ) : (
             <Slider
-              style={{ height: 40, width: "100%" }}
+              style={styles.slider}
               onSlidingComplete={(value) =>
                 setSettings({
                   ...settings,
@@ -286,35 +202,24 @@ export default function Settings() {
             />
           )}
         </View>
-      </View>
+      </GroupedSection>
 
-      <SectionHeader title="Account" />
-      <View
-        style={[
-          styles.cardGroup,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
-        <Pressable style={styles.accountRow} onPress={logout}>
-          <Text style={[styles.flex1, { color: colors.destructive }]}>
-            Log Out
-          </Text>
-        </Pressable>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <Pressable
-          style={styles.accountRow}
+      <GroupedSection header="Account">
+        <GroupedButtonRow
+          label="Log Out"
+          tone="destructive"
+          align="left"
+          onPress={logout}
+        />
+        <RowSeparator />
+        <GroupedButtonRow
+          label="Delete Account"
+          tone="destructive"
+          align="left"
           onPress={handleDeleteAccount}
-          disabled={isDeleting}
-        >
-          {isDeleting ? (
-            <ActivityIndicator size="small" />
-          ) : (
-            <Text style={[styles.flex1, { color: colors.destructive }]}>
-              Delete Account
-            </Text>
-          )}
-        </Pressable>
-      </View>
+          loading={isDeleting}
+        />
+      </GroupedSection>
 
       <Modal
         visible={showPasswordModal}
@@ -392,121 +297,51 @@ export default function Settings() {
         </Pressable>
       </Modal>
 
-      <SectionHeader title="About" />
-      <View
-        style={[
-          styles.cardGroup,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
-        <View style={styles.aboutRow}>
-          <Text style={{ color: colors.mutedForeground }} numberOfLines={1}>
-            Server
-          </Text>
-          <Text
-            style={[styles.aboutValue, { color: colors.mutedForeground }]}
-            numberOfLines={1}
-          >
-            {isSettingsLoading ? "Loading..." : settings.address}
-          </Text>
-        </View>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <View style={styles.aboutRow}>
-          <Text style={{ color: colors.mutedForeground }} numberOfLines={1}>
-            App Version
-          </Text>
-          <Text
-            style={[styles.aboutValue, { color: colors.mutedForeground }]}
-            numberOfLines={1}
-          >
-            {Constants.expoConfig?.version ?? "unknown"}
-          </Text>
-        </View>
-        <Divider orientation="horizontal" style={styles.divider} />
-        <View style={styles.aboutRow}>
-          <Text style={{ color: colors.mutedForeground }} numberOfLines={1}>
-            Server Version
-          </Text>
-          <Text
-            style={[styles.aboutValue, { color: colors.mutedForeground }]}
-            numberOfLines={1}
-          >
-            {isServerVersionLoading
+      <GroupedSection header="About">
+        <SettingRow
+          label="Server"
+          value={isSettingsLoading ? "Loading..." : settings.address}
+        />
+        <RowSeparator />
+        <SettingRow
+          label="App Version"
+          value={Constants.expoConfig?.version ?? "unknown"}
+        />
+        <RowSeparator />
+        <SettingRow
+          label="Server Version"
+          value={
+            isServerVersionLoading
               ? "Loading..."
               : serverVersionError
                 ? "unavailable"
-                : (serverVersion ?? "unknown")}
-          </Text>
-        </View>
-      </View>
+                : (serverVersion ?? "unknown")
+          }
+        />
+      </GroupedSection>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionHeader: {
+  scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 4,
-    paddingTop: 16,
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  cardGroup: {
-    width: "100%",
-    borderRadius: 12,
-    paddingVertical: 8,
-  },
-  rowOuter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 32,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  pressableRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  pressableRowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  rowLabel: {
-    marginRight: 8,
-    flex: 1,
-  },
-  rowValue: {
-    marginRight: 4,
-  },
-  divider: {
-    marginHorizontal: 24,
-    marginVertical: 4,
-  },
-  flex1: {
-    flex: 1,
-  },
-  shrink0: {
-    flexShrink: 0,
+    gap: 20,
   },
   mediaInner: {
     flexDirection: "column",
     gap: 4,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    width: "100%",
+    paddingVertical: 12,
   },
   mediaTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  accountRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+  slider: {
+    height: 40,
+    width: "100%",
   },
   modalBackdrop: {
     flex: 1,
@@ -554,17 +389,5 @@ const styles = StyleSheet.create({
   },
   modalDeleteText: {
     fontWeight: "500",
-  },
-  aboutRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  aboutValue: {
-    flex: 1,
-    textAlign: "right",
-    fontSize: 14,
   },
 });

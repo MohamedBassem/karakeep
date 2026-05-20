@@ -11,7 +11,11 @@ import DraggableFlatList, {
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { TOOLBAR_ACTION_REGISTRY } from "@/components/bookmarks/BottomActions";
-import { Divider } from "@/components/ui/Divider";
+import {
+  GroupedButtonRow,
+  GroupedSection,
+  RowSeparator,
+} from "@/components/ui/GroupedList";
 import { Text, withOpacity } from "@/components/ui/Text";
 import useAppSettings, {
   DEFAULT_OVERFLOW_ACTIONS,
@@ -152,18 +156,10 @@ export default function ToolbarSettingsPage() {
       contentContainerStyle={styles.scrollContent}
       contentInsetAdjustmentBehavior="automatic"
     >
-      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-        Visible Actions (max {MAX_VISIBLE})
-      </Text>
-      <View
-        style={[
-          styles.listCard,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
+      <GroupedSection header={`Visible Actions (max ${MAX_VISIBLE})`}>
         {visible.length === 0 ? (
           <View style={styles.emptyRow}>
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            <Text style={styles.emptyText} color="tertiary">
               No visible actions. Only the overflow menu will show.
             </Text>
           </View>
@@ -174,28 +170,15 @@ export default function ToolbarSettingsPage() {
             keyExtractor={(item) => item}
             onDragEnd={({ data }) => save(data, overflow)}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => (
-              <Divider
-                orientation="horizontal"
-                style={{ marginHorizontal: 24 }}
-              />
-            )}
+            ItemSeparatorComponent={RowSeparator}
           />
         )}
-      </View>
+      </GroupedSection>
 
-      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-        Overflow Actions
-      </Text>
-      <View
-        style={[
-          styles.listCard,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
+      <GroupedSection header="Overflow Actions">
         {overflow.length === 0 ? (
           <View style={styles.emptyRow}>
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            <Text style={styles.emptyText} color="tertiary">
               No overflow actions. All actions are visible on the toolbar.
             </Text>
           </View>
@@ -206,25 +189,18 @@ export default function ToolbarSettingsPage() {
             keyExtractor={(item) => item}
             onDragEnd={({ data }) => save(visible, data)}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => (
-              <Divider
-                orientation="horizontal"
-                style={{ marginHorizontal: 24 }}
-              />
-            )}
+            ItemSeparatorComponent={RowSeparator}
           />
         )}
-      </View>
+      </GroupedSection>
 
-      <Pressable
-        onPress={resetToDefaults}
-        style={[
-          styles.resetButton,
-          { backgroundColor: colors.card, borderCurve: "continuous" },
-        ]}
-      >
-        <Text style={styles.resetText}>Reset to Defaults</Text>
-      </Pressable>
+      <GroupedSection>
+        <GroupedButtonRow
+          label="Reset to Defaults"
+          tone="primary"
+          onPress={resetToDefaults}
+        />
+      </GroupedSection>
     </ScrollView>
   );
 }
@@ -237,17 +213,6 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 16,
     paddingVertical: 8,
-  },
-  sectionLabel: {
-    paddingHorizontal: 4,
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  listCard: {
-    width: "100%",
-    overflow: "hidden",
-    borderRadius: 12,
   },
   emptyRow: {
     paddingHorizontal: 16,
@@ -268,15 +233,5 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 6,
-  },
-  resetButton: {
-    width: "100%",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  resetText: {
-    textAlign: "center",
-    color: "#3b82f6",
   },
 });

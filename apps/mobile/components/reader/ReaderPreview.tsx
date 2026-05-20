@@ -101,7 +101,6 @@ export const ReaderPreview = forwardRef<ReaderPreviewRef, ReaderPreviewProps>(
           height: 128,
           width: "100%",
           overflow: "hidden",
-          borderRadius: 8,
         }}
       >
         <WebView

@@ -2,11 +2,14 @@ import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import FullPageSpinner from "@/components/ui/FullPageSpinner";
-import { GroupedSection, RowSeparator } from "@/components/ui/GroupedList";
+import {
+  GroupedSection,
+  RowSeparator,
+  SelectableRow,
+} from "@/components/ui/GroupedList";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { Check, Plus } from "lucide-react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 
 import {
@@ -220,16 +223,11 @@ const TagPickerPage = () => {
             {optimisticTags.map((tag, index) => (
               <React.Fragment key={tag.id}>
                 {index > 0 && <RowSeparator />}
-                <Pressable
+                <SelectableRow
+                  label={tag.name}
+                  selected
                   onPress={() => handleTagPress(tag, "detach")}
-                  style={({ pressed }) => [
-                    styles.tagRow,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                >
-                  <Text style={styles.tagLabel}>{tag.name}</Text>
-                  <Check size={20} color={colors.primary} strokeWidth={2.5} />
-                </Pressable>
+                />
               </React.Fragment>
             ))}
           </GroupedSection>
@@ -239,26 +237,18 @@ const TagPickerPage = () => {
             {filteredAllTags.map((tag, index) => (
               <React.Fragment key={tag.id}>
                 {index > 0 && <RowSeparator />}
-                <Pressable
-                  onPress={() => handleTagPress(tag, "attach")}
-                  style={({ pressed }) => [
-                    styles.tagRow,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                >
-                  {tag.id === NEW_TAG_ID ? (
-                    <>
-                      <Text
-                        style={[styles.tagLabel, { color: colors.primary }]}
-                      >
-                        Create &ldquo;{tag.name}&rdquo;
-                      </Text>
-                      <Plus size={20} color={colors.primary} strokeWidth={2} />
-                    </>
-                  ) : (
-                    <Text style={styles.tagLabel}>{tag.name}</Text>
-                  )}
-                </Pressable>
+                {tag.id === NEW_TAG_ID ? (
+                  <SelectableRow
+                    label={`Create “${tag.name}”`}
+                    accent
+                    onPress={() => handleTagPress(tag, "attach")}
+                  />
+                ) : (
+                  <SelectableRow
+                    label={tag.name}
+                    onPress={() => handleTagPress(tag, "attach")}
+                  />
+                )}
               </React.Fragment>
             ))}
           </GroupedSection>
@@ -281,17 +271,6 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     paddingHorizontal: 8,
-  },
-  tagRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  tagLabel: {
-    flex: 1,
-    paddingRight: 12,
   },
   emptyState: {
     alignItems: "center",

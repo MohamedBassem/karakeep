@@ -1,18 +1,15 @@
 import React from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { RowSeparator } from "@/components/ui/GroupedList";
+import {
+  GroupedSection,
+  RowSeparator,
+  SelectableRow,
+} from "@/components/ui/GroupedList";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 
 import type { ZBookmarkList } from "@karakeep/shared/types/lists";
@@ -121,47 +118,24 @@ const ListPickerPage = () => {
         style={[styles.flex1, { backgroundColor: colors.background }]}
       >
         {filteredPaths && filteredPaths.length > 0 ? (
-          <View
-            style={[
-              styles.listCard,
-              { backgroundColor: colors.card, borderCurve: "continuous" },
-            ]}
-          >
+          <GroupedSection>
             {filteredPaths.map((path, index) => {
               const listId = path[path.length - 1].id;
-              const isLoading = isListLoading(listId);
-              const isChecked = existingLists?.has(listId);
-
               return (
                 <React.Fragment key={listId}>
                   {index > 0 && <RowSeparator />}
-                  <Pressable
-                    onPress={() => !isLoading && toggleList(listId)}
-                    disabled={isLoading}
-                    style={({ pressed }) => [
-                      styles.listRow,
-                      pressed && { opacity: 0.7 },
-                    ]}
-                  >
-                    <Text style={styles.listLabel} numberOfLines={1}>
-                      {path
-                        .map((item) => `${item.icon} ${item.name}`)
-                        .join(" / ")}
-                    </Text>
-                    {isLoading ? (
-                      <ActivityIndicator size="small" />
-                    ) : isChecked ? (
-                      <Check
-                        size={20}
-                        color={colors.primary}
-                        strokeWidth={2.5}
-                      />
-                    ) : null}
-                  </Pressable>
+                  <SelectableRow
+                    label={path
+                      .map((item) => `${item.icon} ${item.name}`)
+                      .join(" / ")}
+                    selected={existingLists?.has(listId)}
+                    loading={isListLoading(listId)}
+                    onPress={() => toggleList(listId)}
+                  />
                 </React.Fragment>
               );
             })}
-          </View>
+          </GroupedSection>
         ) : (
           <View style={styles.emptyState}>
             <Text color="tertiary">No lists available</Text>
@@ -177,21 +151,6 @@ export default ListPickerPage;
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
-  },
-  listCard: {
-    overflow: "hidden",
-    borderRadius: 12,
-  },
-  listRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  listLabel: {
-    flex: 1,
-    paddingRight: 12,
   },
   emptyState: {
     alignItems: "center",

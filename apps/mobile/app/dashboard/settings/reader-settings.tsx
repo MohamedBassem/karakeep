@@ -1,15 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import {
   ReaderPreview,
   ReaderPreviewRef,
 } from "@/components/reader/ReaderPreview";
 import { Divider } from "@/components/ui/Divider";
+import {
+  GroupedButtonRow,
+  GroupedSection,
+  RowSeparator,
+  SelectableRow,
+} from "@/components/ui/GroupedList";
 import { Text } from "@/components/ui/Text";
 import { MOBILE_FONT_FAMILIES, useReaderSettings } from "@/lib/readerSettings";
 import { useColorScheme } from "@/lib/useColorScheme";
-import { Check, RotateCcw } from "lucide-react-native";
+import { RotateCcw } from "lucide-react-native";
 
 import {
   formatFontFamily,
@@ -20,7 +26,7 @@ import {
 import { ZReaderFontFamily } from "@karakeep/shared/types/users";
 
 export default function ReaderSettingsPage() {
-  const { isDarkColorScheme: isDark, colors } = useColorScheme();
+  const { colors } = useColorScheme();
 
   const {
     settings,
@@ -110,15 +116,9 @@ export default function ReaderSettingsPage() {
     // Note: clearAllLocal is called automatically in the shared hook's onSuccess
   };
 
-  const handleClearLocalOverrides = () => {
-    clearAllLocal();
-  };
-
-  const handleClearServerDefaults = () => {
-    clearAllDefaults();
-  };
-
   const fontFamilyOptions: ZReaderFontFamily[] = ["serif", "sans", "mono"];
+
+  const localBadge = <Text style={{ color: colors.primary }}> (local)</Text>;
 
   return (
     <ScrollView
@@ -127,54 +127,42 @@ export default function ReaderSettingsPage() {
       contentInsetAdjustmentBehavior="automatic"
     >
       {/* Font Family Selection */}
-      <View style={styles.fullWidth}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          Font Family
-          {localOverrides.fontFamily !== undefined && (
-            <Text style={styles.localBadge}> (local)</Text>
-          )}
-        </Text>
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          {fontFamilyOptions.map((fontFamily, index) => {
-            const isChecked = effectiveFontFamily === fontFamily;
-            return (
-              <View key={fontFamily}>
-                <Pressable
-                  onPress={() => handleFontFamilyChange(fontFamily)}
-                  style={styles.optionRow}
-                >
-                  <Text
-                    style={{
-                      fontFamily: MOBILE_FONT_FAMILIES[fontFamily],
-                    }}
-                  >
-                    {formatFontFamily(fontFamily)}
-                  </Text>
-                  {isChecked && <Check color="rgb(0, 122, 255)" />}
-                </Pressable>
-                {index < fontFamilyOptions.length - 1 && (
-                  <Divider orientation="horizontal" style={{ height: 2 }} />
-                )}
-              </View>
-            );
-          })}
-        </View>
-      </View>
+      <GroupedSection
+        header={
+          <>
+            Font Family
+            {localOverrides.fontFamily !== undefined && localBadge}
+          </>
+        }
+      >
+        {fontFamilyOptions.map((fontFamily, index) => (
+          <React.Fragment key={fontFamily}>
+            {index > 0 && <RowSeparator />}
+            <SelectableRow
+              label={formatFontFamily(fontFamily)}
+              labelStyle={{ fontFamily: MOBILE_FONT_FAMILIES[fontFamily] }}
+              selected={effectiveFontFamily === fontFamily}
+              onPress={() => handleFontFamilyChange(fontFamily)}
+            />
+          </React.Fragment>
+        ))}
+      </GroupedSection>
 
       {/* Font Size */}
-      <View style={styles.fullWidth}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          Font Size ({formatFontSize(displayFontSize)})
-          {localOverrides.fontSize !== undefined && (
-            <Text style={styles.localBadge}> (local)</Text>
-          )}
-        </Text>
-        <View style={[styles.sliderCard, { backgroundColor: colors.card }]}>
+      <GroupedSection
+        header={
+          <>
+            {`Font Size (${formatFontSize(displayFontSize)})`}
+            {localOverrides.fontSize !== undefined && localBadge}
+          </>
+        }
+      >
+        <View style={styles.sliderRow}>
           <Text style={{ color: colors.mutedForeground }}>
             {READER_SETTING_CONSTRAINTS.fontSize.min}
           </Text>
           <Slider
-            style={{ height: 40, flex: 1 }}
+            style={styles.slider}
             value={displayFontSize}
             minimumValue={READER_SETTING_CONSTRAINTS.fontSize.min}
             maximumValue={READER_SETTING_CONSTRAINTS.fontSize.max}
@@ -187,22 +175,23 @@ export default function ReaderSettingsPage() {
             {READER_SETTING_CONSTRAINTS.fontSize.max}
           </Text>
         </View>
-      </View>
+      </GroupedSection>
 
       {/* Line Height */}
-      <View style={styles.fullWidth}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          Line Height ({formatLineHeight(displayLineHeight)})
-          {localOverrides.lineHeight !== undefined && (
-            <Text style={styles.localBadge}> (local)</Text>
-          )}
-        </Text>
-        <View style={[styles.sliderCard, { backgroundColor: colors.card }]}>
+      <GroupedSection
+        header={
+          <>
+            {`Line Height (${formatLineHeight(displayLineHeight)})`}
+            {localOverrides.lineHeight !== undefined && localBadge}
+          </>
+        }
+      >
+        <View style={styles.sliderRow}>
           <Text style={{ color: colors.mutedForeground }}>
             {READER_SETTING_CONSTRAINTS.lineHeight.min}
           </Text>
           <Slider
-            style={{ height: 40, flex: 1 }}
+            style={styles.slider}
             value={displayLineHeight}
             minimumValue={READER_SETTING_CONSTRAINTS.lineHeight.min}
             maximumValue={READER_SETTING_CONSTRAINTS.lineHeight.max}
@@ -215,65 +204,52 @@ export default function ReaderSettingsPage() {
             {READER_SETTING_CONSTRAINTS.lineHeight.max}
           </Text>
         </View>
-      </View>
+      </GroupedSection>
 
       {/* Preview */}
-      <View style={styles.fullWidth}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          Preview
-        </Text>
+      <GroupedSection header="Preview">
         <ReaderPreview
           ref={previewRef}
           initialFontFamily={effectiveFontFamily}
           initialFontSize={effectiveFontSize}
           initialLineHeight={effectiveLineHeight}
         />
-      </View>
+      </GroupedSection>
 
       <Divider orientation="horizontal" style={styles.bigDivider} />
 
       {/* Save as Default */}
-      <Pressable
-        onPress={handleSaveAsDefault}
-        disabled={!hasLocalOverrides}
-        style={[styles.actionCard, { backgroundColor: colors.card }]}
-      >
-        <Text
-          style={[
-            styles.actionText,
-            {
-              color: hasLocalOverrides ? "#3b82f6" : colors.mutedForeground,
-            },
-          ]}
-        >
-          Save as Default (All Devices)
-        </Text>
-      </Pressable>
+      <GroupedSection>
+        <GroupedButtonRow
+          label="Save as Default (All Devices)"
+          tone="primary"
+          onPress={handleSaveAsDefault}
+          disabled={!hasLocalOverrides}
+        />
+      </GroupedSection>
 
       {/* Clear Local */}
       {hasLocalOverrides && (
-        <Pressable
-          onPress={handleClearLocalOverrides}
-          style={[styles.clearCard, { backgroundColor: colors.card }]}
-        >
-          <RotateCcw size={16} color={isDark ? "#9ca3af" : "#6b7280"} />
-          <Text style={{ color: colors.mutedForeground }}>
-            Clear Local Overrides
-          </Text>
-        </Pressable>
+        <GroupedSection>
+          <GroupedButtonRow
+            label="Clear Local Overrides"
+            icon={RotateCcw}
+            tone="muted"
+            onPress={clearAllLocal}
+          />
+        </GroupedSection>
       )}
 
       {/* Clear Server */}
       {hasServerDefaults && (
-        <Pressable
-          onPress={handleClearServerDefaults}
-          style={[styles.clearCard, { backgroundColor: colors.card }]}
-        >
-          <RotateCcw size={16} color={isDark ? "#9ca3af" : "#6b7280"} />
-          <Text style={{ color: colors.mutedForeground }}>
-            Clear Server Defaults
-          </Text>
-        </Pressable>
+        <GroupedSection>
+          <GroupedButtonRow
+            label="Clear Server Defaults"
+            icon={RotateCcw}
+            tone="muted"
+            onPress={clearAllDefaults}
+          />
+        </GroupedSection>
       )}
     </ScrollView>
   );
@@ -284,62 +260,23 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   scrollContent: {
-    alignItems: "center",
     gap: 16,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  sectionLabel: {
-    marginBottom: 8,
-    paddingHorizontal: 4,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  localBadge: {
-    color: "#3b82f6",
-  },
-  card: {
-    width: "100%",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  sliderCard: {
+  sliderRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    width: "100%",
+  },
+  slider: {
+    height: 40,
+    flex: 1,
   },
   bigDivider: {
     marginVertical: 8,
     width: "100%",
-  },
-  actionCard: {
-    width: "100%",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  actionText: {
-    textAlign: "center",
-  },
-  clearCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    width: "100%",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
   },
 });

@@ -1,21 +1,27 @@
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import React from "react";
+import { ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { Divider } from "@/components/ui/Divider";
-import { Text } from "@/components/ui/Text";
+import {
+  GroupedSection,
+  RowSeparator,
+  SelectableRow,
+} from "@/components/ui/GroupedList";
 import { useToast } from "@/components/ui/Toast";
 import useAppSettings from "@/lib/settings";
-import { useColorScheme } from "@/lib/useColorScheme";
-import { Check } from "lucide-react-native";
+
+const MODES = ["reader", "browser", "externalBrowser"] as const;
+const MODE_LABELS: Record<(typeof MODES)[number], string> = {
+  reader: "Reader",
+  browser: "Browser",
+  externalBrowser: "External Browser",
+};
 
 export default function BookmarkDefaultViewSettings() {
   const router = useRouter();
   const { toast } = useToast();
-  const { colors } = useColorScheme();
   const { settings, setSettings } = useAppSettings();
 
-  const handleUpdate = async (
-    mode: "reader" | "browser" | "externalBrowser",
-  ) => {
+  const handleUpdate = async (mode: (typeof MODES)[number]) => {
     try {
       await setSettings({
         ...settings,
@@ -35,73 +41,29 @@ export default function BookmarkDefaultViewSettings() {
     }
   };
 
-  const options = (["reader", "browser", "externalBrowser"] as const)
-    .map((mode) => {
-      const currentMode = settings.defaultBookmarkView;
-      const isChecked = currentMode === mode;
-      return [
-        <Pressable
-          onPress={() => handleUpdate(mode)}
-          style={styles.row}
-          key={mode}
-        >
-          <Text style={styles.label} numberOfLines={1}>
-            {
-              {
-                browser: "Browser",
-                reader: "Reader",
-                externalBrowser: "External Browser",
-              }[mode]
-            }
-          </Text>
-          {isChecked && <Check color="rgb(0, 122, 255)" />}
-        </Pressable>,
-        <Divider
-          key={mode + "-divider"}
-          orientation="horizontal"
-          style={styles.divider}
-        />,
-      ];
-    })
-    .flat();
-  options.pop();
-
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.scrollContent}
     >
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        {options}
-      </View>
+      <GroupedSection>
+        {MODES.map((mode, index) => (
+          <React.Fragment key={mode}>
+            {index > 0 && <RowSeparator />}
+            <SelectableRow
+              label={MODE_LABELS[mode]}
+              selected={settings.defaultBookmarkView === mode}
+              onPress={() => handleUpdate(mode)}
+            />
+          </React.Fragment>
+        ))}
+      </GroupedSection>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  label: {
-    marginRight: 8,
-    flex: 1,
-  },
-  divider: {
-    marginVertical: 12,
-    height: 2,
-    width: "100%",
-  },
   scrollContent: {
-    width: "100%",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  card: {
-    width: "100%",
-    borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
