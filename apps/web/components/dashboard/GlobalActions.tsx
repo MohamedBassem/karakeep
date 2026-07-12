@@ -1,8 +1,10 @@
 "use client";
 
 import BulkBookmarksAction from "@/components/dashboard/BulkBookmarksAction";
+import ChatModal from "@/components/dashboard/chat/ChatModal";
 import SortOrderToggle from "@/components/dashboard/SortOrderToggle";
 import ViewOptions from "@/components/dashboard/ViewOptions";
+import { useClientConfig } from "@/lib/clientConfig";
 import { useTranslation } from "@/lib/i18n/client";
 import { useInBookmarkGridStore } from "@/lib/store/useInBookmarkGridStore";
 import { useKeyboardNavigationStore } from "@/lib/store/useKeyboardNavigationStore";
@@ -12,6 +14,7 @@ import { ButtonWithTooltip } from "../ui/button";
 
 export default function GlobalActions() {
   const { t } = useTranslation();
+  const clientConfig = useClientConfig();
   const inBookmarkGrid = useInBookmarkGridStore(
     (state) => state.inBookmarkGrid,
   );
@@ -20,6 +23,7 @@ export default function GlobalActions() {
   );
   return (
     <div className="flex min-w-max flex-wrap overflow-hidden">
+      {clientConfig.chat.enabled && <ChatModal />}
       {inBookmarkGrid && <ViewOptions />}
       {inBookmarkGrid && <BulkBookmarksAction />}
       {inBookmarkGrid && <SortOrderToggle />}

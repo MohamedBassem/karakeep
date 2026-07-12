@@ -23,8 +23,20 @@ function createdAtField() {
     .$defaultFn(() => new Date());
 }
 
+function createdAtMsField() {
+  return integer("createdAt", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date());
+}
+
 function modifiedAtField() {
   return integer("modifiedAt", { mode: "timestamp" })
+    .$defaultFn(() => new Date())
+    .$onUpdate(() => new Date());
+}
+
+function modifiedAtMsField() {
+  return integer("modifiedAt", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
     .$onUpdate(() => new Date());
 }
@@ -618,6 +630,47 @@ export const customPrompts = sqliteTable(
   (bl) => [index("customPrompts_userId_idx").on(bl.userId)],
 );
 
+export const chatSessions = sqliteTable(
+  "chatSessions",
+  {
+    id: text("id")
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    title: text("title").notNull(),
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: createdAtMsField(),
+    modifiedAt: modifiedAtMsField(),
+  },
+  (cs) => [
+    index("chatSessions_userId_idx").on(cs.userId),
+    index("chatSessions_userId_modifiedAt_idx").on(cs.userId, cs.modifiedAt),
+  ],
+);
+
+export const chatMessages = sqliteTable(
+  "chatMessages",
+  {
+    id: text("id")
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    chatId: text("chatId")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["user", "assistant", "toolResult"] }).notNull(),
+    content: text("content").notNull(),
+    metadata: text("metadata", { mode: "json" }).$type<unknown>(),
+    createdAt: createdAtMsField(),
+  },
+  (cm) => [
+    index("chatMessages_chatId_idx").on(cm.chatId),
+    index("chatMessages_chatId_createdAt_idx").on(cm.chatId, cm.createdAt),
+  ],
+);
+
 export const rssFeedsTable = sqliteTable(
   "rssFeeds",
   {
@@ -973,6 +1026,7 @@ export const userRelations = relations(users, ({ many, one }) => ({
   bookmarks: many(bookmarks),
   webhooks: many(webhooksTable),
   rules: many(ruleEngineRulesTable),
+  chatSessions: many(chatSessions),
   invites: many(invites),
   subscription: one(subscriptions),
   importSessions: many(importSessions),
@@ -1176,6 +1230,24 @@ export const passwordResetTokensRelations = relations(
     }),
   }),
 );
+
+export const chatSessionsRelations = relations(
+  chatSessions,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [chatSessions.userId],
+      references: [users.id],
+    }),
+    messages: many(chatMessages),
+  }),
+);
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  chat: one(chatSessions, {
+    fields: [chatMessages.chatId],
+    references: [chatSessions.id],
+  }),
+}));
 
 export const importSessionsRelations = relations(
   importSessions,

@@ -12,6 +12,7 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # You can change the default models by uncommenting the following lines, and choosing your model.
 # INFERENCE_TEXT_MODEL=gpt-4.1-mini
 # INFERENCE_IMAGE_MODEL=gpt-4o-mini
+# CHAT_MODEL=gpt-4.1-mini
 ```
 
 ## Ollama
@@ -34,6 +35,7 @@ OPENAI_BASE_URL=http://ollama.mylab.com:11434/v1
 # Make sure to pull the models in ollama first. Example models:
 INFERENCE_TEXT_MODEL=gemma3
 INFERENCE_IMAGE_MODEL=llava
+CHAT_MODEL=gemma3
 ```
 
 ### Option 2: Native Ollama API
@@ -48,6 +50,7 @@ OLLAMA_BASE_URL=http://ollama.mylab.com:11434
 # Make sure to pull the models in ollama first. Example models:
 INFERENCE_TEXT_MODEL=gemma3
 INFERENCE_IMAGE_MODEL=llava
+CHAT_MODEL=gemma3
 
 # If the model you're using doesn't support structured output, you also need:
 # INFERENCE_OUTPUT_SCHEMA=plain

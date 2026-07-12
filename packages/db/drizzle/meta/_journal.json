@@ -617,6 +617,13 @@
       "when": 1783868937511,
       "tag": "0087_missing_bookmark_fk_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "6",
+      "when": 1783874446162,
+      "tag": "0088_add_chat_tables",
+      "breakpoints": true
     }
   ]
 }

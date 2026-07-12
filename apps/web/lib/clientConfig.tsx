@@ -18,6 +18,9 @@ export const ClientConfigCtx = createContext<ClientConfig>({
     enableAutoTagging: false,
     enableAutoSummarization: false,
   },
+  chat: {
+    enabled: false,
+  },
   legal: {
     termsOfServiceUrl: undefined,
     privacyPolicyUrl: undefined,
