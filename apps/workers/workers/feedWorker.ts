@@ -201,8 +201,7 @@ async function run(
     response = await fetchWithProxy(feed.url, {
       signal: AbortSignal.timeout(5000),
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "User-Agent": "Karakeep-RSS/1.0 (+https://karakeep.app)",
         Accept: "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8",
       },
     });
