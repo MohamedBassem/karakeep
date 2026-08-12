@@ -947,6 +947,12 @@ export class Bookmark extends BareBookmark {
     };
   }
 
+  getHtmlContent(): string | null {
+    return this.bookmark.content.type === BookmarkTypes.LINK
+      ? (this.bookmark.content.htmlContent ?? null)
+      : null;
+  }
+
   static async getBookmarkHtmlContent(
     {
       contentAssetId,

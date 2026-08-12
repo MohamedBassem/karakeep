@@ -8,19 +8,22 @@ import { List } from "@karakeep/trpc/models/lists";
 
 import { unauthedMiddleware } from "../middlewares/auth";
 import { toRSS } from "../utils/rss";
+import { zIncludeContentSearchParamsSchema } from "../utils/types";
 
 const app = new Hono().get(
   "/lists/:listId",
   zValidator(
     "query",
-    z.object({
-      token: z.string().min(1).optional(),
-      limit: z.coerce
-        .number()
-        .min(1)
-        .max(MAX_NUM_BOOKMARKS_PER_PAGE)
-        .optional(),
-    }),
+    z
+      .object({
+        token: z.string().min(1).optional(),
+        limit: z.coerce
+          .number()
+          .min(1)
+          .max(MAX_NUM_BOOKMARKS_PER_PAGE)
+          .optional(),
+      })
+      .extend(zIncludeContentSearchParamsSchema.shape),
   ),
   unauthedMiddleware,
   async (c) => {
@@ -36,6 +39,7 @@ const app = new Hono().get(
         limit: searchParams.limit ?? 20,
         order: "desc",
         cursor: null,
+        includeContent: searchParams.includeContent,
       },
     );
     const list = res.list;
@@ -48,6 +52,7 @@ const app = new Hono().get(
         description: list.description ?? undefined,
       },
       res.bookmarks,
+      { includeContent: searchParams.includeContent },
     );
 
     c.header("Content-Type", "application/rss+xml");

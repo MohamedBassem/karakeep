@@ -8,6 +8,10 @@ import {
 import { getAssetUrl } from "@karakeep/shared/utils/assetUtils";
 import { isAllowedBookmarkUrl } from "@karakeep/shared/utils/url";
 
+type RSSBookmark = ZPublicBookmark & {
+  htmlContent?: string | null;
+};
+
 export function toRSS(
   params: {
     title: string;
@@ -15,7 +19,8 @@ export function toRSS(
     feedUrl: string;
     siteUrl: string;
   },
-  bookmarks: ZPublicBookmark[],
+  bookmarks: RSSBookmark[],
+  options: { includeContent?: boolean } = {},
 ) {
   const feed = new RSS({
     title: params.title,
@@ -51,6 +56,14 @@ export function toRSS(
             : undefined,
         categories: bookmark.tags,
         description: bookmark.description ?? "",
+        custom_elements:
+          options.includeContent && bookmark.htmlContent
+            ? [
+                {
+                  "content:encoded": { _cdata: bookmark.htmlContent },
+                },
+              ]
+            : undefined,
       });
     });
 

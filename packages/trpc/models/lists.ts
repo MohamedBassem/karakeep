@@ -211,6 +211,7 @@ export abstract class List {
       limit: number;
       order: Exclude<ZSortOrder, "relevance">;
       cursor: ZCursor | null | undefined;
+      includeContent?: boolean;
     },
   ) {
     const listdb = await this.getPublicList(ctx, listId, token);
@@ -233,7 +234,7 @@ export abstract class List {
 
     const bookmarks = await Bookmark.loadMulti(authedCtx, {
       ids: bookmarkIds,
-      includeContent: false,
+      includeContent: pagination.includeContent ?? false,
       limit: pagination.limit,
       sortOrder: pagination.order,
       cursor: pagination.cursor,
@@ -247,7 +248,12 @@ export abstract class List {
         ownerName: listdb.user.name,
         numItems: bookmarkIds.length,
       },
-      bookmarks: bookmarks.bookmarks.map((b) => b.asPublicBookmark()),
+      bookmarks: bookmarks.bookmarks.map((bookmark) => ({
+        ...bookmark.asPublicBookmark(),
+        ...(pagination.includeContent
+          ? { htmlContent: bookmark.getHtmlContent() }
+          : {}),
+      })),
       nextCursor: bookmarks.nextCursor,
     };
   }

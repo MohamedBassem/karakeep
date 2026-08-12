@@ -13,6 +13,16 @@ You can publish any of your lists as an RSS feed, making it easy to share your b
 3. Toggle the "RSS Feed" switch to enable it
 4. Copy the generated RSS feed URL
 
+By default, feed items contain bookmark metadata only. To include the saved
+article HTML, add `includeContent=true` to the feed URL. For example:
+
+```
+https://example.com/api/v1/rss/lists/<list-id>?token=<token>&includeContent=true
+```
+
+The full HTML is published in the standard RSS `content:encoded` element when
+saved content is available. The regular item description remains unchanged.
+
 ### What Gets Published
 
 RSS feeds include:
@@ -20,6 +30,8 @@ RSS feeds include:
 - **Assets**: Uploaded files (PDFs, images) are included with a link to view them
 - **Tags**: Bookmark tags are exported as RSS categories
 - **Dates**: The bookmark creation date is used as the publication date
+- **Content (optional)**: Saved link content is exported as HTML when the feed
+  URL includes `includeContent=true`
 
 Note: Text notes are not included in RSS feeds as they don't have an associated URL.
 
