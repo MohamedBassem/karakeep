@@ -1,6 +1,51 @@
 import { describe, expect, it } from "vitest";
 
-import { isAllowedBookmarkUrl, setUrlHostnameFromResolvedAddress } from "./url";
+import {
+  isAllowedBookmarkUrl,
+  normalizeBookmarkUrl,
+  setUrlHostnameFromResolvedAddress,
+} from "./url";
+
+describe("normalizeBookmarkUrl", () => {
+  it("removes known tracking parameters and preserves meaningful parameters", () => {
+    expect(
+      normalizeBookmarkUrl(
+        "https://example.com/article?id=42&utm_source=newsletter&fbclid=abc&page=2",
+      ),
+    ).toBe("https://example.com/article?id=42&page=2");
+  });
+
+  it("matches tracking parameter names case-insensitively", () => {
+    expect(
+      normalizeBookmarkUrl(
+        "https://example.com/article?UTM_Campaign=launch&MsClKiD=abc&id=42",
+      ),
+    ).toBe("https://example.com/article?id=42");
+  });
+
+  it("preserves unrecognized parameters that may identify the resource", () => {
+    const url = "https://www.youtube.com/watch?v=abc123&list=playlist";
+
+    expect(normalizeBookmarkUrl(url)).toBe(url);
+  });
+
+  it("trims URLs without otherwise canonicalizing them", () => {
+    expect(normalizeBookmarkUrl("  https://example.com  ")).toBe(
+      "https://example.com",
+    );
+    expect(normalizeBookmarkUrl("https://example.com?utm_source=email")).toBe(
+      "https://example.com",
+    );
+  });
+
+  it("preserves fragments while removing tracking parameters", () => {
+    expect(
+      normalizeBookmarkUrl(
+        "https://example.com/article?id=42&utm_medium=email#comments",
+      ),
+    ).toBe("https://example.com/article?id=42#comments");
+  });
+});
 
 describe("setUrlHostnameFromResolvedAddress", () => {
   it("sets IPv4 addresses as URL hostnames", () => {

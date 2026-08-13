@@ -806,6 +806,31 @@ describe("Bookmark Routes", () => {
     expect(bookmark3User1.alreadyExists).toEqual(false);
   });
 
+  test<CustomTestContext>("normalizes tracking parameters before storing and deduplicating links", async ({
+    apiCallers,
+  }) => {
+    const api = apiCallers[0].bookmarks;
+    const original = await api.createBookmark({
+      url: "https://example.com/article?id=42&utm_source=newsletter&fbclid=abc",
+      type: BookmarkTypes.LINK,
+    });
+
+    expect(original.content).toMatchObject({
+      type: BookmarkTypes.LINK,
+      url: "https://example.com/article?id=42",
+    });
+
+    const duplicate = await api.createBookmark({
+      url: "https://example.com/article?id=42&utm_campaign=launch&gclid=def",
+      type: BookmarkTypes.LINK,
+    });
+
+    expect(duplicate).toMatchObject({
+      id: original.id,
+      alreadyExists: true,
+    });
+  });
+
   test<CustomTestContext>("re-saving a link restores and refreshes the existing bookmark", async ({
     apiCallers,
     db,

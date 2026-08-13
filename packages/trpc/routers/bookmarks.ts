@@ -62,6 +62,7 @@ import {
 import type { ZBookmarkTags } from "@karakeep/shared/types/tags";
 import { ANCHOR_TEXT_MAX_LENGTH } from "@karakeep/shared/utils/reading-progress-dom";
 import { normalizeTagName } from "@karakeep/shared/utils/tag";
+import { normalizeBookmarkUrl } from "@karakeep/shared/utils/url";
 import { getVectorStoreClient } from "@karakeep/shared/vectorStore";
 import type { VectorFilterQuery } from "@karakeep/shared/vectorStore";
 import { bookmarkCreationCounter } from "../stats";
@@ -256,14 +257,19 @@ export const bookmarksAppRouter = router({
       ),
     )
     .mutation(async ({ input, ctx }) => {
+      const normalizedLinkUrl =
+        input.type === BookmarkTypes.LINK
+          ? normalizeBookmarkUrl(input.url)
+          : undefined;
+
       addLogFields<"bookmark.create">({
         "bookmark.type": input.type,
         "bookmark.source": input.source ?? undefined,
         "bookmark.crawl_priority": input.crawlPriority,
         ...(input.type === BookmarkTypes.LINK
           ? {
-              "bookmark.url": input.url,
-              "bookmark.domain": safeUrlHost(input.url),
+              "bookmark.url": normalizedLinkUrl,
+              "bookmark.domain": safeUrlHost(normalizedLinkUrl),
               "bookmark.has_precrawled": !!input.precrawledArchiveId,
             }
           : {}),
@@ -273,7 +279,7 @@ export const bookmarksAppRouter = router({
       });
       if (input.type == BookmarkTypes.LINK) {
         // This doesn't 100% protect from duplicates because of races, but it's more than enough for this usecase.
-        const alreadyExists = await attemptToDedupLink(ctx, input.url);
+        const alreadyExists = await attemptToDedupLink(ctx, normalizedLinkUrl!);
         if (alreadyExists) {
           addLogFields<"bookmark.create">({
             "bookmark.id": alreadyExists.id,
@@ -371,7 +377,7 @@ export const bookmarksAppRouter = router({
                   .insert(bookmarkLinks)
                   .values({
                     id: bookmark.id,
-                    url: input.url.trim(),
+                    url: normalizedLinkUrl!,
                   })
                   .returning()
               )[0];
