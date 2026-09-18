@@ -50,6 +50,7 @@ const zSettingsSchema = z.object({
   keepScreenOnWhileReading: z.boolean().optional().default(false),
   customHeaders: z.record(z.string(), z.string()).optional().default({}),
   // Reader settings (local device overrides)
+  readerSpeechRate: z.number().min(0.5).max(2).optional(),
   readerFontSize: z.number().int().min(12).max(24).optional(),
   readerLineHeight: z.number().min(1.2).max(2.5).optional(),
   readerFontFamily: zReaderFontFamilySchema.optional(),

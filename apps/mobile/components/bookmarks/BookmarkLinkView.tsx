@@ -15,11 +15,15 @@ import { BookmarkLinkType } from "./BookmarkLinkTypeSelector";
 interface BookmarkLinkViewProps {
   bookmark: ZBookmark;
   bookmarkPreviewType: BookmarkLinkType;
+  speechEnabled: boolean;
+  onCloseSpeech: () => void;
 }
 
 export default function BookmarkLinkView({
   bookmark,
   bookmarkPreviewType,
+  speechEnabled,
+  onCloseSpeech,
 }: BookmarkLinkViewProps) {
   if (bookmark.content.type !== BookmarkTypes.LINK) {
     throw new Error("Wrong content type rendered");
@@ -35,7 +39,13 @@ export default function BookmarkLinkView({
     case "browser":
       return <BookmarkLinkBrowserPreview bookmark={bookmark} />;
     case "reader":
-      return <BookmarkLinkReaderPreview bookmark={bookmark} />;
+      return (
+        <BookmarkLinkReaderPreview
+          bookmark={bookmark}
+          speechEnabled={speechEnabled}
+          onCloseSpeech={onCloseSpeech}
+        />
+      );
     case "screenshot":
       return <BookmarkLinkScreenshotPreview bookmark={bookmark} />;
     case "archive":

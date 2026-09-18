@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Pressable, View } from "react-native";
 import { useKeepAwake } from "expo-keep-awake";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import BookmarkAssetView from "@/components/bookmarks/BookmarkAssetView";
 import BookmarkLinkTypeSelector, {
   BookmarkLinkType,
@@ -38,6 +43,9 @@ export default function BookmarkView() {
   const { settings } = useAppSettings();
   const connectionStatus = useConnectionStatus();
   const api = useTRPC();
+  const [speechEnabled, setSpeechEnabled] = useState(false);
+  const closeSpeech = useCallback(() => setSpeechEnabled(false), []);
+  useFocusEffect(useCallback(() => closeSpeech, [closeSpeech]));
 
   const [bookmarkLinkType, setBookmarkLinkType] = useState<BookmarkLinkType>(
     settings.defaultBookmarkView === "externalBrowser"
@@ -93,6 +101,8 @@ export default function BookmarkView() {
         <BookmarkLinkView
           bookmark={displayedBookmark}
           bookmarkPreviewType={displayedBookmarkLinkType}
+          speechEnabled={speechEnabled}
+          onCloseSpeech={closeSpeech}
         />
       );
       break;
@@ -139,8 +149,13 @@ export default function BookmarkView() {
                 )}
                 <BookmarkLinkTypeSelector
                   type={displayedBookmarkLinkType}
-                  onChange={(type) => setBookmarkLinkType(type)}
+                  onChange={(type) => {
+                    if (type !== displayedBookmarkLinkType) closeSpeech();
+                    setBookmarkLinkType(type);
+                  }}
                   bookmark={displayedBookmark}
+                  speechEnabled={speechEnabled}
+                  onToggleSpeech={() => setSpeechEnabled((enabled) => !enabled)}
                 />
               </View>
             ) : undefined,

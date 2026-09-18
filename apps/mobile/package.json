@@ -17,7 +17,8 @@
     "format:fix": "oxfmt --ignore-path=../../.gitignore --ignore-path=./.gitignore .",
     "lint": "oxlint --ignore-path=../../.gitignore .",
     "lint:fix": "oxlint --ignore-path=../../.gitignore . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.1.2",
@@ -59,6 +60,7 @@
     "expo-secure-store": "~57.0.4",
     "expo-share-intent": "^8.0.1",
     "expo-sharing": "~57.0.22",
+    "expo-speech": "~57.0.3",
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.4",
     "expo-web-browser": "~57.0.3",
@@ -97,7 +99,8 @@
     "@types/react": "19.2.15",
     "ajv": "latest",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.9"
+    "typescript": "^5.9",
+    "vitest": "^4.1.11"
   },
   "expo": {
     "install": {

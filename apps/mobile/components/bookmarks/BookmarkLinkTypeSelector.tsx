@@ -1,10 +1,11 @@
 import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useMenuIconColors } from "@/lib/useMenuIconColors";
-import { MenuView } from "@react-native-menu/menu";
+import { MenuAction, MenuView } from "@react-native-menu/menu";
 import { ChevronDown } from "lucide-react-native";
 
 import { BookmarkTypes, ZBookmark } from "@karakeep/shared/types/bookmarks";
+import { isBookmarkStillCrawling } from "@karakeep/shared/utils/bookmarkUtils";
 
 export type BookmarkLinkType =
   | "browser"
@@ -44,12 +45,16 @@ interface BookmarkLinkTypeSelectorProps {
   type: BookmarkLinkType;
   onChange: (type: BookmarkLinkType) => void;
   bookmark: ZBookmark;
+  speechEnabled: boolean;
+  onToggleSpeech: () => void;
 }
 
 export default function BookmarkLinkTypeSelector({
   type,
   onChange,
   bookmark,
+  speechEnabled,
+  onToggleSpeech,
 }: BookmarkLinkTypeSelectorProps) {
   const availableTypes = getAvailableViewTypes(bookmark);
   const { menuIconColor } = useMenuIconColors();
@@ -112,14 +117,28 @@ export default function BookmarkLinkTypeSelector({
     },
   ];
 
-  const availableViewActions = viewActions.filter((action) =>
+  const availableViewActions: MenuAction[] = viewActions.filter((action) =>
     availableTypes.includes(action.id),
   );
+  if (type === "reader" && !isBookmarkStillCrawling(bookmark)) {
+    availableViewActions.push({
+      id: "read-aloud",
+      title: speechEnabled ? "Stop reading aloud" : "Read aloud",
+      image: Platform.select({
+        ios: speechEnabled ? "speaker.slash" : "speaker.wave.2",
+      }),
+      imageColor: menuIconColor,
+    });
+  }
 
   return (
     <MenuView
       onPressAction={({ nativeEvent }) => {
         Haptics.selectionAsync();
+        if (nativeEvent.event === "read-aloud") {
+          onToggleSpeech();
+          return;
+        }
         onChange(nativeEvent.event as BookmarkLinkType);
       }}
       actions={availableViewActions}

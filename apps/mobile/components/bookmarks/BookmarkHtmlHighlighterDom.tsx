@@ -2,7 +2,7 @@
 
 import "@/globals.css";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import type { Highlight } from "@karakeep/shared-react/components/BookmarkHtmlHighlighter";
 import BookmarkHTMLHighlighter from "@karakeep/shared-react/components/BookmarkHtmlHighlighter";
@@ -19,6 +19,8 @@ export default function BookmarkHtmlHighlighterDom({
   onDeleteHighlight,
   onLinkPress,
   onImagePress,
+  readAloudEnabled,
+  onReadableText,
   readingProgressOffset,
   readingProgressAnchor,
   restoreReadingPosition,
@@ -35,6 +37,8 @@ export default function BookmarkHtmlHighlighterDom({
   onDeleteHighlight?: (highlight: Highlight) => void;
   onLinkPress?: (url: string) => void;
   onImagePress?: (src: string) => void;
+  readAloudEnabled?: boolean;
+  onReadableText?: (text: string) => Promise<void>;
   readingProgressOffset?: number | null;
   readingProgressAnchor?: string | null;
   restoreReadingPosition?: boolean;
@@ -50,6 +54,13 @@ export default function BookmarkHtmlHighlighterDom({
   }) => void;
   dom?: import("expo/dom").DOMProps;
 }) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!readAloudEnabled) return;
+    // innerText reads the displayed article, decodes entities, and omits hidden markup.
+    void onReadableText?.(contentRef.current?.innerText ?? "");
+  }, [htmlContent, readAloudEnabled, onReadableText]);
+
   // Strip href from links so the browser treats them as regular selectable text
   // instead of activating native link gestures (iOS preview, Android drag).
   // The URL is preserved in data-href for our click handler.
@@ -140,6 +151,7 @@ export default function BookmarkHtmlHighlighterDom({
         progressBarStyle={{ position: "fixed" }}
       >
         <BookmarkHTMLHighlighter
+          ref={contentRef}
           className="dark:[&_*]:!text-inherit dark:[&_[data-highlight]]:!text-gray-600 dark:[&_a]:!text-[var(--tw-prose-links)]"
           htmlContent={htmlContent}
           highlights={highlights}

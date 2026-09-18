@@ -33,6 +33,7 @@ import { BookmarkTypes, ZBookmark } from "@karakeep/shared/types/bookmarks";
 import BookmarkAssetImage from "./BookmarkAssetImage";
 import BookmarkHtmlHighlighterDom from "./BookmarkHtmlHighlighterDom";
 import { PDFViewer } from "./PDFViewer";
+import ReaderSpeechControls from "./ReaderSpeechControls";
 
 function openUrlExternally(url: string) {
   if (url.startsWith("http://") || url.startsWith("https://")) {
@@ -107,8 +108,12 @@ export function BookmarkLinkPdfPreview({ bookmark }: { bookmark: ZBookmark }) {
 
 export function BookmarkLinkReaderPreview({
   bookmark,
+  speechEnabled,
+  onCloseSpeech,
 }: {
   bookmark: ZBookmark;
+  speechEnabled: boolean;
+  onCloseSpeech: () => void;
 }) {
   const { isDarkColorScheme: isDark } = useColorScheme();
   const { settings: readerSettings } = useReaderSettings();
@@ -171,6 +176,11 @@ export function BookmarkLinkReaderPreview({
     bookmarkId: bookmark.id,
   });
 
+  const [readableText, setReadableText] = useState<string | null>(null);
+  const onReadableText = useCallback(async (text: string) => {
+    setReadableText(text);
+  }, []);
+
   const [viewingImage, setViewingImage] = useState<string | null>(null);
 
   const handleLinkPress = useCallback((url: string) => {
@@ -231,7 +241,12 @@ export function BookmarkLinkReaderPreview({
           </TouchableOpacity>
         </View>
       )}
+      {speechEnabled && readableText !== null && (
+        <ReaderSpeechControls text={readableText} onClose={onCloseSpeech} />
+      )}
       <BookmarkHtmlHighlighterDom
+        readAloudEnabled={speechEnabled}
+        onReadableText={onReadableText}
         htmlContent={displayedBookmarkWithContent.content.htmlContent ?? ""}
         contentStyle={contentStyle}
         isDark={isDark}
