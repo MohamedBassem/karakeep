@@ -46,7 +46,8 @@ export default function HighlightList({
         key={numColumns}
         numColumns={numColumns}
         columnWrapperStyle={numColumns > 1 ? { gap: GAP } : undefined}
-        itemLayoutAnimation={LinearTransition}
+        // Reanimated only supports item layout animations in single-column lists.
+        itemLayoutAnimation={numColumns > 1 ? undefined : LinearTransition}
         contentInsetAdjustmentBehavior="automatic"
         ListHeaderComponent={header}
         contentContainerStyle={{
