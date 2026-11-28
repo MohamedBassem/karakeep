@@ -16,6 +16,7 @@ const zToolbarActionId = z.enum([
   "browser",
   "offline",
   "share",
+  "recrawl",
   "delete",
 ]);
 
@@ -33,6 +34,7 @@ export const DEFAULT_OVERFLOW_ACTIONS: ToolbarActionId[] = [
   "info",
   "offline",
   "browser",
+  "recrawl",
   "delete",
 ];
 

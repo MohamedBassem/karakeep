@@ -305,7 +305,18 @@
     "edit_toolbar_menu": "Edit Toolbar…",
     "unarchive_short": "Unarchive",
     "delete_permanent_message": "This also removes its highlights and notes. This can't be undone.",
-    "delete_this_title": "Delete this bookmark?"
+    "delete_this_title": "Delete this bookmark?",
+    "recrawl": "Recrawl",
+    "recrawl_queued": "Recrawl queued",
+    "remove_from_list": "Remove from List",
+    "removed_from_list": "Removed from list",
+    "saved_copies": "Saved Copies",
+    "save_copy": "Save a Copy",
+    "save_pdf": "Save a PDF",
+    "save_video": "Save the Video",
+    "saving_copy": "Saving a copy",
+    "saving_pdf": "Saving a PDF",
+    "video_queued": "Video download queued"
   },
   "manage_tags": {
     "no_tags_found": "No tags found",

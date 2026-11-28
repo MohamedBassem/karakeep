@@ -35,6 +35,7 @@ import {
   Ellipsis,
   Globe,
   Pencil,
+  RotateCw,
   ShareIcon,
   Star,
   Tag,
@@ -43,6 +44,7 @@ import {
 
 import {
   useDeleteBookmark,
+  useRecrawlBookmark,
   useUpdateBookmark,
 } from "@karakeep/shared-react/hooks/bookmarks";
 import { useWhoAmI } from "@karakeep/shared-react/hooks/users";
@@ -139,6 +141,7 @@ export const TOOLBAR_ACTION_REGISTRY: Record<
   offline: { Icon: ArrowDownToLine, sfSymbol: "arrow.down.circle" },
   browser: { Icon: Globe, sfSymbol: "safari" },
   share: { Icon: ShareIcon, sfSymbol: "square.and.arrow.up" },
+  recrawl: { Icon: RotateCw, sfSymbol: "arrow.clockwise" },
   delete: { Icon: Trash2, sfSymbol: "trash" },
 };
 
@@ -154,6 +157,7 @@ export function useToolbarActionLabels(): Record<ToolbarActionId, string> {
     offline: t("bookmark_actions.download"),
     browser: t("bookmark_actions.open_in_browser"),
     share: t("bookmark_actions.share"),
+    recrawl: t("bookmark_actions.recrawl"),
     delete: t("bookmark_actions.delete"),
   };
 }
@@ -177,6 +181,8 @@ function toolbarShortLabel(t: MobileTFunction, id: ToolbarActionId): string {
       return t("bookmark_actions.browser_short");
     case "share":
       return t("bookmark_actions.share");
+    case "recrawl":
+      return t("bookmark_actions.recrawl");
     case "delete":
       return t("bookmark_actions.delete");
   }
@@ -209,6 +215,8 @@ export function translateToolbarRender(
       return t("bookmark_actions.open_in_browser");
     case "share":
       return t("bookmark_actions.share");
+    case "recrawl":
+      return t("bookmark_actions.recrawl");
     case "delete":
       return t("bookmark_actions.delete");
   }
@@ -291,6 +299,23 @@ function useToolbarActions(bookmark: ZBookmark, iconSize: number) {
               archived: !resp.archived,
             }),
         );
+      },
+      onError: () => {
+        toast({
+          message: strings.somethingWentWrong,
+          variant: "destructive",
+          showProgress: false,
+        });
+      },
+    });
+
+  const { mutate: recrawlBookmark, isPending: isRecrawlPending } =
+    useRecrawlBookmark({
+      onSuccess: () => {
+        toast({
+          message: t("bookmark_actions.recrawl_queued"),
+          showProgress: false,
+        });
       },
       onError: () => {
         toast({
@@ -433,6 +458,13 @@ function useToolbarActions(bookmark: ZBookmark, iconSize: number) {
         handleShare();
       },
       disabled: false,
+    },
+    recrawl: {
+      id: "recrawl",
+      icon: makeIcon(RotateCw),
+      shouldRender: isOwner && bookmark.content.type === BookmarkTypes.LINK,
+      onClick: () => recrawlBookmark({ bookmarkId: bookmark.id }),
+      disabled: isRecrawlPending,
     },
     delete: {
       id: "delete",

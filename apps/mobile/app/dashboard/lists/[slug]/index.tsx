@@ -22,6 +22,7 @@ import { MenuView } from "@react-native-menu/menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ellipsis, FolderOpen, ListFilter } from "lucide-react-native";
 
+import { BookmarkListContextProvider } from "@karakeep/shared-react/hooks/bookmark-list-context";
 import { useDeleteBookmarkList } from "@karakeep/shared-react/hooks/lists";
 import { useTRPC } from "@karakeep/shared-react/trpc";
 import { ZBookmarkList } from "@karakeep/shared/types/lists";
@@ -61,37 +62,40 @@ export default function ListView() {
       {!list ? (
         <QueryPageState error={error} onRetry={() => refetch()} />
       ) : !isSettingsLoading ? (
-        <UpdatingBookmarkList
-          query={{
-            listId: list.id,
-            archived,
-          }}
-          emptyState={
-            list.type === "smart"
-              ? {
-                  icon: ListFilter,
-                  title: t("lists.smart_empty_title"),
-                  subtitle: t("lists.smart_empty_subtitle", {
-                    query: list.query,
-                  }),
-                  ...(list.userRole === "owner" && {
-                    actionLabel: t("lists.edit_search"),
-                    onAction: () =>
-                      router.push(`/dashboard/lists/${list.id}/edit`),
-                  }),
-                }
-              : {
-                  icon: FolderOpen,
-                  title: t("lists.empty_title"),
-                  subtitle: t("lists.empty_subtitle"),
-                  ...(canAddBookmarks(list) && {
-                    actionLabel: t("lists.add_bookmarks"),
-                    onAction: () =>
-                      router.push(`/dashboard/lists/${list.id}/add`),
-                  }),
-                }
-          }
-        />
+        // Lets the cards offer to take a bookmark out of this list
+        <BookmarkListContextProvider list={list}>
+          <UpdatingBookmarkList
+            query={{
+              listId: list.id,
+              archived,
+            }}
+            emptyState={
+              list.type === "smart"
+                ? {
+                    icon: ListFilter,
+                    title: t("lists.smart_empty_title"),
+                    subtitle: t("lists.smart_empty_subtitle", {
+                      query: list.query,
+                    }),
+                    ...(list.userRole === "owner" && {
+                      actionLabel: t("lists.edit_search"),
+                      onAction: () =>
+                        router.push(`/dashboard/lists/${list.id}/edit`),
+                    }),
+                  }
+                : {
+                    icon: FolderOpen,
+                    title: t("lists.empty_title"),
+                    subtitle: t("lists.empty_subtitle"),
+                    ...(canAddBookmarks(list) && {
+                      actionLabel: t("lists.add_bookmarks"),
+                      onAction: () =>
+                        router.push(`/dashboard/lists/${list.id}/add`),
+                    }),
+                  }
+            }
+          />
+        </BookmarkListContextProvider>
       ) : (
         <FullPageSpinner />
       )}

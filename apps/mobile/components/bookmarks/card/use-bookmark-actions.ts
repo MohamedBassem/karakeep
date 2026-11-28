@@ -1,4 +1,5 @@
 import { useOfflineAvailability } from "@/components/bookmarks/useOfflineAvailability";
+import { useClientConfig } from "@/lib/client-config";
 import { getBookmarkDisplayTitle } from "@/lib/bookmarkDisplay";
 import useAppSettings from "@/lib/settings";
 import { shareBookmark } from "@/lib/shareBookmark";
@@ -7,10 +8,18 @@ import type { MenuAction } from "@react-native-menu/menu";
 import { router } from "expo-router";
 import { Alert, Platform } from "react-native";
 
+import { useBookmarkListContext } from "@karakeep/shared-react/hooks/bookmark-list-context";
 import {
   useDeleteBookmark,
+  usePreserveBookmarkVideo,
+  usePreserveOfflineCopy,
+  useRecrawlBookmark,
   useUpdateBookmark,
 } from "@karakeep/shared-react/hooks/bookmarks";
+import {
+  useAddBookmarkToList,
+  useRemoveBookmarkFromList,
+} from "@karakeep/shared-react/hooks/lists";
 import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import { BookmarkTypes } from "@karakeep/shared/types/bookmarks";
 
@@ -47,6 +56,9 @@ export function useBookmarkActions(
   const { settings } = useAppSettings();
   const { menuIconColor, destructiveMenuIconColor } = useMenuIconColors();
   const offlineAvailability = useOfflineAvailability(bookmark.id);
+  const clientConfig = useClientConfig();
+  // Set when the card's shown inside a list
+  const list = useBookmarkListContext();
   const supportsOfflineReading =
     bookmark.content.type === BookmarkTypes.LINK ||
     bookmark.content.type === BookmarkTypes.TEXT;
@@ -95,6 +107,52 @@ export function useBookmarkActions(
       onError,
     });
 
+  const { mutate: recrawlBookmark, isPending: isRecrawlPending } =
+    useRecrawlBookmark({
+      onSuccess: () => {
+        toast({
+          message: t("bookmark_actions.recrawl_queued"),
+          showProgress: false,
+        });
+      },
+      onError,
+    });
+
+  const { mutate: saveCopy } = usePreserveOfflineCopy({
+    onSuccess: (_res, req) => {
+      toast({
+        message:
+          req.kind === "pdf"
+            ? t("bookmark_actions.saving_pdf")
+            : t("bookmark_actions.saving_copy"),
+        showProgress: false,
+      });
+    },
+    onError,
+  });
+
+  const { mutate: saveVideo } = usePreserveBookmarkVideo({
+    onSuccess: () => {
+      toast({
+        message: t("bookmark_actions.video_queued"),
+        showProgress: false,
+      });
+    },
+    onError,
+  });
+
+  // Undo puts it back without another undo toast
+  const { mutate: addToList } = useAddBookmarkToList({ onError });
+
+  const { mutate: removeFromList } = useRemoveBookmarkFromList({
+    onSuccess: (_res, req) => {
+      showUndoToast(t("bookmark_actions.removed_from_list"), () =>
+        addToList(req),
+      );
+    },
+    onError,
+  });
+
   const isFavourited = Boolean(
     variables ? variables.favourited : bookmark.favourited,
   );
@@ -124,7 +182,28 @@ export function useBookmarkActions(
       ],
     );
 
+  const isOwnLink = isOwner && bookmark.content.type === BookmarkTypes.LINK;
+  const canRemoveFromList =
+    list?.type === "manual" &&
+    (list.userRole === "owner" || list.userRole === "editor");
+  // It's the first thing to try on a page that couldn't be fetched
+  const hasCrawlFailed =
+    bookmark.content.type === BookmarkTypes.LINK &&
+    bookmark.content.crawlStatus === "failure";
+  const recrawlAction: MenuAction = {
+    id: "recrawl",
+    title: t("bookmark_actions.recrawl"),
+    image: Platform.select({ ios: "arrow.clockwise" }),
+    imageColor: Platform.select({ ios: menuIconColor }),
+    attributes: {
+      ...(isRecrawlPending && { disabled: true }),
+    },
+  };
+
   const menuActions: MenuAction[] = [];
+  if (isOwnLink && hasCrawlFailed) {
+    menuActions.push(recrawlAction);
+  }
   if (isOwner) {
     menuActions.push(
       {
@@ -154,6 +233,16 @@ export function useBookmarkActions(
         imageColor: Platform.select({ ios: menuIconColor }),
       },
     );
+  }
+
+  // The list's editors can take out anyone's bookmark, not just their own
+  if (canRemoveFromList) {
+    menuActions.push({
+      id: "remove-from-list",
+      title: t("bookmark_actions.remove_from_list"),
+      image: Platform.select({ ios: "text.badge.minus" }),
+      imageColor: Platform.select({ ios: menuIconColor }),
+    });
   }
 
   if (supportsOfflineReading) {
@@ -197,6 +286,44 @@ export function useBookmarkActions(
         },
       });
     }
+  }
+
+  // Kept on the server, unlike the download for reading offline on the phone
+  if (isOwnLink) {
+    menuActions.push({
+      id: "saved-copies",
+      title: t("bookmark_actions.saved_copies"),
+      image: Platform.select({ ios: "square.and.arrow.down.on.square" }),
+      imageColor: Platform.select({ ios: menuIconColor }),
+      subactions: [
+        {
+          id: "save-copy",
+          title: t("bookmark_actions.save_copy"),
+          image: Platform.select({ ios: "doc.richtext" }),
+          imageColor: Platform.select({ ios: menuIconColor }),
+        },
+        {
+          id: "save-pdf",
+          title: t("bookmark_actions.save_pdf"),
+          image: Platform.select({ ios: "doc.text" }),
+          imageColor: Platform.select({ ios: menuIconColor }),
+        },
+        ...(clientConfig.crawler.videoDownloadOnDemand
+          ? [
+              {
+                id: "save-video",
+                title: t("bookmark_actions.save_video"),
+                image: Platform.select({ ios: "film" }),
+                imageColor: Platform.select({ ios: menuIconColor }),
+              },
+            ]
+          : []),
+      ],
+    });
+  }
+
+  if (isOwnLink && !hasCrawlFailed) {
+    menuActions.push(recrawlAction);
   }
 
   if (isOwner) {
@@ -243,6 +370,16 @@ export function useBookmarkActions(
       actionId === "update-offline-copy"
     ) {
       void offlineAvailability.save();
+    } else if (actionId === "save-copy") {
+      saveCopy({ bookmarkId: bookmark.id, kind: "fullPageArchive" });
+    } else if (actionId === "save-pdf") {
+      saveCopy({ bookmarkId: bookmark.id, kind: "pdf" });
+    } else if (actionId === "save-video") {
+      saveVideo({ bookmarkId: bookmark.id });
+    } else if (actionId === "remove-from-list" && list) {
+      removeFromList({ listId: list.id, bookmarkId: bookmark.id });
+    } else if (actionId === "recrawl") {
+      recrawlBookmark({ bookmarkId: bookmark.id });
     } else if (actionId === "remove-offline-copy") {
       offlineAvailability.confirmRemove();
     } else if (actionId === "delete") {
