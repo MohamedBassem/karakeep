@@ -76,7 +76,9 @@ export async function getBookmarksConditionFromMatcher(
           .where(
             and(
               eq(bookmarkTags.userId, userId),
-              eq(bookmarkTags.name, matcher.tagName),
+              // Case-insensitive match. It can't use the (userId, name) index
+              // for the name part, but scanning a single user's tags is cheap.
+              sql`${bookmarkTags.name} = ${matcher.tagName} COLLATE NOCASE`,
             ),
           ),
       );

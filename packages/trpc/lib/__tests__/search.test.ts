@@ -248,6 +248,16 @@ describe("getBookmarkIdsFromMatcher", () => {
     expect(result).toEqual(["b1"]);
   });
 
+  it("should match tagName case-insensitively", async () => {
+    const matcher: Matcher = {
+      type: "tagName",
+      tagName: "TAG1",
+      inverse: false,
+    };
+    const result = await getBookmarkIdsFromMatcher(mockCtx, matcher);
+    expect(result).toEqual(["b1"]);
+  });
+
   it("should handle tagName matcher with inverse=true", async () => {
     const matcher: Matcher = {
       type: "tagName",
