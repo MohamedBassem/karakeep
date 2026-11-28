@@ -146,6 +146,15 @@ export function useBookmarkActions(
 
   const { mutate: removeFromList } = useRemoveBookmarkFromList({
     onSuccess: (_res, req) => {
+      // Only a bookmark's owner can add it to a list, so editors removing
+      // someone else's bookmark get no undo
+      if (!isOwner) {
+        toast({
+          message: t("bookmark_actions.removed_from_list"),
+          showProgress: false,
+        });
+        return;
+      }
       showUndoToast(t("bookmark_actions.removed_from_list"), () =>
         addToList(req),
       );
