@@ -258,6 +258,40 @@ describe("getBookmarkIdsFromMatcher", () => {
     expect(result).toEqual(["b1"]);
   });
 
+  it("should match all case variants of a tagName", async () => {
+    await mockCtx.db
+      .insert(bookmarkTags)
+      .values({ id: "t5", userId: testUserId, name: "TAG1" });
+    await mockCtx.db
+      .insert(tagsOnBookmarks)
+      .values({ bookmarkId: "b2", tagId: "t5", attachedBy: "human" });
+
+    const matcher: Matcher = {
+      type: "tagName",
+      tagName: "tag1",
+      inverse: false,
+    };
+    const result = await getBookmarkIdsFromMatcher(mockCtx, matcher);
+    expect(result.sort()).toEqual(["b1", "b2"]);
+  });
+
+  it("should exclude all case variants of a tagName with inverse=true", async () => {
+    await mockCtx.db
+      .insert(bookmarkTags)
+      .values({ id: "t5", userId: testUserId, name: "TAG1" });
+    await mockCtx.db
+      .insert(tagsOnBookmarks)
+      .values({ bookmarkId: "b2", tagId: "t5", attachedBy: "human" });
+
+    const matcher: Matcher = {
+      type: "tagName",
+      tagName: "tag1",
+      inverse: true,
+    };
+    const result = await getBookmarkIdsFromMatcher(mockCtx, matcher);
+    expect(result.sort()).toEqual(["b3", "b4", "b5", "b6"]);
+  });
+
   it("should handle tagName matcher with inverse=true", async () => {
     const matcher: Matcher = {
       type: "tagName",
